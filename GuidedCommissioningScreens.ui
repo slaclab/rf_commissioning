@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1144</width>
+    <height>946</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="tab_setup">
+      <attribute name="title">
+       <string>Initial Setup</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0" colspan="3">
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="4" column="1">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>5) Select cavity</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>3) Enter additional test participants</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>4) Select cryomodule</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="PyDMEnumComboBox" name="PickCavity">
+           <property name="toolTip">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="PyDMDateTimeEdit" name="TestDateAndTime">
+           <property name="toolTip">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLineEdit" name="TestMembers">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter additional test team members, separated by comma&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="PyDMEnumComboBox" name="PickRadMonitor">
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="duplicatesEnabled">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>2) Select test lead</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="PyDMEnumComboBox" name="TestLead">
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="editable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>1) Enter date and time</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="PyDMEnumComboBox" name="PickCM">
+           <property name="toolTip">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>6) Select radiation sensors in use</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <widget class="QPushButton" name="start_button">
+         <property name="text">
+          <string>Start</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_magnet">
+      <attribute name="title">
+       <string>Magnet</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="PyDMTemplateRepeater" name="PyDMTemplateRepeater">
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::Box</enum>
+           </property>
+           <property name="layoutType" stdset="0">
+            <enum>PyDMTemplateRepeater::Horizontal</enum>
+           </property>
+           <property name="templateFilename" stdset="0">
+            <string>MagnetTemplate.ui</string>
+           </property>
+           <property name="dataSource" stdset="0">
+            <string>MagnetTemplate.json</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="PyDMShellCommand" name="PyDMShellCommand">
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="text">
+            <string>Open Striptools</string>
+           </property>
+           <property name="allowMultipleExecutions" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="commands" stdset="0">
+            <stringlist>
+             <string>srf_makeAutoPlot.py st cmmag ACCL:L2B:17</string>
+             <string>srf_makeAutoPlot.py st magtemps 02</string>
+             <string>StripTool $STRIP_CONFIGFILE_DIR/srf_magtemps.stp &amp;</string>
+             <string>StripTool $STRIP_CONFIGFILE_DIR/srf_cmmag.stp &amp;</string>
+             <string></string>
+            </stringlist>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_tuning">
+      <attribute name="title">
+       <string>Tuning</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="tab_cavitycalibration">
+      <attribute name="title">
+       <string>Cavity Calibration</string>
+      </attribute>
+      <widget class="PyDMWaveformPlot" name="PyDMWaveformPlot">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>10</y>
+         <width>591</width>
+         <height>371</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string/>
+       </property>
+       <property name="curves">
+        <stringlist>
+         <string>{&quot;y_channel&quot;: &quot;ACCL:L1B:0210:DF_FC&quot;, &quot;x_channel&quot;: null, &quot;name&quot;: &quot;&quot;, &quot;color&quot;: &quot;white&quot;, &quot;lineStyle&quot;: 1, &quot;lineWidth&quot;: 1, &quot;symbol&quot;: null, &quot;symbolSize&quot;: 10, &quot;yAxisName&quot;: &quot;Axis 1&quot;, &quot;redraw_mode&quot;: 2}</string>
+         <string>{&quot;y_channel&quot;: null, &quot;x_channel&quot;: null, &quot;name&quot;: &quot;&quot;, &quot;color&quot;: &quot;red&quot;, &quot;lineStyle&quot;: 1, &quot;lineWidth&quot;: 1, &quot;symbol&quot;: null, &quot;symbolSize&quot;: 10, &quot;yAxisName&quot;: &quot;Axis 1&quot;, &quot;redraw_mode&quot;: 2}</string>
+        </stringlist>
+       </property>
+      </widget>
+      <widget class="PyDMEDMDisplayButton" name="PyDMEDMDisplayButton">
+       <property name="geometry">
+        <rect>
+         <x>660</x>
+         <y>70</y>
+         <width>28</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string/>
+       </property>
+      </widget>
+      <widget class="PyDMLabel" name="PyDMLabel">
+       <property name="geometry">
+        <rect>
+         <x>690</x>
+         <y>260</y>
+         <width>70</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string/>
+       </property>
+       <property name="channel" stdset="0">
+        <string>ca://ACCL:L1B:0210:DF_FC</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab_pulsedPR">
+      <attribute name="title">
+       <string>Pulsed Mode Power Rise</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="tab_selapPR">
+      <attribute name="title">
+       <string>SELAP Power Rise</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="tab_12hrun">
+      <attribute name="title">
+       <string>12h run</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="tab_finish">
+      <attribute name="title">
+       <string>Finish current measurement</string>
+      </attribute>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMLabel</class>
+   <extends>QLabel</extends>
+   <header>pydm.widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMWaveformPlot</class>
+   <extends>QGraphicsView</extends>
+   <header>pydm.widgets.waveformplot</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMDateTimeEdit</class>
+   <extends>QDateTimeEdit</extends>
+   <header>pydm.widgets.datetime</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMEnumComboBox</class>
+   <extends>QComboBox</extends>
+   <header>pydm.widgets.enum_combo_box</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMRelatedDisplayButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.related_display_button</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMShellCommand</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.shell_command</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMTemplateRepeater</class>
+   <extends>QFrame</extends>
+   <header>pydm.widgets.template_repeater</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMEDMDisplayButton</class>
+   <extends>PyDMRelatedDisplayButton</extends>
+   <header>edmbutton.edm_button</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
