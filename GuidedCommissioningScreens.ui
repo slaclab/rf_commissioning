@@ -17,7 +17,7 @@
    <item row="0" column="1">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_setup">
       <attribute name="title">
@@ -202,27 +202,7 @@
        <string>StripTools &amp;&amp; Interlocks</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_7">
-       <item row="4" column="0">
-        <widget class="PyDMEDMDisplayButton" name="button_interlockoverview">
-         <property name="toolTip">
-          <string/>
-         </property>
-         <property name="text">
-          <string>Open interlock overview</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="PyDMShellCommand" name="button_striptool_cavtemps">
-         <property name="toolTip">
-          <string/>
-         </property>
-         <property name="text">
-          <string>Open striptool 'cavity temperatures'</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
+       <item row="1" column="0">
         <widget class="PyDMRelatedDisplayButton" name="button_decaradgui">
          <property name="toolTip">
           <string/>
@@ -246,23 +226,23 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="PyDMShellCommand" name="button_striptool_cryo">
+       <item row="0" column="0">
+        <widget class="PyDMShellCommand" name="button_striptools">
          <property name="toolTip">
           <string/>
          </property>
          <property name="text">
-          <string>Open striptool 'cryo'</string>
+          <string>Open striptools</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="PyDMShellCommand" name="button_striptool_vacuums">
+       <item row="2" column="0">
+        <widget class="PyDMEDMDisplayButton" name="button_interlockoverview">
          <property name="toolTip">
           <string/>
          </property>
          <property name="text">
-          <string>Open striptool 'vacuum'</string>
+          <string>Open interlock overview</string>
          </property>
         </widget>
        </item>

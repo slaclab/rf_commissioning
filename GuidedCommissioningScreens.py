@@ -59,12 +59,10 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.button_interlockoverview.filenames = ['$TOOLS/edm/display/llrf/rf_srf_intlk_nocryo_embed.edl']
 
-        self.ui.button_striptool_cavtemps.commands(
-            'srf_makeAutoPlot.py st cavtemps ACCL:L0B:01; StripTool $STRIP_CONFIGFILE_DIR/srf_cavtemps.stp'
-        )
-        self.ui.button_striptool_vacuum.commands(
-            'srf_makeAutoPlot.py st cavtemps ACCL:L0B:01; StripTool $STRIP_CONFIGFILE_DIR/srf_cavtemps.stp'
-        )
+        self.ui.button_striptools.commands = [
+            'srf_makeAutoPlot.py st cavtemps {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cavtemps.stp'.format(
+                prefix=self.current_cm.pvPrefix[:-2])
+        ]
 
     def make_interlock_macro_string(self):
 
@@ -84,7 +82,7 @@ class GuidedCommissioningScreens(Display):
         else:
             r = 'B'
 
-        cm = self.current_cm.pvPrefix.rstrip(":0")  # need to remove trailing colon and zeroes to match needed format
+        cm = self.current_cm.pvPrefix[:-2]  # need to remove trailing colon and zeroes to match needed format
 
         id = self.current_cm.name
 
