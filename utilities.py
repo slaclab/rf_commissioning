@@ -1,16 +1,23 @@
-
+testlead_list = [
+    'Aderhold, Sebastian',
+    'Gonnella, Dan',
+    'Maniscalco, James',
+    'Nelson, Janice',
+    'Porter, Ryan',
+    'Zacarias, Lisa',
+]
 
 cavity_list = [
-    'Cavity 1',
-    'Cavity 2',
-    'Cavity 3',
-    'Cavity 4',
-    'Cavity 5',
-    'Cavity 6',
-    'Cavity 7',
-    'Cavity 8',
-    'Cavity 9',
-    ]
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+]
 
 cryomodule_list = [
     '01',
@@ -49,4 +56,4 @@ cryomodule_list = [
     '33',
     '34',
     '35',
-    ]
+]
