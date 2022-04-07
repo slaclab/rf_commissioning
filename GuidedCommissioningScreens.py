@@ -52,8 +52,9 @@ class GuidedCommissioningScreens(Display):
 
     def update_current_decarad(self):
         self.current_decarad = self.ui.pick_radmonitor.currentText()
-        self.ui.button_decaradgui.macros = {"P": "RADM:SYS0:{decarad}00".format(decarad=self.current_decarad),
-                                            "M": self.current_decarad}
+        P = "RADM:SYS0:{decarad}00".format(decarad=self.current_decarad)
+        self.ui.button_decaradgui.macros = ["P={pstring}".format(pstring = P),
+                                            "M={mstring}".format(mstring = self.current_decarad)]
 
     def initial_setup(self):
         # set variables for other tabs

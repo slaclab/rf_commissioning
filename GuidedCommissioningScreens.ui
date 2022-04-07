@@ -211,15 +211,10 @@
           <string>Open Decarad GUI</string>
          </property>
          <property name="filenames" stdset="0">
-          <stringlist>
-           <string>$TOOLS/pydm/display/ads/decarad_main.ui</string>
-          </stringlist>
+          <stringlist/>
          </property>
          <property name="macros" stdset="0">
-          <stringlist>
-           <string>P=&quot;RADM:SYS0:200&quot;</string>
-           <string>M=2</string>
-          </stringlist>
+          <stringlist/>
          </property>
          <property name="openInNewWindow" stdset="0">
           <bool>true</bool>
