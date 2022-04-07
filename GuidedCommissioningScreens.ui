@@ -24,64 +24,6 @@
        <string>Initial Setup</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="3" column="1">
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>Select cavity</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>Select Decarad in use</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QComboBox" name="testlead"/>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Select test lead</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QComboBox" name="pick_radmonitor">
-         <item>
-          <property name="text">
-           <string>1</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>2</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="QPushButton" name="start_button">
-         <property name="text">
-          <string>Start</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QComboBox" name="pick_cavity"/>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>Select cryomodule</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QComboBox" name="pick_cm"/>
-       </item>
        <item row="1" column="0">
         <widget class="QTableWidget" name="test_members">
          <property name="sizePolicy">
@@ -126,6 +68,44 @@
          </column>
         </widget>
        </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Select cavity</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Select Decarad in use</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QComboBox" name="testlead"/>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Select test lead</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QComboBox" name="pick_radmonitor">
+         <item>
+          <property name="text">
+           <string>1</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>2</string>
+          </property>
+         </item>
+        </widget>
+       </item>
        <item row="1" column="1">
         <widget class="QLabel" name="label">
          <property name="text">
@@ -135,6 +115,19 @@
           <bool>true</bool>
          </property>
         </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QComboBox" name="pick_cavity"/>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Select cryomodule</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QComboBox" name="pick_cm"/>
        </item>
       </layout>
      </widget>

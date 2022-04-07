@@ -24,27 +24,24 @@ class GuidedCommissioningScreens(Display):
         # setup: StripTool & Interlock
         self.ui.button_decaradgui.filenames = ["$TOOLS/pydm/display/ads/decarad_main.ui"]
         self.ui.button_decaradgui.openInNewWindow = True
+        self.update_current_decarad()
 
-        # on press of start button read entries from initial setup tab
-        self.ui.start_button.clicked.connect(self.initial_setup)
+        self.initial_setup()
 
     def ui_filename(self):
         return 'GuidedCommissioningScreens.ui'
 
     def setup_combo_boxes(self):
         self.ui.testlead.addItems(util.testlead_list)
-        self.ui.testlead.setEnabled(True)
 
         self.ui.pick_cavity.addItems(util.cavity_list)
-        self.ui.pick_cavity.setEnabled(True)
+
         self.ui.pick_cavity.currentIndexChanged.connect(self.update_current_cavity_and_cm)
 
-        self.ui.pick_radmonitor.addItems(["DecaRad 1", "DecaRad 2"])
-        self.ui.pick_radmonitor.setEnabled(True)
         self.ui.pick_radmonitor.currentIndexChanged.connect(self.update_current_decarad)
 
         self.ui.pick_cm.addItems(util.cryomodule_list)
-        self.ui.pick_cm.setEnabled(True)
+
         self.ui.pick_cm.currentIndexChanged.connect(self.update_current_cavity_and_cm)
 
     def update_current_cavity_and_cm(self):
@@ -60,9 +57,7 @@ class GuidedCommissioningScreens(Display):
         # set variables for other tabs
         # Striptool + Interlock tab
 
-        self.ui.button_interlockoverview.filenames('$TOOLS/edm/display/llrf/rf_srf_intlk_nocryo_embed.edl)')
-        # self.ui.button_interlockoverview.macros('C=1,RFS=1A,R=A,CM=ACCL:L1B:02,CH=1,ID=01') #hardcoded set of macros for testing
-        # self.ui.button_interlockoverview.macros(self.make_interlock_macro_string())
+        self.ui.button_interlockoverview.filenames = ['$TOOLS/edm/display/llrf/rf_srf_intlk_nocryo_embed.edl']
 
         self.ui.button_striptool_cavtemps.commands(
             'srf_makeAutoPlot.py st cavtemps ACCL:L0B:01; StripTool $STRIP_CONFIGFILE_DIR/srf_cavtemps.stp'
