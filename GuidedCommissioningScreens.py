@@ -17,6 +17,8 @@ class GuidedCommissioningScreens(Display):
         # setup: initial setup tab
         self.setup_combo_boxes()
 
+        self.update_current_cavity_and_cm()
+
         # setup: magnet tab
         self.ui.label_7.setText('Current cryomodule is:')
         self.ui.label_8.setText('not defined yet')
