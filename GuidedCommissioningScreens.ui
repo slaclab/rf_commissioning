@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>998</width>
-    <height>1191</height>
+    <width>437</width>
+    <height>398</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="0" column="0">
+   <item row="0" column="1">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
       <number>2</number>
@@ -24,118 +24,114 @@
        <string>Initial Setup</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0" colspan="3">
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="2" column="0">
-          <widget class="QLineEdit" name="test_members">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter additional test team members, separated by comma&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>3) Enter additional test participants</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="PyDMEnumComboBox" name="pick_radmonitor">
-           <property name="toolTip">
-            <string/>
-           </property>
-           <property name="duplicatesEnabled">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="PyDMEnumComboBox" name="pick_cavity">
-           <property name="toolTip">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>7) Select radiation sensors in use</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>1) Enter date and time</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>5) Select cryomodule</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="PyDMEnumComboBox" name="testlead">
-           <property name="toolTip">
-            <string/>
-           </property>
-           <property name="editable">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>2) Select test lead</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="PyDMEnumComboBox" name="pick_cm">
-           <property name="toolTip">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>6) Select cavity</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="PyDMDateTimeEdit" name="test_date">
-           <property name="toolTip">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="PyDMEnumComboBox" name="pick_linacsection">
-           <property name="toolTip">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>4) Select linac section</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <item row="5" column="1">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>6) Select cavity</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="PyDMEnumComboBox" name="pick_linacsection">
+         <property name="toolTip">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLineEdit" name="test_members">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter additional test team members, separated by comma&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="0">
+        <widget class="PyDMEnumComboBox" name="testlead">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="editable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>1) Enter date and time</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>7) Select radiation sensors in use</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>2) Select test lead</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>5) Select cryomodule</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="PyDMEnumComboBox" name="pick_radmonitor">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="duplicatesEnabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>3) Enter additional test participants</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
         <widget class="QPushButton" name="start_button">
          <property name="text">
           <string>Start</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>4) Select linac section</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="PyDMDateTimeEdit" name="test_date">
+         <property name="toolTip">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="PyDMEnumComboBox" name="pick_cm">
+         <property name="toolTip">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="PyDMEnumComboBox" name="pick_cavity">
+         <property name="toolTip">
+          <string/>
          </property>
         </widget>
        </item>
@@ -211,102 +207,72 @@
       <attribute name="title">
        <string>StripTools &amp;&amp; Interlocks</string>
       </attribute>
-      <widget class="QWidget" name="gridLayoutWidget">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>50</y>
-         <width>831</width>
-         <height>1081</height>
-        </rect>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_5">
-        <item row="11" column="1">
-         <widget class="QLabel" name="label_13">
-          <property name="text">
-           <string>Open interlock overview</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QLabel" name="label_12">
-          <property name="text">
-           <string>Open striptool 'cryo'</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="PyDMShellCommand" name="button_striptool_vacuums">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="label_11">
-          <property name="text">
-           <string>Open striptool 'vacuum'</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="label_10">
-          <property name="text">
-           <string>Open striptool 'cavity temperatures'</string>
-          </property>
-         </widget>
-        </item>
-        <item row="11" column="0">
-         <widget class="PyDMEDMDisplayButton" name="button_interlockoverview">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="PyDMShellCommand" name="button_striptool_cavtemps">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="PyDMShellCommand" name="button_striptool_cryo">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="1">
-         <widget class="QLabel" name="label_14">
-          <property name="text">
-           <string>Open Decarad GUI</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0">
-         <widget class="PyDMRelatedDisplayButton" name="button_decaradgui">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="filenames" stdset="0">
-           <stringlist>
-            <string>$TOOLS/pydm/display/ads/decarad_main.ui</string>
-           </stringlist>
-          </property>
-          <property name="macros" stdset="0">
-           <stringlist>
-            <string>P=&quot;RADM:SYS0:200&quot;</string>
-            <string>M=2</string>
-           </stringlist>
-          </property>
-          <property name="openInNewWindow" stdset="0">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
+      <layout class="QGridLayout" name="gridLayout_7">
+       <item row="4" column="0">
+        <widget class="PyDMEDMDisplayButton" name="button_interlockoverview">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="text">
+          <string>Open interlock overview</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="PyDMShellCommand" name="button_striptool_cavtemps">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="text">
+          <string>Open striptool 'cavity temperatures'</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="PyDMRelatedDisplayButton" name="button_decaradgui">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="text">
+          <string>Open Decarad GUI</string>
+         </property>
+         <property name="filenames" stdset="0">
+          <stringlist>
+           <string>$TOOLS/pydm/display/ads/decarad_main.ui</string>
+          </stringlist>
+         </property>
+         <property name="macros" stdset="0">
+          <stringlist>
+           <string>P=&quot;RADM:SYS0:200&quot;</string>
+           <string>M=2</string>
+          </stringlist>
+         </property>
+         <property name="openInNewWindow" stdset="0">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="PyDMShellCommand" name="button_striptool_cryo">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="text">
+          <string>Open striptool 'cryo'</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="PyDMShellCommand" name="button_striptool_vacuums">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="text">
+          <string>Open striptool 'vacuum'</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tab_tuning">
       <attribute name="title">
