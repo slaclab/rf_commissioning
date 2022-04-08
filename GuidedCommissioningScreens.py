@@ -53,17 +53,18 @@ class GuidedCommissioningScreens(Display):
     def update_current_decarad(self):
         self.current_decarad = self.ui.pick_radmonitor.currentText()
         P = "RADM:SYS0:{decarad}00".format(decarad=self.current_decarad)
-        self.ui.button_decaradgui.macros = ["P={pstring}".format(pstring = P),
-                                            "M={mstring}".format(mstring = self.current_decarad)]
+        self.ui.button_decaradgui.macros = ["P={pstring}".format(pstring=P),
+                                            "M={mstring}".format(mstring=self.current_decarad)]
 
     def initial_setup(self):
         # set variables for other tabs
         # Striptool + Interlock tab
 
         self.ui.button_interlockoverview.filenames = ['$TOOLS/edm/display/llrf/rf_srf_intlk_nocryo_embed.edl']
+        self.ui.button_interlockoverview.macros = ['C=1,RFS=1A,R=1,CM=ACCL:L0B:01,ID=01,CH=1']
 
         self.ui.button_striptools.commands = [
-            'srf_makeAutoPlot.py st cavtemps {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cavtemps.stp'.format(
+            'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
                 prefix=self.current_cm.pvPrefix[:-2])
         ]
 
