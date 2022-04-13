@@ -100,7 +100,7 @@ class GuidedCommissioningScreens(Display):
         else:
             ch = 1
 
-        macro_string = ";".join(
+        macro_string = "; ".join(
             ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
              "CH={ch}".format(ch=ch), "ID={id}".format(id=id)])
         return macro_string
