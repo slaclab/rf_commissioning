@@ -91,7 +91,7 @@ class GuidedCommissioningScreens(Display):
         else:
             r = 'B'
 
-        cm = self.current_cm.pvPrefix[:-2]  # need to remove trailing colon and zeroes to match needed format
+        cm = self.current_cm.pvPrefix[:-3]  # need to remove trailing colon and zeroes to match needed format
 
         id = self.current_cm.name
 
