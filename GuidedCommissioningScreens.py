@@ -50,6 +50,8 @@ class GuidedCommissioningScreens(Display):
         self.current_cm = util.COMMISSIONING_CRYOMODULE_OBJECTS[self.ui.pick_cm.currentText()]
         self.current_cavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
+        self.ui.button_interlockoverview.macros = [self.make_interlock_macro_string()]
+
     def update_current_decarad(self):
         self.current_decarad = self.ui.pick_radmonitor.currentText()
         P = "RADM:SYS0:{decarad}00".format(decarad=self.current_decarad)
@@ -60,8 +62,8 @@ class GuidedCommissioningScreens(Display):
         # set variables for other tabs
         # Striptool + Interlock tab
 
-        self.ui.button_interlockoverview.filenames = ['$TOOLS/edm/display/llrf/rf_srf_intlk_nocryo_embed.edl']
-        self.ui.button_interlockoverview.macros = ['C=1,RFS=1A,R=1,CM=ACCL:L0B:01,ID=01,CH=1']
+        self.ui.button_interlockoverview.filenames = ["$TOOLS/edm/display/llrf/rf_srf_intlk_nocryo_embed.edl"]
+        # self.ui.button_interlockoverview.macros = ["C=1; RFS=1A; R=A; CM=ACCL:L0B:01; ID=01; CH=1"]
 
         self.ui.button_striptools.commands = [
             'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
@@ -95,5 +97,6 @@ class GuidedCommissioningScreens(Display):
         else:
             ch = 1
 
-        macro_string = "C={c},RFS={rfs},R={r},CM={cm},CH={ch},ID={id}".format(c=c, rfs=rfs, r=r, cm=cm, ch=ch, id=id)
+        macro_string = "C={c}; RFS={rfs}; R={r}; CM={cm}; CH={ch}; ID={id}".format(c=c, rfs=rfs, r=r, cm=cm, ch=ch,
+                                                                                   id=id)
         return macro_string
