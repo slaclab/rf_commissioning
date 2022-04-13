@@ -52,9 +52,9 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
         # button_interlockoverview is an PyDMEDMDisplaybutton
-        self.ui.button_interlockoverview.macros = [self.macro_string]
-        print(self.macro_string)
-        print("C=1; RFS=1A; R=A; CM=ACCL:L0B:01; ID=01; CH=1")
+        # self.ui.button_interlockoverview.macros = [self.macro_string]
+        self.ui.button_interlockoverview.macros = ["C=1; RFS=1A; R=A; CM=ACCL:L0B:01; ID=01; CH=1"]
+        print(self.macro_string == "C=1; RFS=1A; R=A; CM=ACCL:L0B:01; ID=01; CH=1")
 
     def update_current_decarad(self):
         self.current_decarad = self.ui.pick_radmonitor.currentText()
