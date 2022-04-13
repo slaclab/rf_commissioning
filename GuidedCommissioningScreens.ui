@@ -239,6 +239,9 @@
          <property name="text">
           <string>Open interlock overview</string>
          </property>
+         <property name="macros" stdset="0">
+          <stringlist notr="true"/>
+         </property>
         </widget>
        </item>
       </layout>

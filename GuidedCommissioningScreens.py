@@ -24,6 +24,7 @@ class GuidedCommissioningScreens(Display):
         self.ui.label_8.setText('not defined yet')
 
         # setup: StripTool & Interlock
+        # button_decaradgui is an PyDMRelatedDisplayButton
         self.ui.button_decaradgui.filenames = ["$TOOLS/pydm/display/ads/decarad_main.ui"]
         self.ui.button_decaradgui.openInNewWindow = True
         self.update_current_decarad()
@@ -50,6 +51,7 @@ class GuidedCommissioningScreens(Display):
         self.current_cm = util.COMMISSIONING_CRYOMODULE_OBJECTS[self.ui.pick_cm.currentText()]
         self.current_cavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
+        # button_interlockoverview is an PyDMEDMDisplaybutton
         self.ui.button_interlockoverview.macros = [self.macro_string]
 
     def update_current_decarad(self):
@@ -98,6 +100,7 @@ class GuidedCommissioningScreens(Display):
         else:
             ch = 1
 
-        macro_string = ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
-                        "CH={ch}".format(ch=ch), "ID={id}".format(id=id)]
+        macro_string = ";".join(
+            ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
+             "CH={ch}".format(ch=ch), "ID={id}".format(id=id)])
         return macro_string
