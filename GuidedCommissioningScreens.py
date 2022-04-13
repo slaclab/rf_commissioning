@@ -104,5 +104,5 @@ class GuidedCommissioningScreens(Display):
 
         macro_string = "; ".join(
             ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
-             "CH={ch}".format(ch=ch), "ID={id}".format(id=id)])
+             "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
         return macro_string
