@@ -50,7 +50,7 @@ class GuidedCommissioningScreens(Display):
         self.current_cm = util.COMMISSIONING_CRYOMODULE_OBJECTS[self.ui.pick_cm.currentText()]
         self.current_cavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
-        self.ui.button_interlockoverview.macros = [self.make_interlock_macro_string()]
+        self.ui.button_interlockoverview.macros = [self.macro_string]
 
     def update_current_decarad(self):
         self.current_decarad = self.ui.pick_radmonitor.currentText()
@@ -70,7 +70,8 @@ class GuidedCommissioningScreens(Display):
                 prefix=self.current_cm.pvPrefix[:-2])
         ]
 
-    def make_interlock_macro_string(self):
+    @property
+    def macro_string(self):
 
         c = str(self.current_cavity.number)
 
@@ -97,6 +98,6 @@ class GuidedCommissioningScreens(Display):
         else:
             ch = 1
 
-        macro_string = "C={c}; RFS={rfs}; R={r}; CM={cm}; CH={ch}; ID={id}".format(c=c, rfs=rfs, r=r, cm=cm, ch=ch,
-                                                                                   id=id)
+        macro_string = ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
+                        "CH={ch}".format(ch=ch), "ID={id}".format(id=id)]
         return macro_string
