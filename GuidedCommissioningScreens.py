@@ -65,7 +65,6 @@ class GuidedCommissioningScreens(Display):
         # Striptool + Interlock tab
 
         self.ui.button_interlockoverview.filenames = ["$TOOLS/edm/display/llrf/rf_srf_intlk_nocryo_embed.edl"]
-        # self.ui.button_interlockoverview.macros = ["C=1; RFS=1A; R=A; CM=ACCL:L0B:01; ID=01; CH=1"]
 
         self.ui.button_striptools.commands = [
             'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(

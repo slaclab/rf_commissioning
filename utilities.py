@@ -100,6 +100,11 @@ class CommissioningCryomodule(Cryomodule):
         self.magnet_checked: bool = False
         self.unit_test_complete: bool = False
 
+        magnet_prefix = "{{type}}:{linac}:{cm}85".format(linac=self.linac.name, cm=self.name)
+        self.quad_prefix = magnet_prefix.format(type="QUAD")
+        self.xcor_prefix = magnet_prefix.format(type="XCOR")
+        self.ycor_prefix = magnet_prefix.format(type="YCOR")
+
 
 COMMISSIONING_LINAC_OBJECTS: List[Linac] = []
 
