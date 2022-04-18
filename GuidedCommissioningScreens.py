@@ -1,7 +1,9 @@
 import sys
 from functools import partial
 from os import path
+from typing import List
 
+from PyQt5.QtWidgets import QVBoxLayout
 from pydm import Display
 from qtpy.QtCore import Slot
 
@@ -16,8 +18,8 @@ class GuidedCommissioningScreens(Display):
         self.pathHere = path.dirname(sys.modules[self.__module__].__file__)
 
         # declare class variables
-        self.current_cm = None
-        self.current_cavity = None
+        self.current_cm: util.CommissioningCryomodule = None
+        self.current_cavity: util.CommissioningCavity = None
         self.current_decarad = None
         self.current_pvprefix = None
 
@@ -36,6 +38,24 @@ class GuidedCommissioningScreens(Display):
 
         self.magnet_checkout_window = Display(ui_filename=self.getPath("MagnetScreen.ui"))
         self.ui.button_magnet_checkout.clicked.connect(partial(self.showDisplay, self.magnet_checkout_window))
+
+        magnet_VBoxLayout_list: List[
+            QVBoxLayout] = self.magnet_checkout_window.ui.magnet_template_repeater.findChildren(QVBoxLayout)
+        for VBoxLayout in magnet_VBoxLayout_list:
+            # the magnet reset button is the second item in the ui-file, hence '1'
+            resetbutton = VBoxLayout.itemAt(1)
+            resetbutton.clicked.connect(partial(self.reset_magnet, resetbutton.accessibleName()))
+
+    def reset_magnet(self, accessible_name):
+        # '10' is the equivalent to 'reset' for the control PV
+        if accessible_name == 'Quad':
+            self.current_cm.quad_control_pv.put(10)
+        elif accessible_name == 'XCor':
+            self.current_cm.xcor_control_pv.put(10)
+        elif accessible_name == 'YCor':
+            self.current_cm.ycor_control_pv.put(10)
+        else:
+            raise Exception('Invalid magnet type')
 
     def ui_filename(self):
         return 'GuidedCommissioningScreens.ui'

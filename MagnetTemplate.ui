@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>275</width>
-    <height>334</height>
+    <width>287</width>
+    <height>343</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,171 +22,178 @@
      <property name="title">
       <string>${magnetType}</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QLabel" name="label_2">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Interlock status</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="PyDMByteIndicator" name="PyDMByteIndicator_2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="channel" stdset="0">
+             <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
+            </property>
+            <property name="onColor" stdset="0">
+             <color>
+              <red>255</red>
+              <green>0</green>
+              <blue>0</blue>
+             </color>
+            </property>
+            <property name="offColor" stdset="0">
+             <color>
+              <red>0</red>
+              <green>255</green>
+              <blue>0</blue>
+             </color>
+            </property>
+            <property name="showLabels" stdset="0">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="PyDMLabel" name="PyDMLabel">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>placeholder</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="PyDMPushButton" name="PyDMPushButton">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="accessibleName">
+           <string>${magnetType}</string>
+          </property>
           <property name="text">
-           <string>Interlock status</string>
+           <string>Reset powersupply</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_2">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <property name="bottomMargin">
+           <number>0</number>
           </property>
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="channel" stdset="0">
-           <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
-          </property>
-          <property name="onColor" stdset="0">
-           <color>
-            <red>255</red>
-            <green>0</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="offColor" stdset="0">
-           <color>
-            <red>0</red>
-            <green>255</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="showLabels" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>PS On/Off status</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="PyDMByteIndicator" name="PyDMByteIndicator">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="channel" stdset="0">
+             <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
+            </property>
+            <property name="onColor" stdset="0">
+             <color>
+              <red>255</red>
+              <green>0</green>
+              <blue>0</blue>
+             </color>
+            </property>
+            <property name="offColor" stdset="0">
+             <color>
+              <red>0</red>
+              <green>255</green>
+              <blue>0</blue>
+             </color>
+            </property>
+            <property name="showLabels" stdset="0">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="PyDMLabel" name="PyDMLabel_2">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>placeholder</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
-         <widget class="PyDMLabel" name="PyDMLabel">
+         <widget class="PyDMPushButton" name="PyDMPushButton_2">
           <property name="toolTip">
            <string/>
           </property>
           <property name="text">
-           <string>placeholder</string>
+           <string>Powersupply On/Off</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="PyDMPushButton" name="PyDMPushButton_3">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="text">
+           <string>Degauss</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton">
+          <property name="text">
+           <string>Set BDES to 8.5 and trim</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_2">
+          <property name="text">
+           <string>Set BDES to 0 and trim</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="PyDMEDMDisplayButton" name="PyDMEDMDisplayButton">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="text">
+           <string>Open EDM expert screen</string>
           </property>
          </widget>
         </item>
        </layout>
-      </item>
-      <item>
-       <widget class="PyDMPushButton" name="PyDMPushButton">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="text">
-         <string>Reset powersupply</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>PS On/Off status</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="PyDMByteIndicator" name="PyDMByteIndicator">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="channel" stdset="0">
-           <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
-          </property>
-          <property name="onColor" stdset="0">
-           <color>
-            <red>255</red>
-            <green>0</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="offColor" stdset="0">
-           <color>
-            <red>0</red>
-            <green>255</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="showLabels" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="PyDMLabel" name="PyDMLabel_2">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="text">
-           <string>placeholder</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="PyDMPushButton" name="PyDMPushButton_2">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="text">
-         <string>Powersupply On/Off</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="PyDMPushButton" name="PyDMPushButton_3">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="text">
-         <string>Degauss</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pushButton">
-        <property name="text">
-         <string>Set BDES to 8.5 and trim</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pushButton_2">
-        <property name="text">
-         <string>Set BDES to 0 and trim</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="PyDMEDMDisplayButton" name="PyDMEDMDisplayButton">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="text">
-         <string>Open EDM expert screen</string>
-        </property>
-       </widget>
       </item>
      </layout>
     </widget>
