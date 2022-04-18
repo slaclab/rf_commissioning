@@ -21,14 +21,14 @@
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="1">
-       <widget class="PyDMLabel" name="PyDMLabel_4">
+       <widget class="PyDMLabel" name="label_selphaseoffset_rdbk">
         <property name="toolTip">
          <string/>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="PyDMLineEdit" name="PyDMLineEdit">
+       <widget class="PyDMLineEdit" name="lineedit_selphaseoffset">
         <property name="toolTip">
          <string/>
         </property>
@@ -42,14 +42,14 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="PyDMSlider" name="PyDMSlider">
+       <widget class="PyDMSlider" name="slider_selphaseoffset">
         <property name="toolTip">
          <string/>
         </property>
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="PyDMWaveformPlot" name="PyDMWaveformPlot_2">
+       <widget class="PyDMWaveformPlot" name="waveform_cheeto">
         <property name="toolTip">
          <string/>
         </property>
@@ -82,7 +82,7 @@
     </widget>
    </item>
    <item row="5" column="1">
-    <widget class="PyDMRelatedDisplayButton" name="PyDMRelatedDisplayButton">
+    <widget class="PyDMRelatedDisplayButton" name="button_open_microphonics_gui">
      <property name="toolTip">
       <string/>
      </property>
@@ -100,21 +100,21 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="button_ssa_on">
           <property name="text">
            <string>SSA on</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_2">
+         <widget class="QPushButton" name="button_ssa_off">
           <property name="text">
            <string>SSA off</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="PyDMLabel" name="PyDMLabel">
+         <widget class="PyDMLabel" name="label_ssa_status">
           <property name="toolTip">
            <string/>
           </property>
@@ -135,28 +135,28 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_3">
+         <widget class="QPushButton" name="button_rfmode_sel">
           <property name="text">
            <string>SEL</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_4">
+         <widget class="QPushButton" name="button_rfmode_sela">
           <property name="text">
            <string>SELA</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_5">
+         <widget class="QPushButton" name="button_rfmode_selap">
           <property name="text">
            <string>SELAP</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="PyDMLabel" name="PyDMLabel_2">
+         <widget class="PyDMLabel" name="label_rfmode_rdbk">
           <property name="toolTip">
            <string/>
           </property>
@@ -170,21 +170,21 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QPushButton" name="pushButton_6">
+         <widget class="QPushButton" name="button_rf_on">
           <property name="text">
            <string>RF on</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_7">
+         <widget class="QPushButton" name="button_rf_off">
           <property name="text">
            <string>RF off</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="PyDMLabel" name="PyDMLabel_3">
+         <widget class="PyDMLabel" name="label_rfstatus_rdbk">
           <property name="toolTip">
            <string/>
           </property>
@@ -316,7 +316,7 @@
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="PyDMWaveformPlot" name="PyDMWaveformPlot">
+    <widget class="PyDMWaveformPlot" name="waveform_rfsignals">
      <property name="toolTip">
       <string/>
      </property>

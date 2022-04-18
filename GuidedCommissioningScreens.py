@@ -1,4 +1,9 @@
+import sys
+from functools import partial
+from os import path
+
 from pydm import Display
+from qtpy.QtCore import Slot
 
 import utilities as util
 
@@ -7,6 +12,8 @@ class GuidedCommissioningScreens(Display):
 
     def __init__(self, parent=None, args=None):
         super(GuidedCommissioningScreens, self).__init__(parent=parent, args=args)
+
+        self.pathHere = path.dirname(sys.modules[self.__module__].__file__)
 
         # declare class variables
         self.current_cm = None
@@ -19,10 +26,6 @@ class GuidedCommissioningScreens(Display):
 
         self.update_current_cavity_and_cm()
 
-        # setup: magnet tab
-        self.ui.label_7.setText('Current cryomodule is:')
-        self.ui.label_8.setText('not defined yet')
-
         # setup: StripTool & Interlock
         # button_decaradgui is an PyDMRelatedDisplayButton
         self.ui.button_decaradgui.filenames = ["$TOOLS/pydm/display/ads/decarad_main.ui"]
@@ -31,8 +34,14 @@ class GuidedCommissioningScreens(Display):
 
         self.initial_setup()
 
+        self.magnet_checkout_window = Display(ui_filename=self.getPath("MagnetScreen.ui"))
+        self.ui.button_magnet_checkout.clicked.connect(partial(self.showDisplay, self.magnet_checkout_window))
+
     def ui_filename(self):
         return 'GuidedCommissioningScreens.ui'
+
+    def getPath(self, fileName):
+        return path.join(self.pathHere, fileName)
 
     def setup_combo_boxes(self):
         self.ui.testlead.addItems(util.testlead_list)
@@ -103,3 +112,14 @@ class GuidedCommissioningScreens(Display):
             ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
              "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
         return macro_string
+
+    @Slot()
+    def showDisplay(self, display):
+        # type: (QWidget) -> None
+        display.show()
+
+        # brings the display to the front
+        display.raise_()
+
+        # gives the display focus
+        display.activateWindow()
