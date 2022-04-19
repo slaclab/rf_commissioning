@@ -1,12 +1,14 @@
 import sys
 from functools import partial
 from os import path
-from typing import List
+from typing import List, Dict
 
-from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QVBoxLayout, QWidget, QPushButton
+from edmbutton import PyDMEDMDisplayButton
 from pydm import Display
 from qtpy.QtCore import Slot
 
+import scLinac
 import utilities as util
 
 
@@ -23,6 +25,11 @@ class GuidedCommissioningScreens(Display):
         self.current_decarad = None
         self.current_pvprefix = None
 
+        self.magnet_checkout_window = Display(ui_filename=self.getPath("MagnetScreen.ui"))
+        self.ui.button_magnet_checkout.clicked.connect(partial(self.showDisplay, self.magnet_checkout_window))
+
+        self._magnet_edm_buttons: Dict[str, PyDMEDMDisplayButton] = {}
+
         # setup: initial setup tab
         self.setup_combo_boxes()
 
@@ -36,26 +43,44 @@ class GuidedCommissioningScreens(Display):
 
         self.initial_setup()
 
-        self.magnet_checkout_window = Display(ui_filename=self.getPath("MagnetScreen.ui"))
-        self.ui.button_magnet_checkout.clicked.connect(partial(self.showDisplay, self.magnet_checkout_window))
-
         magnet_VBoxLayout_list: List[
             QVBoxLayout] = self.magnet_checkout_window.ui.magnet_template_repeater.findChildren(QVBoxLayout)
         for VBoxLayout in magnet_VBoxLayout_list:
             # the magnet reset button is the second item in the ui-file, hence '1'
-            resetbutton = VBoxLayout.itemAt(1)
-            resetbutton.clicked.connect(partial(self.reset_magnet, resetbutton.accessibleName()))
+            reset_button: QPushButton = VBoxLayout.itemAt(1).widget()
+            reset_button.clicked.connect(partial(self.magnet_control, reset_button.accessibleName(),
+                                                 util.MAGNET_RESET_VALUE))
+            # the power supply on button is the 1st item in a horizontal layout in 4th place in the ui-file,
+            # hence '3' and then '0'
+            on_button: QPushButton = VBoxLayout.itemAt(3).itemAt(0).widget()
+            on_button.clicked.connect(partial(self.magnet_control, on_button.accessibleName(), util.MAGNET_ON_VALUE))
+            # the power supply off button is the 2st item in a horizontal layout in 4th place in the ui-file,
+            # hence '3' and then '1'
+            off_button: QPushButton = VBoxLayout.itemAt(3).itemAt(1).widget()
+            off_button.clicked.connect(partial(self.magnet_control, off_button.accessibleName(), util.MAGNET_OFF_VALUE))
+            # the degauss button is the 5th item in the ui-file, hence '4'
+            degauss_button: QPushButton = VBoxLayout.itemAt(4).widget()
+            degauss_button.clicked.connect(
+                partial(self.magnet_control, degauss_button.accessibleName(), util.MAGNET_DEGAUSS_VALUE))
+            # the nominal trim button is the 6th element in the ui-file, hence '5'
+            nominal_trim_button: QPushButton = VBoxLayout.itemAt(5).widget()
+            nominal_trim_button.setText('Set BDES to {nominalbdes} and trim'.format(nominalbdes=util.NOMINAL_BDES))
+            nominal_trim_button.clicked.connect(
+                partial(self.magnet_trim, nominal_trim_button.accessibleName(), util.NOMINAL_BDES))
+            # the zero trim button is the 7th element in the ui-file, hence '6'
+            zero_trim_button: QPushButton = VBoxLayout.itemAt(6).widget()
+            zero_trim_button.clicked.connect(
+                partial(self.magnet_trim, zero_trim_button.accessibleName(), 0))
+            # the edm expert display button is the 8th element in the ui-file, hence '7'
+            magnet_expert_button: PyDMEDMDisplayButton = VBoxLayout.itemAt(7).widget()
+            self._magnet_edm_buttons[magnet_expert_button.accessibleName()] = magnet_expert_button
 
-    def reset_magnet(self, accessible_name):
-        # '10' is the equivalent to 'reset' for the control PV
-        if accessible_name == 'Quad':
-            self.current_cm.quad_control_pv.put(10)
-        elif accessible_name == 'XCor':
-            self.current_cm.xcor_control_pv.put(10)
-        elif accessible_name == 'YCor':
-            self.current_cm.ycor_control_pv.put(10)
-        else:
-            raise Exception('Invalid magnet type')
+    def magnet_control(self, accessible_name, enum_value):
+        self.current_cm.controlPV(accessible_name).put(enum_value)
+
+    def magnet_trim(self, accessible_name, bdes):
+        self.current_cm.bdesPV(accessible_name).put(bdes)
+        self.magnet_control(accessible_name, util.MAGNET_TRIM_VALUE)
 
     def ui_filename(self):
         return 'GuidedCommissioningScreens.ui'
@@ -64,24 +89,28 @@ class GuidedCommissioningScreens(Display):
         return path.join(self.pathHere, fileName)
 
     def setup_combo_boxes(self):
-        self.ui.testlead.addItems(util.testlead_list)
-
-        self.ui.pick_cavity.addItems(util.cavity_list)
+        self.ui.testlead.addItems(util.TESTLEAD_LIST)
 
         self.ui.pick_cavity.currentIndexChanged.connect(self.update_current_cavity_and_cm)
 
         self.ui.pick_radmonitor.currentIndexChanged.connect(self.update_current_decarad)
 
-        self.ui.pick_cm.addItems(util.cryomodule_list)
+        self.ui.pick_cm.addItems(scLinac.CRYOMODULE_OBJECTS.keys())
 
         self.ui.pick_cm.currentIndexChanged.connect(self.update_current_cavity_and_cm)
 
     def update_current_cavity_and_cm(self):
-        self.current_cm = util.COMMISSIONING_CRYOMODULE_OBJECTS[self.ui.pick_cm.currentText()]
-        self.current_cavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
+        self.current_cm: util.CommissioningCryomodule = util.COMMISSIONING_CRYOMODULE_OBJECTS[
+            self.ui.pick_cm.currentText()]
+        self.current_cavity: util.CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
         # button_interlockoverview is an PyDMEDMDisplaybutton
         self.ui.button_interlockoverview.macros = [self.macro_string]
+
+        for magnettype, edmbutton in self._magnet_edm_buttons.items():
+            edmbutton.macros = ["DEV={dev}".format(dev=self.current_cm.magnetPVs[magnettype].prefix)]
+
+        self.magnet_checkout_window.ui.magnet_groupbox.setTitle('CM{cm}'.format(cm=self.current_cm.name))
 
     def update_current_decarad(self):
         self.current_decarad = self.ui.pick_radmonitor.currentText()
@@ -92,8 +121,6 @@ class GuidedCommissioningScreens(Display):
     def initial_setup(self):
         # set variables for other tabs
         # Striptool + Interlock tab
-
-        self.ui.button_interlockoverview.filenames = ["$TOOLS/edm/display/llrf/rf_srf_intlk_nocryo_embed.edl"]
 
         self.ui.button_striptools.commands = [
             'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
@@ -134,8 +161,7 @@ class GuidedCommissioningScreens(Display):
         return macro_string
 
     @Slot()
-    def showDisplay(self, display):
-        # type: (QWidget) -> None
+    def showDisplay(self, display: QWidget):
         display.show()
 
         # brings the display to the front

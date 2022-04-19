@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>287</width>
-    <height>343</height>
+    <width>353</width>
+    <height>351</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -150,19 +150,39 @@
          </layout>
         </item>
         <item>
-         <widget class="PyDMPushButton" name="PyDMPushButton_2">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="text">
-           <string>Powersupply On/Off</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="PyDMPushButton" name="PyDMPushButton_2">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="accessibleName">
+             <string>${magnetType}</string>
+            </property>
+            <property name="text">
+             <string>Powersupply On</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_3">
+            <property name="accessibleName">
+             <string>${magnetType}</string>
+            </property>
+            <property name="text">
+             <string>Powersupply Off</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="PyDMPushButton" name="PyDMPushButton_3">
           <property name="toolTip">
            <string/>
+          </property>
+          <property name="accessibleName">
+           <string>${magnetType}</string>
           </property>
           <property name="text">
            <string>Degauss</string>
@@ -171,13 +191,19 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton">
+          <property name="accessibleName">
+           <string>${magnetType}</string>
+          </property>
           <property name="text">
-           <string>Set BDES to 8.5 and trim</string>
+           <string/>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_2">
+          <property name="accessibleName">
+           <string>${magnetType}</string>
+          </property>
           <property name="text">
            <string>Set BDES to 0 and trim</string>
           </property>
@@ -190,6 +216,11 @@
           </property>
           <property name="text">
            <string>Open EDM expert screen</string>
+          </property>
+          <property name="filenames" stdset="0">
+           <stringlist>
+            <string>$TOOLS/edm/display/mgnt/mgnt_unit2.edl</string>
+           </stringlist>
           </property>
          </widget>
         </item>

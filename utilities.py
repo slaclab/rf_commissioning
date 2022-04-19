@@ -1,9 +1,10 @@
+import dataclasses
 from typing import Optional, List, Dict
 
 from epics import PV
 from lcls_tools.devices.scLinac import Cavity, Cryomodule, Linac, LINAC_TUPLES
 
-testlead_list = [
+TESTLEAD_LIST = [
     'Aderhold, Sebastian',
     'Gonnella, Dan',
     'Maniscalco, James',
@@ -12,56 +13,22 @@ testlead_list = [
     'Zacarias, Lisa',
 ]
 
-cavity_list = [
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-]
+# these values are based on the list of enum states found by probing {Magnettype}:L{x}B:{cm}85:CTRL
+MAGNET_RESET_VALUE = 10
+MAGNET_ON_VALUE = 11
+MAGNET_OFF_VALUE = 12
+MAGNET_DEGAUSS_VALUE = 13
+MAGNET_TRIM_VALUE = 1
 
-cryomodule_list = [
-    '01',
-    '02',
-    '03',
-    'H1',
-    'H2',
-    '04',
-    '05',
-    '06',
-    '07',
-    '08',
-    '09',
-    '10',
-    '11',
-    '12',
-    '13',
-    '14',
-    '15',
-    '16',
-    '17',
-    '18',
-    '19',
-    '21',
-    '22',
-    '23',
-    '24',
-    '25',
-    '26',
-    '27',
-    '28',
-    '29',
-    '30',
-    '31',
-    '32',
-    '33',
-    '34',
-    '35',
-]
+NOMINAL_BDES = 8.5
+
+
+@dataclasses.dataclass
+class MagnetPVs:
+    def __init__(self, prefix: str):
+        self.bdesPV = PV(prefix + ':BDES')
+        self.controlPV = PV(prefix + ':CTRL')
+        self.prefix = prefix
 
 
 class CommissioningCavity(Cavity):
@@ -100,14 +67,24 @@ class CommissioningCryomodule(Cryomodule):
         self.magnet_checked: bool = False
         self.unit_test_complete: bool = False
 
-        magnet_prefix = "{{type}}:{linac}:{cm}85:".format(linac=self.linac.name, cm=self.name)
-        self.quad_prefix = magnet_prefix.format(type="QUAD")
-        self.xcor_prefix = magnet_prefix.format(type="XCOR")
-        self.ycor_prefix = magnet_prefix.format(type="YCOR")
+        magnet_prefix = "{{type}}:{linac}:{cm}85".format(linac=self.linac.name, cm=self.name)
+        quad_prefix = magnet_prefix.format(type="QUAD")
+        xcor_prefix = magnet_prefix.format(type="XCOR")
+        ycor_prefix = magnet_prefix.format(type="YCOR")
 
-        self.quad_control_pv = PV(self.quad_prefix + 'CTRL')
-        self.xcor_control_pv = PV(self.xcor_prefix + 'CTRL')
-        self.ycor_control_pv = PV(self.ycor_prefix + 'CTRL')
+        self._magnetPVs: Dict[str, MagnetPVs] = {'Quad': MagnetPVs(quad_prefix),
+                                                 'XCor': MagnetPVs(xcor_prefix),
+                                                 'YCor': MagnetPVs(ycor_prefix)}
+
+    def bdesPV(self, magnet_type: str):
+        return self._magnetPVs[magnet_type].bdesPV
+
+    def controlPV(self, magnet_type: str):
+        return self._magnetPVs[magnet_type].controlPV
+
+    @property
+    def magnetPVs(self):
+        return self._magnetPVs
 
 
 COMMISSIONING_LINAC_OBJECTS: List[Linac] = []

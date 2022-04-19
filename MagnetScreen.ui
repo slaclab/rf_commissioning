@@ -6,66 +6,48 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>893</width>
-    <height>506</height>
+    <width>907</width>
+    <height>432</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="0" rowspan="2">
-    <widget class="PyDMTemplateRepeater" name="magnet_template_repeater">
-     <property name="toolTip">
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="magnet_groupbox">
+     <property name="title">
       <string/>
      </property>
-     <property name="frameShape">
-      <enum>QFrame::Box</enum>
-     </property>
-     <property name="layoutType" stdset="0">
-      <enum>PyDMTemplateRepeater::Horizontal</enum>
-     </property>
-     <property name="countShownInDesigner" stdset="0">
-      <number>3</number>
-     </property>
-     <property name="templateFilename" stdset="0">
-      <string>MagnetTemplate.ui</string>
-     </property>
-     <property name="dataSource" stdset="0">
-      <string>MagnetTemplate.json</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="2">
-    <widget class="PyDMShellCommand" name="button_open_magnetstriptools">
-     <property name="toolTip">
-      <string/>
-     </property>
-     <property name="text">
-      <string>Open Striptools</string>
-     </property>
-     <property name="allowMultipleExecutions" stdset="0">
-      <bool>true</bool>
-     </property>
-     <property name="commands" stdset="0">
-      <stringlist>
-       <string>srf_makeAutoPlot.py st cmmag ACCL:L2B:17</string>
-       <string>srf_makeAutoPlot.py st magtemps 02</string>
-       <string>StripTool $STRIP_CONFIGFILE_DIR/srf_magtemps.stp &amp;</string>
-       <string>StripTool $STRIP_CONFIGFILE_DIR/srf_cmmag.stp &amp;</string>
-       <string></string>
-      </stringlist>
-     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="PyDMTemplateRepeater" name="magnet_template_repeater">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
+        </property>
+        <property name="layoutType" stdset="0">
+         <enum>PyDMTemplateRepeater::Horizontal</enum>
+        </property>
+        <property name="countShownInDesigner" stdset="0">
+         <number>3</number>
+        </property>
+        <property name="templateFilename" stdset="0">
+         <string>MagnetTemplate.ui</string>
+        </property>
+        <property name="dataSource" stdset="0">
+         <string>MagnetTemplate.json</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>PyDMShellCommand</class>
-   <extends>QPushButton</extends>
-   <header>pydm.widgets.shell_command</header>
-  </customwidget>
   <customwidget>
    <class>PyDMTemplateRepeater</class>
    <extends>QFrame</extends>
