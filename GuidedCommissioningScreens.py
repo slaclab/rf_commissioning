@@ -33,15 +33,11 @@ class GuidedCommissioningScreens(Display):
         # setup: initial setup tab
         self.setup_combo_boxes()
 
-        self.update_current_cavity_and_cm()
-
         # setup: StripTool & Interlock
         # button_decaradgui is an PyDMRelatedDisplayButton
         self.ui.button_decaradgui.filenames = ["$TOOLS/pydm/display/ads/decarad_main.ui"]
         self.ui.button_decaradgui.openInNewWindow = True
         self.update_current_decarad()
-
-        self.initial_setup()
 
         magnet_VBoxLayout_list: List[
             QVBoxLayout] = self.magnet_checkout_window.ui.magnet_template_repeater.findChildren(QVBoxLayout)
@@ -75,6 +71,10 @@ class GuidedCommissioningScreens(Display):
             magnet_expert_button: PyDMEDMDisplayButton = VBoxLayout.itemAt(7).widget()
             self._magnet_edm_buttons[magnet_expert_button.accessibleName()] = magnet_expert_button
 
+        self.update_current_cavity_and_cm()
+
+        self.initial_setup()
+
     def magnet_control(self, accessible_name, enum_value):
         self.current_cm.controlPV(accessible_name).put(enum_value)
 
@@ -106,10 +106,11 @@ class GuidedCommissioningScreens(Display):
 
         # button_interlockoverview is an PyDMEDMDisplaybutton
         self.ui.button_interlockoverview.macros = [self.macro_string]
+        print(self.ui.button_interlockoverview.macros)
 
         for magnettype, edmbutton in self._magnet_edm_buttons.items():
             edmbutton.macros = ["DEV={dev}".format(dev=self.current_cm.magnetPVs[magnettype].prefix)]
-
+            print(edmbutton.macros)
         self.magnet_checkout_window.ui.magnet_groupbox.setTitle('CM{cm}'.format(cm=self.current_cm.name))
 
     def update_current_decarad(self):

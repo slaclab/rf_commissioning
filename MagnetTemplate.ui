@@ -214,6 +214,9 @@
           <property name="toolTip">
            <string/>
           </property>
+          <property name="accessibleName">
+           <string>${magnetType}</string>
+          </property>
           <property name="text">
            <string>Open EDM expert screen</string>
           </property>
