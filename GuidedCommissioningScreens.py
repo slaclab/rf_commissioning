@@ -5,10 +5,10 @@ from typing import List, Dict
 
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QPushButton
 from edmbutton import PyDMEDMDisplayButton
+from lcls_tools.devices.scLinac import CRYOMODULE_OBJECTS
 from pydm import Display
 from qtpy.QtCore import Slot
 
-import scLinac
 import utilities as util
 
 
@@ -95,7 +95,7 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.pick_radmonitor.currentIndexChanged.connect(self.update_current_decarad)
 
-        self.ui.pick_cm.addItems(scLinac.CRYOMODULE_OBJECTS.keys())
+        self.ui.pick_cm.addItems(CRYOMODULE_OBJECTS.keys())
 
         self.ui.pick_cm.currentIndexChanged.connect(self.update_current_cavity_and_cm)
 
