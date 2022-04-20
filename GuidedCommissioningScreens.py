@@ -1,15 +1,16 @@
-import sys
-from functools import partial
 from os import path
-from typing import List, Dict
 
+import sys
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QPushButton
 from edmbutton import PyDMEDMDisplayButton
-from lcls_tools.devices.scLinac import CRYOMODULE_OBJECTS
+from functools import partial
 from pydm import Display
+from pydm.widgets import PyDMByteIndicator, PyDMLabel
 from qtpy.QtCore import Slot
+from typing import List, Dict, Optional
 
 import utilities as util
+from lcls_tools.devices.scLinac import CRYOMODULE_OBJECTS
 
 
 class GuidedCommissioningScreens(Display):
@@ -20,8 +21,8 @@ class GuidedCommissioningScreens(Display):
         self.pathHere = path.dirname(sys.modules[self.__module__].__file__)
 
         # declare class variables
-        self.current_cm: util.CommissioningCryomodule = None
-        self.current_cavity: util.CommissioningCavity = None
+        self.current_cm: Optional[util.CommissioningCryomodule] = None
+        self.current_cavity: Optional[util.CommissioningCavity] = None
         self.current_decarad = None
         self.current_pvprefix = None
 
@@ -39,18 +40,33 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_decaradgui.openInNewWindow = True
         self.update_current_decarad()
 
+        self.magnet_interlock_labels = {}
+        self.magnet_interlock_indicators = {}
+        self.magnet_ps_status_labels = {}
+        self.magnet_ps_status_indicators = {}
+
         magnet_VBoxLayout_list: List[
             QVBoxLayout] = self.magnet_checkout_window.ui.magnet_template_repeater.findChildren(QVBoxLayout)
         for VBoxLayout in magnet_VBoxLayout_list:
+            # the interlock status is the first element in the ui-file, with the byte indicator in 2nd and the text label in 3rd position, hence '0' then '1' and '2'
+            interlock_indicator: PyDMByteIndicator = VBoxLayout.itemAt(0).itemAt(1).widget()
+            interlock_label: PyDMLabel = VBoxLayout.itemAt(0).itemAt(2).widget()
+            self.magnet_interlock_labels[interlock_label.accessibleName()] = interlock_label
+            self.magnet_interlock_indicators[interlock_indicator.accessibleName()] = interlock_indicator
             # the magnet reset button is the second item in the ui-file, hence '1'
             reset_button: QPushButton = VBoxLayout.itemAt(1).widget()
             reset_button.clicked.connect(partial(self.magnet_control, reset_button.accessibleName(),
                                                  util.MAGNET_RESET_VALUE))
+            # the power supply status is the third element in the ui-file, with the byte indicator in 2nd and the text label in 3rd position, hence '2' then '1' and '2'
+            ps_status_indicator: PyDMByteIndicator = VBoxLayout.itemAt(2).itemAt(1).widget()
+            ps_status_label: PyDMLabel = VBoxLayout.itemAt(2).itemAt(2).widget()
+            self.magnet_ps_status_labels[ps_status_label.accessibleName()] = ps_status_label
+            self.magnet_ps_status_indicators[ps_status_indicator.accessibleName()] = ps_status_indicator
             # the power supply on button is the 1st item in a horizontal layout in 4th place in the ui-file,
             # hence '3' and then '0'
             on_button: QPushButton = VBoxLayout.itemAt(3).itemAt(0).widget()
             on_button.clicked.connect(partial(self.magnet_control, on_button.accessibleName(), util.MAGNET_ON_VALUE))
-            # the power supply off button is the 2st item in a horizontal layout in 4th place in the ui-file,
+            # the power supply off button is the 2nd item in a horizontal layout in 4th place in the ui-file,
             # hence '3' and then '1'
             off_button: QPushButton = VBoxLayout.itemAt(3).itemAt(1).widget()
             off_button.clicked.connect(partial(self.magnet_control, off_button.accessibleName(), util.MAGNET_OFF_VALUE))
@@ -76,10 +92,10 @@ class GuidedCommissioningScreens(Display):
         self.initial_setup()
 
     def magnet_control(self, accessible_name, enum_value):
-        self.current_cm.controlPV(accessible_name).put(enum_value)
+        self.current_cm.magnet_name_map[accessible_name].controlPV.put(enum_value)
 
     def magnet_trim(self, accessible_name, bdes):
-        self.current_cm.bdesPV(accessible_name).put(bdes)
+        self.current_cm.magnet_name_map[accessible_name].bdesPV.put(bdes)
         self.magnet_control(accessible_name, util.MAGNET_TRIM_VALUE)
 
     def ui_filename(self):
@@ -106,12 +122,16 @@ class GuidedCommissioningScreens(Display):
 
         # button_interlockoverview is an PyDMEDMDisplaybutton
         self.ui.button_interlockoverview.macros = [self.macro_string]
-        print(self.ui.button_interlockoverview.macros)
 
         for magnettype, edmbutton in self._magnet_edm_buttons.items():
-            edmbutton.macros = ["DEV={dev}".format(dev=self.current_cm.magnetPVs[magnettype].prefix)]
-            print(edmbutton.macros)
+            edmbutton.macros = ["DEV={dev}".format(dev=self.current_cm.magnet_name_map[magnettype].pvprefix[:-1])]
         self.magnet_checkout_window.ui.magnet_groupbox.setTitle('CM{cm}'.format(cm=self.current_cm.name))
+        for magnetprefix in ['Quad', 'XCor', 'YCor']:
+            magnet_object = self.current_cm.magnet_name_map[magnetprefix]
+            self.magnet_interlock_indicators[magnetprefix].channel = magnet_object.interlockPV.pvname
+            self.magnet_interlock_labels[magnetprefix].channel = magnet_object.interlockPV.pvname
+            self.magnet_ps_status_labels[magnetprefix].channel = magnet_object.ps_statusPV.pvname
+            self.magnet_ps_status_indicators[magnetprefix].channel = magnet_object.ps_statusPV.pvname
 
     def update_current_decarad(self):
         self.current_decarad = self.ui.pick_radmonitor.currentText()

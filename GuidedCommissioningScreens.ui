@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_setup">
       <attribute name="title">
@@ -61,7 +61,7 @@
             <item row="0" column="1">
              <widget class="QLabel" name="label_checkout_magnet">
               <property name="text">
-               <string>TextLabel</string>
+               <string>Status</string>
               </property>
              </widget>
             </item>
@@ -75,7 +75,7 @@
             <item row="1" column="1">
              <widget class="QLabel" name="label_piezo_prerf">
               <property name="text">
-               <string>TextLabel</string>
+               <string>Status</string>
               </property>
              </widget>
             </item>
@@ -89,7 +89,7 @@
             <item row="2" column="1">
              <widget class="QLabel" name="label_ssa_char">
               <property name="text">
-               <string>TextLabel</string>
+               <string>Status</string>
               </property>
              </widget>
             </item>
@@ -103,7 +103,7 @@
             <item row="3" column="1">
              <widget class="QLabel" name="label_tune_cavity">
               <property name="text">
-               <string>TextLabel</string>
+               <string>Status</string>
               </property>
              </widget>
             </item>
@@ -117,7 +117,7 @@
             <item row="4" column="1">
              <widget class="QLabel" name="label_measure_8pi9">
               <property name="text">
-               <string>TextLabel</string>
+               <string>Status</string>
               </property>
              </widget>
             </item>
@@ -131,7 +131,7 @@
             <item row="5" column="1">
              <widget class="QLabel" name="label_cavity_calibration">
               <property name="text">
-               <string>TextLabel</string>
+               <string>Status</string>
               </property>
              </widget>
             </item>
@@ -145,7 +145,7 @@
             <item row="6" column="1">
              <widget class="QLabel" name="label_selap_rampup">
               <property name="text">
-               <string>TextLabel</string>
+               <string>Status</string>
               </property>
              </widget>
             </item>
@@ -159,7 +159,7 @@
             <item row="7" column="1">
              <widget class="QLabel" name="label_12hrun">
               <property name="text">
-               <string>TextLabel</string>
+               <string>Status</string>
               </property>
              </widget>
             </item>

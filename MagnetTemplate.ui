@@ -45,8 +45,11 @@
             <property name="toolTip">
              <string/>
             </property>
+            <property name="accessibleName">
+             <string>${magnetType}</string>
+            </property>
             <property name="channel" stdset="0">
-             <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
+             <string/>
             </property>
             <property name="onColor" stdset="0">
              <color>
@@ -71,6 +74,9 @@
            <widget class="PyDMLabel" name="PyDMLabel">
             <property name="toolTip">
              <string/>
+            </property>
+            <property name="accessibleName">
+             <string>${magnetType}</string>
             </property>
             <property name="text">
              <string>placeholder</string>
@@ -115,21 +121,17 @@
             <property name="toolTip">
              <string/>
             </property>
-            <property name="channel" stdset="0">
-             <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
+            <property name="accessibleName">
+             <string>${magnetType}</string>
             </property>
-            <property name="onColor" stdset="0">
-             <color>
-              <red>255</red>
-              <green>0</green>
-              <blue>0</blue>
-             </color>
+            <property name="channel" stdset="0">
+             <string/>
             </property>
             <property name="offColor" stdset="0">
              <color>
-              <red>0</red>
-              <green>255</green>
-              <blue>0</blue>
+              <red>252</red>
+              <green>1</green>
+              <blue>7</blue>
              </color>
             </property>
             <property name="showLabels" stdset="0">
@@ -141,6 +143,9 @@
            <widget class="PyDMLabel" name="PyDMLabel_2">
             <property name="toolTip">
              <string/>
+            </property>
+            <property name="accessibleName">
+             <string>${magnetType}</string>
             </property>
             <property name="text">
              <string>placeholder</string>

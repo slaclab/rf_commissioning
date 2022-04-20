@@ -1,8 +1,7 @@
-import dataclasses
+from epics import PV
 from typing import Optional, List, Dict
 
-from epics import PV
-from lcls_tools.devices.scLinac import Cavity, Cryomodule, Linac, LINAC_TUPLES
+from lcls_tools.devices.scLinac import Cavity, Cryomodule, Linac, LINAC_TUPLES, Magnet
 
 TESTLEAD_LIST = [
     'Aderhold, Sebastian',
@@ -21,14 +20,6 @@ MAGNET_DEGAUSS_VALUE = 13
 MAGNET_TRIM_VALUE = 1
 
 NOMINAL_BDES = 8.5
-
-
-@dataclasses.dataclass
-class MagnetPVs:
-    def __init__(self, prefix: str):
-        self.bdesPV = PV(prefix + ':BDES')
-        self.controlPV = PV(prefix + ':CTRL')
-        self.prefix = prefix
 
 
 class CommissioningCavity(Cavity):
@@ -60,31 +51,24 @@ class CommissioningCavity(Cavity):
         return self.interlock_pv.value == 1
 
 
+class CommissioningMagnet(Magnet):
+    def __init__(self, magnettype, cryomodule):
+        super(CommissioningMagnet, self).__init__(magnettype, cryomodule)
+
+        self.bdesPV = PV(self.pvprefix + 'BDES')
+        self.controlPV = PV(self.pvprefix + 'CTRL')
+        self.interlockPV = PV(self.pvprefix + 'INTLKSUMY')
+        self.ps_statusPV = PV(self.pvprefix + 'STATE')
+
+
 class CommissioningCryomodule(Cryomodule):
-    def __init__(self, cryoName, linacObject, cavityClass=CommissioningCavity):
-        super().__init__(cryoName, linacObject, CommissioningCavity)
+    def __init__(self, cryoName, linacObject, cavityClass=CommissioningCavity, magnetClass=CommissioningMagnet):
+        super().__init__(cryoName, linacObject, CommissioningCavity, CommissioningMagnet)
 
         self.magnet_checked: bool = False
         self.unit_test_complete: bool = False
 
-        magnet_prefix = "{{type}}:{linac}:{cm}85".format(linac=self.linac.name, cm=self.name)
-        quad_prefix = magnet_prefix.format(type="QUAD")
-        xcor_prefix = magnet_prefix.format(type="XCOR")
-        ycor_prefix = magnet_prefix.format(type="YCOR")
-
-        self._magnetPVs: Dict[str, MagnetPVs] = {'Quad': MagnetPVs(quad_prefix),
-                                                 'XCor': MagnetPVs(xcor_prefix),
-                                                 'YCor': MagnetPVs(ycor_prefix)}
-
-    def bdesPV(self, magnet_type: str):
-        return self._magnetPVs[magnet_type].bdesPV
-
-    def controlPV(self, magnet_type: str):
-        return self._magnetPVs[magnet_type].controlPV
-
-    @property
-    def magnetPVs(self):
-        return self._magnetPVs
+        self.magnet_name_map: Dict[str, CommissioningMagnet] = {'Quad': self.quad, 'XCor': self.xcor, 'YCor': self.ycor}
 
 
 COMMISSIONING_LINAC_OBJECTS: List[Linac] = []
