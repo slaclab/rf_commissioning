@@ -1,6 +1,8 @@
+import json
 import sys
 from functools import partial
 from os import path
+from time import sleep
 from typing import List, Dict, Optional
 
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QPushButton
@@ -107,10 +109,6 @@ class GuidedCommissioningScreens(Display):
             magnet_expert_button: PyDMEDMDisplayButton = VBoxLayout.itemAt(7).widget()
             self._magnet_edm_buttons[magnet_expert_button.accessibleName()] = magnet_expert_button
 
-        self.update_current_cavity_and_cm()
-
-        self.initial_setup()
-
         self.live_signals_window = Display(ui_filename=self.getPath("LiveSignals.ui"))
         self.ui.button_livesignals.clicked.connect(partial(self.showDisplay, self.live_signals_window))
 
@@ -127,6 +125,11 @@ class GuidedCommissioningScreens(Display):
                              FREQUENCY_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_frequency)
                              }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
+
+        self.update_current_cavity_and_cm()
+
+        self.ui.load_button.clicked.connect(self.load_results)
+        self.ui.save_button.clicked.connect(self.save_results)
 
     def magnet_control(self, accessible_name, enum_value):
         self.current_cm.magnet_name_map[accessible_name].controlPV.put(enum_value)
@@ -160,6 +163,11 @@ class GuidedCommissioningScreens(Display):
         # button_interlockoverview is an PyDMEDMDisplaybutton
         self.ui.button_interlockoverview.macros = [self.macro_string]
 
+        self.ui.button_striptools.commands = [
+            'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
+                prefix=self.current_cm.pvPrefix[:-2])
+        ]
+
         for magnettype, edmbutton in self._magnet_edm_buttons.items():
             edmbutton.macros = ["DEV={dev}".format(dev=self.current_cm.magnet_name_map[magnettype].pvprefix[:-1])]
         self.magnet_checkout_window.ui.magnet_groupbox.setTitle('CM{cm}'.format(cm=self.current_cm.name))
@@ -177,20 +185,13 @@ class GuidedCommissioningScreens(Display):
                            CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
                            FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs}
 
+        self.time_plot_updater.updatePlots(plot_update_map)
+
     def update_current_decarad(self):
         self.current_decarad = self.ui.pick_radmonitor.currentText()
         P = "RADM:SYS0:{decarad}00".format(decarad=self.current_decarad)
         self.ui.button_decaradgui.macros = ["P={pstring}".format(pstring=P),
                                             "M={mstring}".format(mstring=self.current_decarad)]
-
-    def initial_setup(self):
-        # set variables for other tabs
-        # Striptool + Interlock tab
-
-        self.ui.button_striptools.commands = [
-            'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
-                prefix=self.current_cm.pvPrefix[:-2])
-        ]
 
     @property
     def macro_string(self):
@@ -234,3 +235,57 @@ class GuidedCommissioningScreens(Display):
 
         # gives the display focus
         display.activateWindow()
+
+    def run_piezo_prerf_check(self):
+        # turn RF off
+        self.current_cavity.rf_state_PV.put(0)
+        # set piezo to 'enabled'
+        self.current_cavity.piezo_enable_PV.put(1)
+        # set piezo to 'manual' mode
+        self.current_cavity.piezo_feedback_mode_PV.put(0)
+        # set piezo DC voltage offset to 0V
+        self.current_cavity.piezo_dc_setpoint_PV.put(0)
+        # run the test script
+        self.current_cavity.piezo_prerf_run_check_PV.put(1)
+
+        while self.current_cavity.piezo_prerf_check_status_PV.value == 2:
+            sleep(1)
+        if self.current_cavity.piezo_prerf_check_status_PV.value == 0:
+            print('Piezo pre-rf test script has exited with status \'crash\' ')
+
+        if self.current_cavity.piezo_prerf_cha_status_PV.value == 0 and self.current_cavity.piezo_prerf_chb_status_PV == 0:
+            self.current_cavity.results.piezo_capacitance_a = self.current_cavity.piezo_capacitance_a_PV.value
+            self.current_cavity.results.piezo_capacitance_b = self.current_cavity.piezo_capacitance_b_PV.value
+            self.current_cavity.results.piezo_prerf_checked = True
+            self.ui.label_piezo_prerf.setText('Complete')
+        else:
+            self.ui.label_piezo_prerf.setText('Failed')
+
+    def load_results(self):
+        with open('cryomodule_results.json', 'r+') as f:
+            data = json.load(f)
+            if self.current_cm.name in data:
+                self.current_cm.results.__dict__ = data[self.current_cm.name]
+        with open('cavity_results.json', 'r+') as f:
+            data = json.load(f)
+            if self.current_cm.name in data:
+                cav_data = data[self.current_cm.name]
+                if self.current_cavity.number in cav_data:
+                    self.current_cavity.results.__dict__ = cav_data[self.current_cavity.number]
+
+    def save_results(self):
+        with open('cryomodule_results.json', 'r+') as f:
+            data = json.load(f)
+
+            data[self.current_cm.name] = self.current_cm.results.__dict__
+            f.seek(0)
+            json.dump(data, f)
+            f.truncate()
+        with open('cavity_results.json', 'r+') as f:
+            data = json.load(f)
+            if self.current_cm.name not in data:
+                data[self.current_cm.name] = {cav_number: {} for cav_number in self.current_cm.cavities.keys()}
+            data[self.current_cm.name][self.current_cavity.number] = self.current_cavity.results.__dict__
+            f.seek(0)
+            json.dump(data, f)
+            f.truncate()

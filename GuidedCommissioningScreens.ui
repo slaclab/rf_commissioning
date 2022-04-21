@@ -266,6 +266,27 @@
             </property>
            </widget>
           </item>
+          <item row="6" column="0">
+           <widget class="QComboBox" name="pick_radmonitor">
+            <item>
+             <property name="text">
+              <string>1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Select Decarad in use</string>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="0">
            <widget class="QTableWidget" name="test_members">
             <property name="sizePolicy">
@@ -317,30 +338,23 @@
             </property>
            </widget>
           </item>
+          <item row="7" column="0">
+           <widget class="QPushButton" name="load_button">
+            <property name="text">
+             <string>load data</string>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="0">
            <widget class="QComboBox" name="testlead"/>
           </item>
           <item row="4" column="0">
            <widget class="QComboBox" name="pick_cm"/>
           </item>
-          <item row="6" column="0">
-           <widget class="QComboBox" name="pick_radmonitor">
-            <item>
-             <property name="text">
-              <string>1</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>2</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QLabel" name="label_6">
+          <item row="8" column="0">
+           <widget class="QPushButton" name="save_button">
             <property name="text">
-             <string>Select Decarad in use</string>
+             <string>save data</string>
             </property>
            </widget>
           </item>

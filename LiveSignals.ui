@@ -29,6 +29,12 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="0" column="1">
@@ -42,12 +48,24 @@
          <property name="curves">
           <stringlist/>
          </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="0" column="2">
         <widget class="PyDMTimePlot" name="plot_couplertop_temp">
          <property name="toolTip">
           <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -56,12 +74,24 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="1" column="0">
         <widget class="PyDMTimePlot" name="plot_magnet">
          <property name="toolTip">
           <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -76,6 +106,12 @@
          <property name="curves">
           <stringlist/>
          </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="1" column="2">
@@ -83,12 +119,24 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="1" column="3">
         <widget class="PyDMTimePlot" name="plot_cryosignals">
          <property name="toolTip">
           <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -104,6 +152,12 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
         </widget>
        </item>
       </layout>
@@ -117,6 +171,12 @@
         <widget class="PyDMTimePlot" name="plot_frequency">
          <property name="toolTip">
           <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
          </property>
         </widget>
        </item>
