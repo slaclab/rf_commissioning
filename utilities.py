@@ -1,5 +1,6 @@
-from epics import PV
 from typing import Optional, List, Dict
+
+from epics import PV
 
 from lcls_tools.devices.scLinac import Cavity, Cryomodule, Linac, LINAC_TUPLES, Magnet
 
@@ -46,6 +47,13 @@ class CommissioningCavity(Cavity):
         self.final_phase_offset: Optional[float] = None
         self.onehourrun_complete: bool = False
 
+        self.stepper_temp_PV = PV(self.pvPrefix + "STEPTEMP")
+        self.coupler_top_PV = PV(self.pvPrefix + "CPLRTEMP1")
+        self.coupler_bot_PV = PV(self.pvPrefix + "CPLRTEMP2")
+        self.hom_us_PV = PV("CTE:CM{cm}:1{cavity}18:UH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
+        self.hom_ds_PV = PV("CTE:CM{cm}:1{cavity}20:DH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
+        self.detune_PV = PV(self.pvPrefix + "DFBEST")
+
     @property
     def interlocks_cleared(self):
         return self.interlock_pv.value == 1
@@ -67,6 +75,21 @@ class CommissioningCryomodule(Cryomodule):
 
         self.magnet_checked: bool = False
         self.unit_test_complete: bool = False
+
+        self.stepper_temp_PVs = []
+        self.coupler_top_PVs = []
+        self.coupler_bot_PVs = []
+        self.hom_us_PVs = []
+        self.hom_ds_PVs = []
+        self.detune_PVs = []
+
+        for cavity in self.cavities.values():
+            self.stepper_temp_PVs.append(cavity.stepper_temp_PV)
+            self.coupler_top_PVs.append(cavity.coupler_top_PV)
+            self.coupler_bot_PVs.append(cavity.coupler_bot_PV)
+            self.hom_us_PVs.append(cavity.hom_us_PV)
+            self.hom_ds_PVs.append(cavity.hom_ds_PV)
+            self.detune_PVs.append(cavity.detune_PV)
 
         self.magnet_name_map: Dict[str, CommissioningMagnet] = {'Quad': self.quad, 'XCor': self.xcor, 'YCor': self.ycor}
 

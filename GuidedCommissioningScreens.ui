@@ -405,6 +405,13 @@
      </widget>
     </widget>
    </item>
+   <item row="1" column="0">
+    <widget class="QPushButton" name="button_livesignals">
+     <property name="text">
+      <string>Show Live Signals</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>

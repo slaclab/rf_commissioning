@@ -1,16 +1,28 @@
-from os import path
-
 import sys
+from functools import partial
+from os import path
+from typing import List, Dict, Optional
+
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QPushButton
 from edmbutton import PyDMEDMDisplayButton
-from functools import partial
 from pydm import Display
 from pydm.widgets import PyDMByteIndicator, PyDMLabel
 from qtpy.QtCore import Slot
-from typing import List, Dict, Optional
 
 import utilities as util
 from lcls_tools.devices.scLinac import CRYOMODULE_OBJECTS
+from lcls_tools.pydm_tools.timePlotUtil import TimePlotParams, TimePlotUpdater
+
+STEPPERTEMP_PLOT_KEY = 'steppertemp'
+CMVACUUM_PLOT_KEY = 'cmvacuum'
+CRYOSIGNALS_PLOT_KEY = 'cryosignals'
+MAGNET_PLOT_KEY = 'magnet'
+HOMUS_PLOT_KEY = 'homus'
+HOMDS_PLOT_KEY = 'homds'
+CPLRTOP_PLOT_KEY = 'cplrtop'
+CPLRBOT_PLOT_KEY = 'cplrbot'
+SINGLE_CAVITY_PLOT_KEY = 'singlecavity'
+FREQUENCY_PLOT_KEY = 'frequency'
 
 
 class GuidedCommissioningScreens(Display):
@@ -53,36 +65,44 @@ class GuidedCommissioningScreens(Display):
             interlock_label: PyDMLabel = VBoxLayout.itemAt(0).itemAt(2).widget()
             self.magnet_interlock_labels[interlock_label.accessibleName()] = interlock_label
             self.magnet_interlock_indicators[interlock_indicator.accessibleName()] = interlock_indicator
+
             # the magnet reset button is the second item in the ui-file, hence '1'
             reset_button: QPushButton = VBoxLayout.itemAt(1).widget()
             reset_button.clicked.connect(partial(self.magnet_control, reset_button.accessibleName(),
                                                  util.MAGNET_RESET_VALUE))
+
             # the power supply status is the third element in the ui-file, with the byte indicator in 2nd and the text label in 3rd position, hence '2' then '1' and '2'
             ps_status_indicator: PyDMByteIndicator = VBoxLayout.itemAt(2).itemAt(1).widget()
             ps_status_label: PyDMLabel = VBoxLayout.itemAt(2).itemAt(2).widget()
             self.magnet_ps_status_labels[ps_status_label.accessibleName()] = ps_status_label
             self.magnet_ps_status_indicators[ps_status_indicator.accessibleName()] = ps_status_indicator
+
             # the power supply on button is the 1st item in a horizontal layout in 4th place in the ui-file,
             # hence '3' and then '0'
             on_button: QPushButton = VBoxLayout.itemAt(3).itemAt(0).widget()
             on_button.clicked.connect(partial(self.magnet_control, on_button.accessibleName(), util.MAGNET_ON_VALUE))
+
             # the power supply off button is the 2nd item in a horizontal layout in 4th place in the ui-file,
             # hence '3' and then '1'
             off_button: QPushButton = VBoxLayout.itemAt(3).itemAt(1).widget()
             off_button.clicked.connect(partial(self.magnet_control, off_button.accessibleName(), util.MAGNET_OFF_VALUE))
+
             # the degauss button is the 5th item in the ui-file, hence '4'
             degauss_button: QPushButton = VBoxLayout.itemAt(4).widget()
             degauss_button.clicked.connect(
                 partial(self.magnet_control, degauss_button.accessibleName(), util.MAGNET_DEGAUSS_VALUE))
+
             # the nominal trim button is the 6th element in the ui-file, hence '5'
             nominal_trim_button: QPushButton = VBoxLayout.itemAt(5).widget()
             nominal_trim_button.setText('Set BDES to {nominalbdes} and trim'.format(nominalbdes=util.NOMINAL_BDES))
             nominal_trim_button.clicked.connect(
                 partial(self.magnet_trim, nominal_trim_button.accessibleName(), util.NOMINAL_BDES))
+
             # the zero trim button is the 7th element in the ui-file, hence '6'
             zero_trim_button: QPushButton = VBoxLayout.itemAt(6).widget()
             zero_trim_button.clicked.connect(
                 partial(self.magnet_trim, zero_trim_button.accessibleName(), 0))
+
             # the edm expert display button is the 8th element in the ui-file, hence '7'
             magnet_expert_button: PyDMEDMDisplayButton = VBoxLayout.itemAt(7).widget()
             self._magnet_edm_buttons[magnet_expert_button.accessibleName()] = magnet_expert_button
@@ -90,6 +110,23 @@ class GuidedCommissioningScreens(Display):
         self.update_current_cavity_and_cm()
 
         self.initial_setup()
+
+        self.live_signals_window = Display(ui_filename=self.getPath("LiveSignals.ui"))
+        self.ui.button_livesignals.clicked.connect(partial(self.showDisplay, self.live_signals_window))
+
+        time_plot_updater = {STEPPERTEMP_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_steppertemps),
+                             MAGNET_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_magnet),
+                             HOMUS_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_homus_temp),
+                             HOMDS_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_homds_temp),
+                             CPLRTOP_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_couplertop_temp),
+                             CPLRBOT_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_couplerbot_temp),
+                             CMVACUUM_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_cmvacuum),
+                             CRYOSIGNALS_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_cryosignals),
+                             SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
+                                 self.live_signals_window.ui.plot_single_cavity_overview),
+                             FREQUENCY_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_frequency)
+                             }
+        self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
     def magnet_control(self, accessible_name, enum_value):
         self.current_cm.magnet_name_map[accessible_name].controlPV.put(enum_value)
@@ -132,6 +169,13 @@ class GuidedCommissioningScreens(Display):
             self.magnet_interlock_labels[magnetprefix].channel = magnet_object.interlockPV.pvname
             self.magnet_ps_status_labels[magnetprefix].channel = magnet_object.ps_statusPV.pvname
             self.magnet_ps_status_indicators[magnetprefix].channel = magnet_object.ps_statusPV.pvname
+
+        plot_update_map = {STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
+                           HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
+                           HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
+                           CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
+                           CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
+                           FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs}
 
     def update_current_decarad(self):
         self.current_decarad = self.ui.pick_radmonitor.currentText()
