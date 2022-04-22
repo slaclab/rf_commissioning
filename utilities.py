@@ -3,7 +3,7 @@ from typing import Optional, List, Dict
 
 from epics import PV
 
-from lcls_tools.devices.scLinac import Cavity, Cryomodule, Linac, LINAC_TUPLES, Magnet
+from lcls_tools.devices.scLinac.scLinac import Cavity, Cryomodule, Linac, LINAC_TUPLES, Magnet
 
 TESTLEAD_LIST = [
     'Aderhold, Sebastian',

@@ -166,7 +166,7 @@
            </layout>
           </item>
           <item row="1" column="1">
-           <widget class="QLabel" name="label_completion_status">
+           <widget class="QLabel" name="label_overall_completion">
             <property name="font">
              <font>
               <pointsize>20</pointsize>
@@ -338,25 +338,11 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="0">
-           <widget class="QPushButton" name="load_button">
-            <property name="text">
-             <string>load data</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="0">
            <widget class="QComboBox" name="testlead"/>
           </item>
           <item row="4" column="0">
            <widget class="QComboBox" name="pick_cm"/>
-          </item>
-          <item row="8" column="0">
-           <widget class="QPushButton" name="save_button">
-            <property name="text">
-             <string>save data</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </widget>

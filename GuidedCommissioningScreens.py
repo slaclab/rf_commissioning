@@ -1,3 +1,4 @@
+import dataclasses
 import json
 import sys
 from functools import partial
@@ -12,7 +13,7 @@ from pydm.widgets import PyDMByteIndicator, PyDMLabel
 from qtpy.QtCore import Slot
 
 import utilities as util
-from lcls_tools.devices.scLinac import CRYOMODULE_OBJECTS
+from lcls_tools.devices.scLinac.scLinac import CRYOMODULE_OBJECTS
 from lcls_tools.pydm_tools.timePlotUtil import TimePlotParams, TimePlotUpdater
 
 STEPPERTEMP_PLOT_KEY = 'steppertemp'
@@ -128,9 +129,6 @@ class GuidedCommissioningScreens(Display):
 
         self.update_current_cavity_and_cm()
 
-        self.ui.load_button.clicked.connect(self.load_results)
-        self.ui.save_button.clicked.connect(self.save_results)
-
     def magnet_control(self, accessible_name, enum_value):
         self.current_cm.magnet_name_map[accessible_name].controlPV.put(enum_value)
 
@@ -155,10 +153,56 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.pick_cm.currentIndexChanged.connect(self.update_current_cavity_and_cm)
 
+    def populate_status_labels(self):
+        @dataclasses.dataclass
+        class StatusMap:
+            message: str
+            color: str
+
+            @property
+            def stylesheet(self):
+                return 'color: {color};'.format(color=self.color)
+
+        status_map = {True: StatusMap('Complete', 'green'),
+                      False: StatusMap('Incomplete', 'red')}
+
+        cm_results = self.current_cm.results
+        cav_results = self.current_cavity.results
+        overall_completion_status = (cm_results.magnet_checked
+                                     and cav_results.piezo_prerf_checked
+                                     and cav_results.ssa_characterized
+                                     and cav_results.is_tuned
+                                     and cav_results.eightpiovernine_frequency_measured
+                                     and cav_results.cavity_calibration_run
+                                     and cav_results.onehourrun_complete
+                                     and cm_results.unit_test_complete
+                                     )
+
+        label_status_pairs = [(self.ui.label_checkout_magnet, cm_results.magnet_checked),
+                              (self.ui.label_piezo_prerf, cav_results.piezo_prerf_checked),
+                              (self.ui.label_ssa_char, cav_results.ssa_characterized),
+                              (self.ui.label_tune_cavity, cav_results.is_tuned),
+                              (self.ui.label_measure_8pi9,
+                               cav_results.eightpiovernine_frequency_measured),
+                              (self.ui.label_cavity_calibration, cav_results.cavity_calibration_run),
+                              (self.ui.label_selap_rampup, cav_results.onehourrun_complete),
+                              (self.ui.label_12hrun, cm_results.unit_test_complete),
+                              (self.ui.label_overall_completion, overall_completion_status)]
+
+        for label, status in label_status_pairs:
+            label.setText(status_map[status].message)
+            label.setStyleSheet(status_map[status].stylesheet)
+
     def update_current_cavity_and_cm(self):
+        self.save_results()
+
         self.current_cm: util.CommissioningCryomodule = util.COMMISSIONING_CRYOMODULE_OBJECTS[
             self.ui.pick_cm.currentText()]
         self.current_cavity: util.CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
+
+        self.load_results()
+
+        self.populate_status_labels()
 
         # button_interlockoverview is an PyDMEDMDisplaybutton
         self.ui.button_interlockoverview.macros = [self.macro_string]
@@ -270,10 +314,14 @@ class GuidedCommissioningScreens(Display):
             data = json.load(f)
             if self.current_cm.name in data:
                 cav_data = data[self.current_cm.name]
-                if self.current_cavity.number in cav_data:
-                    self.current_cavity.results.__dict__ = cav_data[self.current_cavity.number]
+                # required precondition: keys in cav_data are ints 1 through 8
+                if str(self.current_cavity.number) in cav_data:
+                    self.current_cavity.results.__dict__ = cav_data[str(self.current_cavity.number)]
 
     def save_results(self):
+        if not self.current_cm:
+            return
+
         with open('cryomodule_results.json', 'r+') as f:
             data = json.load(f)
 
