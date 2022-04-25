@@ -13,8 +13,10 @@ from pydm.widgets import PyDMByteIndicator, PyDMLabel
 from qtpy.QtCore import Slot
 
 import utilities as util
+from commissioningLinac import CommissioningCryomodule, CommissioningCavity, COMMISSIONING_CRYOMODULE_OBJECTS
 from lcls_tools.devices.scLinac.scLinac import CRYOMODULE_OBJECTS
-from lcls_tools.devices.scLinac.scLinacUtils import SSACalibrationError, SSAPowerError
+from lcls_tools.devices.scLinac.scLinacUtils import (SSACalibrationError, SSAPowerError, CavityQLoadedCalibrationError,
+                                                     CavityScaleFactorCalibrationError)
 from lcls_tools.pydm_tools.timePlotUtil import TimePlotParams, TimePlotUpdater
 
 STEPPERTEMP_PLOT_KEY = 'steppertemp'
@@ -32,13 +34,14 @@ FREQUENCY_PLOT_KEY = 'frequency'
 class GuidedCommissioningScreens(Display):
 
     def __init__(self, parent=None, args=None):
+        # TODO add functionality to disable ui buttons that depend on completion of previous steps
         super(GuidedCommissioningScreens, self).__init__(parent=parent, args=args)
 
         self.pathHere = path.dirname(sys.modules[self.__module__].__file__)
 
         # declare class variables
-        self.current_cm: Optional[util.CommissioningCryomodule] = None
-        self.current_cavity: Optional[util.CommissioningCavity] = None
+        self.current_cm: Optional[CommissioningCryomodule] = None
+        self.current_cavity: Optional[CommissioningCavity] = None
         self.current_decarad = None
         self.current_pvprefix = None
 
@@ -107,8 +110,8 @@ class GuidedCommissioningScreens(Display):
             zero_trim_button.clicked.connect(
                 partial(self.magnet_trim, zero_trim_button.accessibleName(), 0))
 
-            # the edm expert display button is the 8th element in the ui-file, hence '7'
-            magnet_expert_button: PyDMEDMDisplayButton = VBoxLayout.itemAt(7).widget()
+            # the edm expert display button is the 9th element in the ui-file, hence '8'
+            magnet_expert_button: PyDMEDMDisplayButton = VBoxLayout.itemAt(8).widget()
             self._magnet_edm_buttons[magnet_expert_button.accessibleName()] = magnet_expert_button
 
         self.live_signals_window = Display(ui_filename=self.getPath("LiveSignals.ui"))
@@ -130,7 +133,8 @@ class GuidedCommissioningScreens(Display):
 
         self.update_current_cavity_and_cm()
 
-        self.ui.button_ssa_char.clicked.connect(self.try_ssa_calibration)
+        self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
+        self.ui.button_cavity_calibration.clicked.connect(self.cavity_calibration_button_pushed)
 
     def magnet_control(self, accessible_name, enum_value):
         self.current_cm.magnet_name_map[accessible_name].controlPV.put(enum_value)
@@ -199,9 +203,9 @@ class GuidedCommissioningScreens(Display):
     def update_current_cavity_and_cm(self):
         self.save_results()
 
-        self.current_cm: util.CommissioningCryomodule = util.COMMISSIONING_CRYOMODULE_OBJECTS[
+        self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
             self.ui.pick_cm.currentText()]
-        self.current_cavity: util.CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
+        self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
         self.load_results()
 
@@ -323,7 +327,7 @@ class GuidedCommissioningScreens(Display):
             else:
                 raise SSACalibrationError
 
-    def try_ssa_calibration(self):
+    def ssa_calibration_button_pushed(self):
         try:
             self.run_ssa_calibration()
         except (SSACalibrationError, SSAPowerError) as e:
@@ -334,18 +338,45 @@ class GuidedCommissioningScreens(Display):
             ssa_expert_button.setText('Open SSA EDM expert screen')
             ssa_expert_button.setDefault(True)
             self.make_popup('SSA calibration failed', ssa_expert_button, e)
+        self.save_results()
 
-    @staticmethod
-    def make_popup(title, edmbutton, exception):
+    def mark_ssa_char_complete(self):
+        self.current_cavity.results.ssa_characterized = True
+        self.current_cavity.results.ssa_maxdrive = self.current_cavity.ssa_maxdrive_PV.value
+
+    def make_popup(self, title, edmbutton, exception):
         popup = QMessageBox()
         popup.setIcon(QMessageBox.Critical)
         popup.setWindowTitle(title)
         popup.setText(
             '{error}\nPlease check expert screen and select from the options below'.format(error=exception))
         popup.addButton('Abort', QMessageBox.RejectRole)
-        popup.addButton('Acknowledge completion and continue', QMessageBox.AcceptRole)
+        popup.addButton('Acknowledge manual completion and continue', QMessageBox.AcceptRole)
         popup.addButton(edmbutton, QMessageBox.ActionRole)
+        popup.buttonClicked.connect(partial(self.popupbutton_clicked, popup))
         popup.exec()
+
+    def popupbutton_clicked(self, qmessagebox: QMessageBox):
+        clickedbutton = qmessagebox.clickedButton()
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.AcceptRole:
+            self.mark_ssa_char_complete()
+        self.populate_status_labels()
+
+    def cavity_calibration_button_pushed(self):
+        try:
+            self.current_cavity.runCalibration(loadedQLowerlimit=3e7, loadedQUpperlimit=5e7)
+            self.current_cavity.results.fpc_qext = self.current_cavity.measuredQLoadedPV.value
+            self.current_cavity.results.cavity_calibration_run = True
+            self.populate_status_labels()
+            self.save_results()
+        except (CavityQLoadedCalibrationError, CavityScaleFactorCalibrationError, TypeError) as e:
+            cavity_expert_button = PyDMEDMDisplayButton()
+            cavity_expert_button.filenames = ['$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl']
+            cavity_expert_button.macros = self.macro_string
+            cavity_expert_button.setText('Open cavity EDM expert screen')
+            cavity_expert_button.setDefault(True)
+            # TODO handle acknowledge button click
+            self.make_popup('Cavity calibration failed', cavity_expert_button, e)
 
     def load_results(self):
         with open('cryomodule_results.json', 'r+') as f:

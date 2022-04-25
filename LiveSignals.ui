@@ -87,6 +87,9 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="title" stdset="0">
+          <string>Magnets</string>
+         </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
