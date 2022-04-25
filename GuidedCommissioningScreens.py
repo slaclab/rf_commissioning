@@ -328,7 +328,8 @@ class GuidedCommissioningScreens(Display):
             self.run_ssa_calibration()
         except (SSACalibrationError, SSAPowerError) as e:
             print(e)
-            ssa_expert_button = PyDMEDMDisplayButton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ssa.edl')
+            ssa_expert_button = PyDMEDMDisplayButton()
+            ssa_expert_button.filenames = ['$TOOLS/edm/display/llrf/rf_srf_char_embed_ssa.edl']
             ssa_expert_button.macros = self.macro_string
             ssa_expert_button.setText('Open SSA EDM expert screen')
             ssa_expert_button.setDefault(True)
