@@ -6,7 +6,7 @@ from os import path
 from time import sleep
 from typing import List, Dict, Optional
 
-from PyQt5.QtWidgets import QVBoxLayout, QWidget, QPushButton
+from PyQt5.QtWidgets import QVBoxLayout, QWidget, QPushButton, QMessageBox
 from edmbutton import PyDMEDMDisplayButton
 from pydm import Display
 from pydm.widgets import PyDMByteIndicator, PyDMLabel
@@ -14,6 +14,7 @@ from qtpy.QtCore import Slot
 
 import utilities as util
 from lcls_tools.devices.scLinac.scLinac import CRYOMODULE_OBJECTS
+from lcls_tools.devices.scLinac.scLinacUtils import SSACalibrationError, SSAPowerError
 from lcls_tools.pydm_tools.timePlotUtil import TimePlotParams, TimePlotUpdater
 
 STEPPERTEMP_PLOT_KEY = 'steppertemp'
@@ -128,6 +129,8 @@ class GuidedCommissioningScreens(Display):
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
         self.update_current_cavity_and_cm()
+
+        self.ui.button_ssa_char.clicked.connect(self.try_ssa_calibration)
 
     def magnet_control(self, accessible_name, enum_value):
         self.current_cm.magnet_name_map[accessible_name].controlPV.put(enum_value)
@@ -305,18 +308,56 @@ class GuidedCommissioningScreens(Display):
         else:
             self.ui.label_piezo_prerf.setText('Failed')
 
+    def run_ssa_calibration(self, drivemax=0.8, attemptnumber=1):
+        if self.current_cavity.results.ssa_maxdrive:
+            self.current_cavity.ssa_maxdrive_PV.put(self.current_cavity.results.ssa_maxdrive)
+        else:
+            self.current_cavity.ssa_maxdrive_PV.put(drivemax)
+        try:
+            self.current_cavity.ssa.runCalibration()
+            self.current_cavity.results.ssa_maxdrive = drivemax
+            self.current_cavity.results.ssa_characterized = True
+        except SSACalibrationError:
+            if attemptnumber <= 3:
+                self.run_ssa_calibration(drivemax - 0.05, attemptnumber + 1)
+            else:
+                raise SSACalibrationError
+
+    def try_ssa_calibration(self):
+        try:
+            self.run_ssa_calibration()
+        except (SSACalibrationError, SSAPowerError) as e:
+            print(e)
+            ssa_expert_button = PyDMEDMDisplayButton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ssa.edl')
+            ssa_expert_button.macros = self.macro_string
+            ssa_expert_button.setText('Open SSA EDM expert screen')
+            ssa_expert_button.setDefault(True)
+            self.make_popup('SSA calibration failed', ssa_expert_button, e)
+
+    @staticmethod
+    def make_popup(title, edmbutton, exception):
+        popup = QMessageBox()
+        popup.setIcon(QMessageBox.Critical)
+        popup.setWindowTitle(title)
+        popup.setText(
+            '{error}\nPlease check expert screen and select from the options below'.format(error=exception))
+        popup.addButton('Abort', QMessageBox.RejectRole)
+        popup.addButton('Acknowledge completion and continue', QMessageBox.AcceptRole)
+        popup.addButton(edmbutton, QMessageBox.ActionRole)
+        popup.exec()
+
     def load_results(self):
         with open('cryomodule_results.json', 'r+') as f:
             data = json.load(f)
             if self.current_cm.name in data:
-                self.current_cm.results.__dict__ = data[self.current_cm.name]
+                self.current_cm.results.__dict__.update(data[self.current_cm.name])
         with open('cavity_results.json', 'r+') as f:
             data = json.load(f)
             if self.current_cm.name in data:
                 cav_data = data[self.current_cm.name]
                 # required precondition: keys in cav_data are ints 1 through 8
                 if str(self.current_cavity.number) in cav_data:
-                    self.current_cavity.results.__dict__ = cav_data[str(self.current_cavity.number)]
+                    self.current_cavity.results.__dict__.update(cav_data[str(self.current_cavity.number)])
 
     def save_results(self):
         if not self.current_cm:

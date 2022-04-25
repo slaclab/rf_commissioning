@@ -29,6 +29,7 @@ class CommissioningCavityResults:
     piezo_prerf_checked: bool = False
     piezo_capacitance_a: Optional[float] = None
     piezo_capacitance_b: Optional[float] = None
+    ssa_maxdrive: Optional[float] = None
     ssa_characterized: bool = False
     is_tuned: bool = False
     cold_landing_frequency: Optional[float] = None
@@ -68,6 +69,7 @@ class CommissioningCavity(Cavity):
         self.detune_PV = PV(self.pvPrefix + "DFBEST")
 
         self.rf_state_PV = PV(self.pvPrefix + "RFCTRL")
+        self.ssa_maxdrive_PV = PV(self.pvPrefix + "SSA:DRV_MAX_REQ")
         self.piezo_enable_PV = PV(self.pvPrefix + "PZT:ENABLE")
         self.piezo_feedback_mode_PV = PV(self.pvPrefix + "PZT:MODECTRL")
         self.piezo_dc_setpoint_PV = PV(self.pvPrefix + "PZT:DAC_SP")
