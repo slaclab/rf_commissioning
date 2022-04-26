@@ -5,6 +5,9 @@ from epics import PV
 from lcls_tools.devices.scLinac.scLinac import Cavity, Magnet, Cryomodule, Linac, LINAC_TUPLES
 from utilities import CommissioningCavityResults, ProbeQError, CommissioningCryomoduleResults
 
+PROBE_QEXT_UPPER_LIMIT = 3e12
+PROBE_QEXT_LOWER_LIMIT = 1e11
+
 
 class CommissioningCavity(Cavity):
     def __init__(self, cavityNum, rackObject):
@@ -20,7 +23,6 @@ class CommissioningCavity(Cavity):
         self.hom_ds_PV = PV("CTE:CM{cm}:1{cavity}20:DH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
         self.detune_PV = PV(self.pvPrefix + "DFBEST")
 
-        self.rf_state_PV = PV(self.pvPrefix + "RFCTRL")
         self.ssa_maxdrive_PV = PV(self.pvPrefix + "SSA:DRV_MAX_REQ")
         self.piezo_enable_PV = PV(self.pvPrefix + "PZT:ENABLE")
         self.piezo_feedback_mode_PV = PV(self.pvPrefix + "PZT:MODECTRL")
@@ -46,8 +48,7 @@ class CommissioningCavity(Cavity):
     def calculate_probe_q(self):
         # TODO check if '1' is actually the right thing to put
         self.calculate_probe_qext_PV.put(1)
-        # TODO check the right bounds for probe Q
-        if 5e10 <= self.measured_probe_qext_PV.value <= 5e12:
+        if PROBE_QEXT_LOWER_LIMIT <= self.measured_probe_qext_PV.value <= PROBE_QEXT_UPPER_LIMIT:
             self.push_probe_qext_PV.put(1)
             self.results.probe_qext_value = self.measured_probe_qext_PV.value
             self.results.probe_qext_measured = True
