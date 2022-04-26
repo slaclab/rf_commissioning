@@ -16,7 +16,7 @@ import lcls_tools.devices.scLinac.scLinacUtils as scLinacUtils
 import utilities as util
 from commissioningLinac import CommissioningCryomodule, CommissioningCavity, COMMISSIONING_CRYOMODULE_OBJECTS
 from lcls_tools.devices.scLinac.scLinac import CRYOMODULE_OBJECTS
-from lcls_tools.pydm_tools.timePlotUtil import TimePlotParams, TimePlotUpdater
+from lcls_tools.pydm_tools.pydmPlotUtil import TimePlotParams, TimePlotUpdater, WaveformPlotParams, WaveformPlotUpdater
 
 STEPPERTEMP_PLOT_KEY = 'steppertemp'
 CMVACUUM_PLOT_KEY = 'cmvacuum'
@@ -28,6 +28,7 @@ CPLRTOP_PLOT_KEY = 'cplrtop'
 CPLRBOT_PLOT_KEY = 'cplrbot'
 SINGLE_CAVITY_PLOT_KEY = 'singlecavity'
 FREQUENCY_PLOT_KEY = 'frequency'
+RFWAVEFORM_PLOT_KEY = 'rfwaveform'
 
 
 class GuidedCommissioningScreens(Display):
@@ -70,19 +71,22 @@ class GuidedCommissioningScreens(Display):
         self.live_signals_window = Display(ui_filename=self.getPath("LiveSignals.ui"))
         self.ui.button_livesignals.clicked.connect(partial(self.showDisplay, self.live_signals_window))
 
-        time_plot_updater = {STEPPERTEMP_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_steppertemps),
-                             MAGNET_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_magnet),
-                             HOMUS_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_homus_temp),
-                             HOMDS_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_homds_temp),
-                             CPLRTOP_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_couplertop_temp),
-                             CPLRBOT_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_couplerbot_temp),
-                             CMVACUUM_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_cmvacuum),
-                             CRYOSIGNALS_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_cryosignals),
+        time_plot_updater = {STEPPERTEMP_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
+                             MAGNET_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_magnet),
+                             HOMUS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
+                             HOMDS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
+                             CPLRTOP_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_couplertop_temp),
+                             CPLRBOT_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_couplerbot_temp),
+                             CMVACUUM_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
+                             CRYOSIGNALS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
                              SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
-                                 self.live_signals_window.ui.plot_single_cavity_overview),
-                             FREQUENCY_PLOT_KEY: TimePlotParams(self.live_signals_window.ui.plot_frequency)
+                                 plot=self.live_signals_window.ui.plot_single_cavity_overview),
+                             FREQUENCY_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_frequency)
                              }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
+
+        self.waveform_plot_updater = WaveformPlotUpdater({RFWAVEFORM_PLOT_KEY: WaveformPlotParams(
+            plot=self.rf_controls_window.ui.waveform_rfsignals)})
 
         self.update_current_cavity_and_cm()
 
@@ -236,26 +240,44 @@ class GuidedCommissioningScreens(Display):
 
         self.time_plot_updater.updatePlots(plot_update_map)
 
+        rfwaveformplot_update_map = {RFWAVEFORM_PLOT_KEY: self.current_cavity.waveformplot_channelpairs}
+        self.waveform_plot_updater.updatePlots(rfwaveformplot_update_map)
+
     def update_rf_controls(self):
-        self.rf_controls_window.ui.button_ssa_on.clicked.connect(self.current_cavity.ssa.turnOn)
-        self.rf_controls_window.ui.button_ssa_off.clicked.connect(self.current_cavity.ssa.turnOff)
-        self.rf_controls_window.ui.label_ssa_status.channel = self.current_cavity.ssa.ssaStatusPV.pvname
+        ui = self.rf_controls_window.ui
+        ui.button_ssa_on.clicked.connect(self.current_cavity.ssa.turnOn)
+        ui.button_ssa_off.clicked.connect(self.current_cavity.ssa.turnOff)
+        ui.label_ssa_status.channel = self.current_cavity.ssa.ssaStatusPV.pvname
 
-        self.rf_controls_window.ui.button_rfmode_chirp.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
-                                                                               scLinacUtils.RF_MODE_CHIRP))
-        self.rf_controls_window.ui.button_rfmode_pulsed.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
-                                                                                scLinacUtils.RF_MODE_PULSE))
-        self.rf_controls_window.ui.button_rfmode_sel.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
-                                                                             scLinacUtils.RF_MODE_SEL))
-        self.rf_controls_window.ui.button_rfmode_sela.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
-                                                                              scLinacUtils.RF_MODE_SELA))
-        self.rf_controls_window.ui.button_rfmode_selap.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
-                                                                               scLinacUtils.RF_MODE_SELAP))
-        self.rf_controls_window.ui.label_rfmode_rdbk.channel = self.current_cavity.rfModePV.pvname
+        ui.button_rfmode_chirp.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
+                                                       scLinacUtils.RF_MODE_CHIRP))
+        ui.button_rfmode_pulsed.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
+                                                        scLinacUtils.RF_MODE_PULSE))
+        ui.button_rfmode_sel.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
+                                                     scLinacUtils.RF_MODE_SEL))
+        ui.button_rfmode_sela.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
+                                                      scLinacUtils.RF_MODE_SELA))
+        ui.button_rfmode_selap.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
+                                                       scLinacUtils.RF_MODE_SELAP))
+        ui.label_rfmode_rdbk.channel = self.current_cavity.rfModePV.pvname
 
-        self.rf_controls_window.ui.button_rf_on.clicked.connect(self.current_cavity.turnOn)
-        self.rf_controls_window.ui.button_rf_off.clicked.connect(self.current_cavity.turnOff)
-        self.rf_controls_window.ui.label_rfstatus_rdbk.channel = self.current_cavity.rfStatePV.pvname
+        ui.button_rf_on.clicked.connect(self.current_cavity.turnOn)
+        ui.button_rf_off.clicked.connect(self.current_cavity.turnOff)
+        ui.label_rfstatus_rdbk.channel = self.current_cavity.rfStatePV.pvname
+
+        ui.lineedit_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PV.pvname
+        ui.label_selphaseoffset_rdbk.channel = self.current_cavity.sel_phaseoffset_rdbk_PV.pvname
+        ui.slider_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PV.pvname
+
+        ui.indicator_phas_high.channel = self.current_cavity.feedback_phase_high_PV.pvname
+        ui.indicator_phas_low.channel = self.current_cavity.feedback_phase_low_PV.pvname
+        ui.indicator_amp_high.channel = self.current_cavity.feedback_amplitude_high_PV.pvname
+        ui.indicator_amp_low.channel = self.current_cavity.feedback_amplitude_low_PV.pvname
+
+        ui.label_max_amplitude.channel = self.current_cavity.acceptancetest_max_amplitude_PV.pvname
+        ui.label_useable_amplitude.channel = self.current_cavity.acceptancetest_useable_amplitude_PV.pvname
+        ui.label_fe_onset.channel = self.current_cavity.acceptancetest_fe_onset_PV.pvname
+        ui.label_cavity_limitation.channel = self.current_cavity.acceptancetest_cavity_limitation_PV.pvname
 
     def update_magnets(self):
         for magnettype, edmbutton in self._magnet_edm_buttons.items():

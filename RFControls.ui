@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>639</width>
-    <height>803</height>
+    <width>735</width>
+    <height>867</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -169,58 +169,91 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="1">
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>Straightening the cheeto</string>
+   <item row="5" column="1">
+    <widget class="QGroupBox" name="groupBox_5">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
+     <property name="title">
+      <string>CM acceptance test data</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
       <item row="0" column="1">
-       <widget class="PyDMLabel" name="label_selphaseoffset_rdbk">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="channel" stdset="0">
-         <string>${sel_phase_offset_PV}</string>
-        </property>
-       </widget>
+       <layout class="QFormLayout" name="formLayout_2">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Usable amplitude:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="PyDMLabel" name="label_useable_amplitude">
+          <property name="toolTip">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
-      <item row="1" column="1">
-       <widget class="PyDMLineEdit" name="lineedit_selphaseoffset">
-        <property name="toolTip">
-         <string/>
-        </property>
-       </widget>
+      <item row="0" column="0">
+       <layout class="QFormLayout" name="formLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Max. amplitude:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="PyDMLabel" name="label_max_amplitude">
+          <property name="toolTip">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>SEL phase offset</string>
-        </property>
-       </widget>
+       <layout class="QFormLayout" name="formLayout_3">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>FE onset:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="PyDMLabel" name="label_fe_onset">
+          <property name="toolTip">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
-      <item row="2" column="1">
-       <widget class="PyDMSlider" name="slider_selphaseoffset">
-        <property name="toolTip">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="PyDMWaveformPlot" name="waveform_cheeto">
-        <property name="toolTip">
-         <string/>
-        </property>
-       </widget>
+      <item row="1" column="1">
+       <layout class="QFormLayout" name="formLayout_4">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Limitation:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="PyDMLabel" name="label_cavity_limitation">
+          <property name="toolTip">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="PyDMWaveformPlot" name="waveform_rfsignals">
-     <property name="toolTip">
-      <string/>
-     </property>
     </widget>
    </item>
    <item row="4" column="1">
@@ -232,7 +265,7 @@
        </property>
        <layout class="QGridLayout" name="gridLayout_4">
         <item row="0" column="1">
-         <widget class="PyDMByteIndicator" name="PyDMByteIndicator">
+         <widget class="PyDMByteIndicator" name="indicator_amp_high">
           <property name="toolTip">
            <string/>
           </property>
@@ -259,7 +292,7 @@
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_2">
+         <widget class="PyDMByteIndicator" name="indicator_phas_low">
           <property name="toolTip">
            <string/>
           </property>
@@ -286,7 +319,7 @@
          </widget>
         </item>
         <item row="1" column="2">
-         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_4">
+         <widget class="PyDMByteIndicator" name="indicator_phas_high">
           <property name="toolTip">
            <string/>
           </property>
@@ -313,7 +346,7 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="PyDMByteIndicator" name="PyDMByteIndicator_3">
+         <widget class="PyDMByteIndicator" name="indicator_amp_low">
           <property name="toolTip">
            <string/>
           </property>
@@ -367,89 +400,77 @@
      </item>
     </layout>
    </item>
-   <item row="5" column="1">
-    <widget class="QGroupBox" name="groupBox_5">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+   <item row="1" column="1">
+    <widget class="PyDMWaveformPlot" name="waveform_rfsignals">
+     <property name="toolTip">
+      <string/>
      </property>
+     <property name="yAxes">
+      <stringlist/>
+     </property>
+     <property name="curves">
+      <stringlist/>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
-      <string>CM acceptance test data</string>
+      <string>Straightening the cheeto</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_5">
-      <item row="0" column="1">
-       <layout class="QFormLayout" name="formLayout_2">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Usable amplitude</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="PyDMLabel" name="label_useable_amplitude">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-       </layout>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="4" column="1">
+       <widget class="PyDMSlider" name="slider_selphaseoffset">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="userDefinedLimits" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="userMinimum" stdset="0">
+         <double>-180.000000000000000</double>
+        </property>
+        <property name="userMaximum" stdset="0">
+         <double>180.000000000000000</double>
+        </property>
+       </widget>
       </item>
-      <item row="0" column="0">
-       <layout class="QFormLayout" name="formLayout">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>Max. amplitude</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="PyDMLabel" name="label_max_amplitude">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-       </layout>
+      <item row="2" column="1">
+       <widget class="PyDMLabel" name="label_selphaseoffset_rdbk">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="channel" stdset="0">
+         <string>${sel_phase_offset_PV}</string>
+        </property>
+       </widget>
       </item>
-      <item row="1" column="0">
-       <layout class="QFormLayout" name="formLayout_3">
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>FE onset</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="PyDMLabel" name="label_fe_onset">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-       </layout>
+      <item row="3" column="1">
+       <widget class="PyDMLineEdit" name="lineedit_selphaseoffset">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
       </item>
       <item row="1" column="1">
-       <layout class="QFormLayout" name="formLayout_4">
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>Limitation</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="PyDMLabel" name="label_cavity_limitation">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>SEL phase offset</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" rowspan="4">
+       <widget class="PyDMWaveformPlot" name="waveform_cheeto">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="yAxes">
+         <stringlist/>
+        </property>
+        <property name="curves">
+         <stringlist/>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

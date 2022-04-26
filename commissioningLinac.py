@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
 
 from epics import PV
 
@@ -15,31 +15,48 @@ class CommissioningCavity(Cavity):
 
         self.results = CommissioningCavityResults()
 
-        self.interlock_PV = PV(self.pvPrefix + "RFPERMIT")
-        self.stepper_temp_PV = PV(self.pvPrefix + "STEPTEMP")
-        self.coupler_top_PV = PV(self.pvPrefix + "CPLRTEMP1")
-        self.coupler_bot_PV = PV(self.pvPrefix + "CPLRTEMP2")
-        self.hom_us_PV = PV("CTE:CM{cm}:1{cavity}18:UH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
-        self.hom_ds_PV = PV("CTE:CM{cm}:1{cavity}20:DH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
-        self.detune_PV = PV(self.pvPrefix + "DFBEST")
+        self.interlock_PV: PV = PV(self.pvPrefix + "RFPERMIT")
+        self.stepper_temp_PV: PV = PV(self.pvPrefix + "STEPTEMP")
+        self.coupler_top_PV: PV = PV(self.pvPrefix + "CPLRTEMP1")
+        self.coupler_bot_PV: PV = PV(self.pvPrefix + "CPLRTEMP2")
+        self.hom_us_PV: PV = PV("CTE:CM{cm}:1{cavity}18:UH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
+        self.hom_ds_PV: PV = PV("CTE:CM{cm}:1{cavity}20:DH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
+        self.detune_PV: PV = PV(self.pvPrefix + "DFBEST")
 
-        self.ssa_maxdrive_PV = PV(self.pvPrefix + "SSA:DRV_MAX_REQ")
-        self.piezo_enable_PV = PV(self.pvPrefix + "PZT:ENABLE")
-        self.piezo_feedback_mode_PV = PV(self.pvPrefix + "PZT:MODECTRL")
-        self.piezo_dc_setpoint_PV = PV(self.pvPrefix + "PZT:DAC_SP")
-        self.piezo_prerf_run_check_PV = PV(self.pvPrefix + "PZT:TESTSTRT")
-        self.piezo_prerf_cha_status_PV = PV(self.pvPrefix + "PZT:CHA_TESTSTAT")
-        self.piezo_prerf_chb_status_PV = PV(self.pvPrefix + "PZT:CHB_TESTSTAT")
-        self.piezo_prerf_cha_testmsg_PV = PV(self.pvPrefix + "PZT:CHA_TESTMSG1")
-        self.piezo_prerf_chb_testmsg_PV = PV(self.pvPrefix + "PZT:CHA_TESTMSG2")
-        self.piezo_capacitance_a_PV = PV(self.pvPrefix + "PZT:CHA_C")
-        self.piezo_capacitance_b_PV = PV(self.pvPrefix + "PZT:CHB_C")
-        self.piezo_prerf_check_status_PV = PV(self.pvPrefix + "PZT:TESTSTS")
+        self.ssa_maxdrive_PV: PV = PV(self.pvPrefix + "SSA:DRV_MAX_REQ")
+        self.piezo_enable_PV: PV = PV(self.pvPrefix + "PZT:ENABLE")
+        self.piezo_feedback_mode_PV: PV = PV(self.pvPrefix + "PZT:MODECTRL")
+        self.piezo_dc_setpoint_PV: PV = PV(self.pvPrefix + "PZT:DAC_SP")
+        self.piezo_prerf_run_check_PV: PV = PV(self.pvPrefix + "PZT:TESTSTRT")
+        self.piezo_prerf_cha_status_PV: PV = PV(self.pvPrefix + "PZT:CHA_TESTSTAT")
+        self.piezo_prerf_chb_status_PV: PV = PV(self.pvPrefix + "PZT:CHB_TESTSTAT")
+        self.piezo_prerf_cha_testmsg_PV: PV = PV(self.pvPrefix + "PZT:CHA_TESTMSG1")
+        self.piezo_prerf_chb_testmsg_PV: PV = PV(self.pvPrefix + "PZT:CHA_TESTMSG2")
+        self.piezo_capacitance_a_PV: PV = PV(self.pvPrefix + "PZT:CHA_C")
+        self.piezo_capacitance_b_PV: PV = PV(self.pvPrefix + "PZT:CHB_C")
+        self.piezo_prerf_check_status_PV: PV = PV(self.pvPrefix + "PZT:TESTSTS")
 
-        self.measured_probe_qext_PV = PV(self.pvPrefix + "QPROBE_CALC2")
-        self.inuse_probe_qext_PV = PV(self.pvPrefix + "QPROBE")
-        self.calculate_probe_qext_PV = PV(self.pvPrefix + "QPROBE_CALC1.PROC")
-        self.push_probe_qext_PV = PV(self.pvPrefix + "PUSH_QPROBECALC.PROC")
+        self.measured_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE_CALC2")
+        self.inuse_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE")
+        self.calculate_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE_CALC1.PROC")
+        self.push_probe_qext_PV: PV = PV(self.pvPrefix + "PUSH_QPROBECALC.PROC")
+
+        self.waveformplot_channelpairs: List[Tuple[Optional[str], str]] = [(None, self.revWaveformPV.pvname),
+                                                                           (None, self.fwdWaveformPV.pvname),
+                                                                           (None, self.cavWaveformPV.pvname)]
+
+        self.acceptancetest_max_amplitude_PV: PV = PV(self.pvPrefix + "AT:AMAX")
+        self.acceptancetest_useable_amplitude_PV: PV = PV(self.pvPrefix + "AT:AUSE")
+        self.acceptancetest_fe_onset_PV: PV = PV(self.pvPrefix + "AT:FEON_AACT")
+        self.acceptancetest_cavity_limitation_PV: PV = PV(self.pvPrefix + "AT:LIMIT")
+
+        self.sel_phaseoffset_PV: PV = PV(self.pvPrefix + "SEL_POFFs")
+        self.sel_phaseoffset_rdbk_PV: PV = PV(self.pvPrefix + "SEL_POFF_RBV")
+
+        self.feedback_phase_high_PV: PV = PV(self.pvPrefix + "PHAFB_HSUM")
+        self.feedback_phase_low_PV: PV = PV(self.pvPrefix + "PHAFB_LSUM")
+        self.feedback_amplitude_high_PV: PV = PV(self.pvPrefix + "AMPFB_HSUM")
+        self.feedback_amplitude_low_PV: PV = PV(self.pvPrefix + "AMPFB_LSUM")
 
     @property
     def interlocks_cleared(self):
@@ -60,10 +77,10 @@ class CommissioningMagnet(Magnet):
     def __init__(self, magnettype, cryomodule):
         super(CommissioningMagnet, self).__init__(magnettype, cryomodule)
 
-        self.bdesPV = PV(self.pvprefix + 'BDES')
-        self.controlPV = PV(self.pvprefix + 'CTRL')
-        self.interlockPV = PV(self.pvprefix + 'INTLKSUMY')
-        self.ps_statusPV = PV(self.pvprefix + 'STATE')
+        self.bdesPV: PV = PV(self.pvprefix + 'BDES')
+        self.controlPV: PV = PV(self.pvprefix + 'CTRL')
+        self.interlockPV: PV = PV(self.pvprefix + 'INTLKSUMY')
+        self.ps_statusPV: PV = PV(self.pvprefix + 'STATE')
 
 
 class CommissioningCryomodule(Cryomodule):
