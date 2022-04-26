@@ -8,6 +8,7 @@ from typing import List, Dict, Optional
 
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QPushButton, QMessageBox
 from edmbutton import PyDMEDMDisplayButton
+from epics.ca import CASeverityException
 from pydm import Display
 from pydm.widgets import PyDMByteIndicator, PyDMLabel
 from qtpy.QtCore import Slot
@@ -422,7 +423,7 @@ class GuidedCommissioningScreens(Display):
             self.save_results()
         except (
                 scLinacUtils.CavityQLoadedCalibrationError, scLinacUtils.CavityScaleFactorCalibrationError,
-                TypeError) as e:
+                TypeError, CASeverityException) as e:
             cavity_expert_button = PyDMEDMDisplayButton()
             cavity_expert_button.filenames = ['$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl']
             cavity_expert_button.macros = self.macro_string
