@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1260</width>
+    <height>589</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_2">
+      <attribute name="title">
+       <string>Full CM Overview</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="PyDMTimePlot" name="plot_steppertemps">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="PyDMTimePlot" name="plot_homus_temp">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="yAxes">
+          <stringlist/>
+         </property>
+         <property name="curves">
+          <stringlist/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="PyDMTimePlot" name="plot_couplertop_temp">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="PyDMTimePlot" name="plot_cmvacuum">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="PyDMTimePlot" name="plot_magnet">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="title" stdset="0">
+          <string>Magnets</string>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="PyDMTimePlot" name="plot_homds_temp">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="yAxes">
+          <stringlist/>
+         </property>
+         <property name="curves">
+          <stringlist/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="PyDMTimePlot" name="plot_couplerbot_temp">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="PyDMTimePlot" name="plot_cryosignals">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Single Cavity Overview</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0">
+        <widget class="PyDMTimePlot" name="plot_single_cavity_overview">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_3">
+      <attribute name="title">
+       <string>Frequency tuning</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="PyDMTimePlot" name="plot_frequency">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMTimePlot</class>
+   <extends>QGraphicsView</extends>
+   <header>pydm.widgets.timeplot</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

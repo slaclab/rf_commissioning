@@ -1,52 +1,71 @@
+import dataclasses
+from typing import Optional
+
+TESTLEAD_LIST = [
+    'Aderhold, Sebastian',
+    'Gonnella, Dan',
+    'Maniscalco, James',
+    'Nelson, Janice',
+    'Porter, Ryan',
+    'Zacarias, Lisa',
+]
+
+# these values are based on the list of enum states found by probing {Magnettype}:L{x}B:{cm}85:CTRL
+MAGNET_RESET_VALUE = 10
+MAGNET_ON_VALUE = 11
+MAGNET_OFF_VALUE = 12
+MAGNET_DEGAUSS_VALUE = 13
+MAGNET_TRIM_VALUE = 1
+
+# TODO convert to IDES of 20A
+NOMINAL_BDES = 8.5
 
 
-cavity_list = [
-    'Cavity 1',
-    'Cavity 2',
-    'Cavity 3',
-    'Cavity 4',
-    'Cavity 5',
-    'Cavity 6',
-    'Cavity 7',
-    'Cavity 8',
-    'Cavity 9',
-    ]
+class ProbeQError(Exception):
+    """
+    Exception thrown during cavity probe Q calculation
+    """
 
-cryomodule_list = [
-    '01',
-    '02',
-    '03',
-    'H1',
-    'H2',
-    '04',
-    '05',
-    '06',
-    '07',
-    '08',
-    '09',
-    '10',
-    '11',
-    '12',
-    '13',
-    '14',
-    '15',
-    '16',
-    '17',
-    '18',
-    '19',
-    '21',
-    '22',
-    '23',
-    '24',
-    '25',
-    '26',
-    '27',
-    '28',
-    '29',
-    '30',
-    '31',
-    '32',
-    '33',
-    '34',
-    '35',
-    ]
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+class FreqSearchError(Exception):
+    """
+    Exception thrown during 8pi/9 frequency search
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+@dataclasses.dataclass
+class CommissioningCavityResults:
+    piezo_prerf_checked: bool = False
+    piezo_capacitance_a: Optional[float] = None
+    piezo_capacitance_b: Optional[float] = None
+    ssa_maxdrive: Optional[float] = None
+    ssa_characterized: bool = False
+    is_tuned: bool = False
+    cold_landing_frequency: Optional[float] = None
+    steps_to_tuned: Optional[int] = None
+    eightpiovernine_frequency_measured: bool = False
+    cavity_calibration_run: bool = False
+    fpc_qext: Optional[float] = None
+    probe_qext_measured: bool = False
+    probe_qext_value: Optional[float] = None
+    piezo_withrf_checked: bool = False
+    piezo_amplifiergain_a: Optional[float] = None
+    piezo_amplifiergain_b: Optional[float] = None
+    piezo_detune_gain: Optional[float] = None
+    microphonics_captured: bool = False
+    final_phase_offset: Optional[float] = None
+    onehourrun_complete: bool = False
+
+
+@dataclasses.dataclass
+class CommissioningCryomoduleResults:
+    magnet_checked: bool = False
+    unit_test_complete: bool = False

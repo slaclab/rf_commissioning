@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1144</width>
-    <height>946</height>
+    <width>592</width>
+    <height>719</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,284 +17,408 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_setup">
       <attribute name="title">
        <string>Initial Setup</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0" colspan="3">
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="4" column="1">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>5) Select cavity</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>3) Enter additional test participants</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>4) Select cryomodule</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="PyDMEnumComboBox" name="PickCavity">
-           <property name="toolTip">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="PyDMDateTimeEdit" name="TestDateAndTime">
-           <property name="toolTip">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLineEdit" name="TestMembers">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter additional test team members, separated by comma&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="PyDMEnumComboBox" name="PickRadMonitor">
-           <property name="toolTip">
-            <string/>
-           </property>
-           <property name="duplicatesEnabled">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>2) Select test lead</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="PyDMEnumComboBox" name="TestLead">
-           <property name="toolTip">
-            <string/>
-           </property>
-           <property name="editable">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>1) Enter date and time</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="PyDMEnumComboBox" name="PickCM">
-           <property name="toolTip">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>6) Select radiation sensors in use</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <item row="1" column="0" colspan="3">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Step selection and progress</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="PyDMDrawingLine" name="PyDMDrawingLine">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="rotation" stdset="0">
+             <double>270.000000000000000</double>
+            </property>
+            <property name="arrowEndPoint" stdset="0">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="button_magnet_checkout">
+              <property name="text">
+               <string>Checkout magnet</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_checkout_magnet">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="button_piezo_prerf">
+              <property name="text">
+               <string>Run piezo pre-RF check</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="label_piezo_prerf">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="button_ssa_char">
+              <property name="text">
+               <string>Run SSA characterization</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_ssa_char">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QPushButton" name="button_tune_cavity">
+              <property name="text">
+               <string>Tune cavity</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="label_tune_cavity">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QPushButton" name="button_measure_8pi9">
+              <property name="text">
+               <string>Measure 8pi/9 mode frequency</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLabel" name="label_measure_8pi9">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QPushButton" name="button_cavity_calibration">
+              <property name="text">
+               <string>Perform cavity calibration</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLabel" name="label_cavity_calibration">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QPushButton" name="button_selap_rampup">
+              <property name="text">
+               <string>Ramp up cavity in SELAP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLabel" name="label_selap_rampup">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QPushButton" name="button_12hrun">
+              <property name="text">
+               <string>Full CM 12h run</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QLabel" name="label_12hrun">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_overall_completion">
+            <property name="font">
+             <font>
+              <pointsize>20</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Incomplete</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_17">
+            <property name="font">
+             <font>
+              <pointsize>20</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Completion status:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
+       <item row="0" column="0" colspan="3">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Test setup</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="4" column="1">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Select cryomodule</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Enter additional test participants</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QComboBox" name="pick_cavity">
+            <item>
+             <property name="text">
+              <string>1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>3</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>4</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>5</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>6</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>7</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>8</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Select cavity</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QComboBox" name="pick_radmonitor">
+            <item>
+             <property name="text">
+              <string>1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Select Decarad in use</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QTableWidget" name="test_members">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="verticalScrollBarPolicy">
+             <enum>Qt::ScrollBarAsNeeded</enum>
+            </property>
+            <property name="horizontalScrollBarPolicy">
+             <enum>Qt::ScrollBarAsNeeded</enum>
+            </property>
+            <property name="sizeAdjustPolicy">
+             <enum>QAbstractScrollArea::AdjustToContents</enum>
+            </property>
+            <row>
+             <property name="text">
+              <string>1</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>2</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>3</string>
+             </property>
+            </row>
+            <column>
+             <property name="text">
+              <string>First Name</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Last Name</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Select test lead</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QComboBox" name="testlead"/>
+          </item>
+          <item row="4" column="0">
+           <widget class="QComboBox" name="pick_cm"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_striptools">
+      <attribute name="title">
+       <string>StripTools &amp;&amp; Interlocks</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_7">
        <item row="1" column="0">
-        <widget class="QPushButton" name="start_button">
+        <widget class="PyDMRelatedDisplayButton" name="button_decaradgui">
+         <property name="toolTip">
+          <string/>
+         </property>
          <property name="text">
-          <string>Start</string>
+          <string>Open Decarad GUI</string>
+         </property>
+         <property name="filenames" stdset="0">
+          <stringlist/>
+         </property>
+         <property name="macros" stdset="0">
+          <stringlist/>
+         </property>
+         <property name="openInNewWindow" stdset="0">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="PyDMShellCommand" name="button_striptools">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="text">
+          <string>Open striptools</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="PyDMEDMDisplayButton" name="button_interlockoverview">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="text">
+          <string>Open interlock overview</string>
+         </property>
+         <property name="filenames" stdset="0">
+          <stringlist>
+           <string>$TOOLS/edm/display/llrf/rf_srf_intlk_nocryo_embed.edl</string>
+          </stringlist>
+         </property>
+         <property name="macros" stdset="0">
+          <stringlist notr="true"/>
          </property>
         </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_magnet">
-      <attribute name="title">
-       <string>Magnet</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_3">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout_6">
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>TextLabel</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="PyDMTemplateRepeater" name="PyDMTemplateRepeater">
-           <property name="toolTip">
-            <string/>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::Box</enum>
-           </property>
-           <property name="layoutType" stdset="0">
-            <enum>PyDMTemplateRepeater::Horizontal</enum>
-           </property>
-           <property name="templateFilename" stdset="0">
-            <string>MagnetTemplate.ui</string>
-           </property>
-           <property name="dataSource" stdset="0">
-            <string>MagnetTemplate.json</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="PyDMShellCommand" name="PyDMShellCommand">
-           <property name="toolTip">
-            <string/>
-           </property>
-           <property name="text">
-            <string>Open Striptools</string>
-           </property>
-           <property name="allowMultipleExecutions" stdset="0">
-            <bool>true</bool>
-           </property>
-           <property name="commands" stdset="0">
-            <stringlist>
-             <string>srf_makeAutoPlot.py st cmmag ACCL:L2B:17</string>
-             <string>srf_makeAutoPlot.py st magtemps 02</string>
-             <string>StripTool $STRIP_CONFIGFILE_DIR/srf_magtemps.stp &amp;</string>
-             <string>StripTool $STRIP_CONFIGFILE_DIR/srf_cmmag.stp &amp;</string>
-             <string></string>
-            </stringlist>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>TextLabel</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_tuning">
-      <attribute name="title">
-       <string>Tuning</string>
-      </attribute>
-     </widget>
-     <widget class="QWidget" name="tab_cavitycalibration">
-      <attribute name="title">
-       <string>Cavity Calibration</string>
-      </attribute>
-      <widget class="PyDMWaveformPlot" name="PyDMWaveformPlot">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>10</y>
-         <width>591</width>
-         <height>371</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string/>
-       </property>
-       <property name="curves">
-        <stringlist>
-         <string>{&quot;y_channel&quot;: &quot;ACCL:L1B:0210:DF_FC&quot;, &quot;x_channel&quot;: null, &quot;name&quot;: &quot;&quot;, &quot;color&quot;: &quot;white&quot;, &quot;lineStyle&quot;: 1, &quot;lineWidth&quot;: 1, &quot;symbol&quot;: null, &quot;symbolSize&quot;: 10, &quot;yAxisName&quot;: &quot;Axis 1&quot;, &quot;redraw_mode&quot;: 2}</string>
-         <string>{&quot;y_channel&quot;: null, &quot;x_channel&quot;: null, &quot;name&quot;: &quot;&quot;, &quot;color&quot;: &quot;red&quot;, &quot;lineStyle&quot;: 1, &quot;lineWidth&quot;: 1, &quot;symbol&quot;: null, &quot;symbolSize&quot;: 10, &quot;yAxisName&quot;: &quot;Axis 1&quot;, &quot;redraw_mode&quot;: 2}</string>
-        </stringlist>
-       </property>
-      </widget>
-      <widget class="PyDMEDMDisplayButton" name="PyDMEDMDisplayButton">
-       <property name="geometry">
-        <rect>
-         <x>660</x>
-         <y>70</y>
-         <width>28</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string/>
-       </property>
-      </widget>
-      <widget class="PyDMLabel" name="PyDMLabel">
-       <property name="geometry">
-        <rect>
-         <x>690</x>
-         <y>260</y>
-         <width>70</width>
-         <height>17</height>
-        </rect>
-       </property>
-       <property name="toolTip">
-        <string/>
-       </property>
-       <property name="channel" stdset="0">
-        <string>ca://ACCL:L1B:0210:DF_FC</string>
-       </property>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="tab_pulsedPR">
-      <attribute name="title">
-       <string>Pulsed Mode Power Rise</string>
-      </attribute>
-     </widget>
-     <widget class="QWidget" name="tab_selapPR">
-      <attribute name="title">
-       <string>SELAP Power Rise</string>
-      </attribute>
-     </widget>
-     <widget class="QWidget" name="tab_12hrun">
-      <attribute name="title">
-       <string>12h run</string>
-      </attribute>
-     </widget>
-     <widget class="QWidget" name="tab_finish">
-      <attribute name="title">
-       <string>Finish current measurement</string>
-      </attribute>
-     </widget>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QPushButton" name="button_livesignals">
+     <property name="text">
+      <string>Show Live Signals</string>
+     </property>
     </widget>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>PyDMLabel</class>
-   <extends>QLabel</extends>
-   <header>pydm.widgets.label</header>
-  </customwidget>
-  <customwidget>
-   <class>PyDMWaveformPlot</class>
-   <extends>QGraphicsView</extends>
-   <header>pydm.widgets.waveformplot</header>
-  </customwidget>
-  <customwidget>
-   <class>PyDMDateTimeEdit</class>
-   <extends>QDateTimeEdit</extends>
-   <header>pydm.widgets.datetime</header>
-  </customwidget>
-  <customwidget>
-   <class>PyDMEnumComboBox</class>
-   <extends>QComboBox</extends>
-   <header>pydm.widgets.enum_combo_box</header>
+   <class>PyDMDrawingLine</class>
+   <extends>QWidget</extends>
+   <header>pydm.widgets.drawing</header>
   </customwidget>
   <customwidget>
    <class>PyDMRelatedDisplayButton</class>
@@ -305,11 +429,6 @@
    <class>PyDMShellCommand</class>
    <extends>QPushButton</extends>
    <header>pydm.widgets.shell_command</header>
-  </customwidget>
-  <customwidget>
-   <class>PyDMTemplateRepeater</class>
-   <extends>QFrame</extends>
-   <header>pydm.widgets.template_repeater</header>
   </customwidget>
   <customwidget>
    <class>PyDMEDMDisplayButton</class>
