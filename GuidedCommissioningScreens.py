@@ -19,6 +19,14 @@ from commissioningLinac import CommissioningCryomodule, CommissioningCavity, COM
 from lcls_tools.devices.scLinac.scLinac import CRYOMODULE_OBJECTS
 from lcls_tools.pydm_tools.pydmPlotUtil import TimePlotParams, TimePlotUpdater, WaveformPlotParams, WaveformPlotUpdater
 
+FREQ_SEARCH_MODEOVERLAP = 1000
+
+FREQ_SEARCH_RMS_THRESH = 10
+
+FREQ_SEARCH_HIGH = 50000
+
+FREQ_SEARCH_LOW = -900000
+
 STEPPERTEMP_PLOT_KEY = 'steppertemp'
 CMVACUUM_PLOT_KEY = 'cmvacuum'
 CRYOSIGNALS_PLOT_KEY = 'cryosignals'
@@ -93,6 +101,7 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
         self.ui.button_cavity_calibration.clicked.connect(self.cavity_calibration_button_pushed)
+        self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
 
     def get_magnet_labels(self):
         magnet_VBoxLayout_list: List[
@@ -393,7 +402,7 @@ class GuidedCommissioningScreens(Display):
             self.make_popup('SSA calibration failed', ssa_expert_button, e, self.ssa_actionbutton_clicked)
         self.save_results()
 
-    def make_popup(self, title, edmbutton, exception, action_func):
+    def make_popup(self, title, expert_edmbutton, exception, action_func):
         popup = QMessageBox()
         popup.setIcon(QMessageBox.Critical)
         popup.setWindowTitle(title)
@@ -401,7 +410,7 @@ class GuidedCommissioningScreens(Display):
             '{error}\nPlease check expert screen and select from the options below'.format(error=exception))
         popup.addButton('Abort', QMessageBox.RejectRole)
         popup.addButton('Acknowledge manual completion and continue', QMessageBox.AcceptRole)
-        popup.addButton(edmbutton, QMessageBox.ActionRole)
+        popup.addButton(expert_edmbutton, QMessageBox.ActionRole)
         popup.buttonClicked.connect(partial(action_func, popup))
         popup.exec()
 
@@ -410,6 +419,12 @@ class GuidedCommissioningScreens(Display):
         if qmessagebox.buttonRole(clickedbutton) == QMessageBox.AcceptRole:
             self.current_cavity.results.ssa_characterized = True
             self.current_cavity.results.ssa_maxdrive = self.current_cavity.ssa_maxdrive_PV.value
+        self.populate_status_labels()
+
+    def freq_actionbutton_clicked(self, qmessagebox: QMessageBox):
+        clickedbutton = qmessagebox.clickedButton()
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.AcceptRole:
+            self.current_cavity.results.eightpiovernine_frequency_measured = True
         self.populate_status_labels()
 
     def cavity_calibration_button_pushed(self):
@@ -424,12 +439,16 @@ class GuidedCommissioningScreens(Display):
         except (
                 scLinacUtils.CavityQLoadedCalibrationError, scLinacUtils.CavityScaleFactorCalibrationError,
                 TypeError, CASeverityException) as e:
-            cavity_expert_button = PyDMEDMDisplayButton()
-            cavity_expert_button.filenames = ['$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl']
-            cavity_expert_button.macros = self.macro_string
-            cavity_expert_button.setText('Open cavity EDM expert screen')
-            cavity_expert_button.setDefault(True)
+            cavity_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl')
             self.make_popup('Cavity calibration failed', cavity_expert_button, e, self.cavity_actionbutton_clicked)
+
+    def make_edmbutton(self, filepath: str):
+        edmbutton = PyDMEDMDisplayButton()
+        edmbutton.filenames = [filepath]
+        edmbutton.macros = self.macro_string
+        edmbutton.setText('Open EDM expert screen')
+        edmbutton.setDefault(True)
+        return edmbutton
 
     def cavity_actionbutton_clicked(self, qmessagebox: QMessageBox):
         clickedbutton = qmessagebox.clickedButton()
@@ -438,6 +457,38 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.results.fpc_qext = self.current_cavity.measuredQLoadedPV.value
             self.current_cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
         self.populate_status_labels()
+
+    def measure_8pi9mode(self):
+        other_cavities = list(self.current_cavity.rack.cavities.keys())
+        other_cavities.remove(self.current_cavity.number)
+
+        for cavity in other_cavities:
+            self.current_cm.cavities[cavity].freq_search_select_PV.put(0)
+        self.current_cavity.freq_search_select_PV.put(1)
+
+        self.current_cavity.rack.freq_search_low_PV.put(FREQ_SEARCH_LOW)
+        self.current_cavity.rack.freq_search_high_PV.put(FREQ_SEARCH_HIGH)
+        self.current_cavity.rack.freq_search_rms_thresh_PV.put(FREQ_SEARCH_RMS_THRESH)
+        self.current_cavity.rack.freq_search_modeoverlap_PV.put(FREQ_SEARCH_MODEOVERLAP)
+
+        self.current_cavity.rack.freq_search_start_PV.put(1)
+        while self.current_cavity.rack.freq_search_status_PV.value == 3:
+            sleep(1)
+        if self.current_cavity.rack.freq_search_status_PV.value != 5:
+            raise util.FreqSearchError('Frequency search did not exit successfully')
+        if (self.current_cavity.freq_search_8pi9_PV.value > -750000
+                or self.current_cavity.freq_search_8pi9_PV.value < -850000):
+            raise util.FreqSearchError('8pi/9 frequency outside tolerance')
+        self.current_cavity.freq_search_push_PV.put(1)
+        self.current_cavity.results.eightpiovernine_frequency_measured = True
+
+    def freq_scan_button_pressed(self):
+        try:
+            self.measure_8pi9mode()
+        except util.FreqSearchError as e:
+            freq_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_freq_scan_rack_embed_search.edl')
+            self.make_popup(title='Error finding 8pi/9 frequency', expert_edmbutton=freq_edmbutton,
+                            exception=e, action_func=self.freq_actionbutton_clicked)
 
     def load_results(self):
         with open('cryomodule_results.json', 'r+') as f:

@@ -31,6 +31,16 @@ class ProbeQError(Exception):
         super().__init__(self.message)
 
 
+class FreqSearchError(Exception):
+    """
+    Exception thrown during 8pi/9 frequency search
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
 @dataclasses.dataclass
 class CommissioningCavityResults:
     piezo_prerf_checked: bool = False

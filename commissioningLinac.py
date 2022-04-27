@@ -2,7 +2,7 @@ from typing import Dict, List, Tuple, Optional
 
 from epics import PV
 
-from lcls_tools.devices.scLinac.scLinac import Cavity, Magnet, Cryomodule, Linac, LINAC_TUPLES
+from lcls_tools.devices.scLinac.scLinac import Cavity, Magnet, Cryomodule, Linac, LINAC_TUPLES, Rack
 from utilities import CommissioningCavityResults, ProbeQError, CommissioningCryomoduleResults
 
 PROBE_QEXT_UPPER_LIMIT = 3e12
@@ -50,13 +50,17 @@ class CommissioningCavity(Cavity):
         self.acceptancetest_fe_onset_PV: PV = PV(self.pvPrefix + "AT:FEON_AACT")
         self.acceptancetest_cavity_limitation_PV: PV = PV(self.pvPrefix + "AT:LIMIT")
 
-        self.sel_phaseoffset_PV: PV = PV(self.pvPrefix + "SEL_POFFs")
+        self.sel_phaseoffset_PV: PV = PV(self.pvPrefix + "SEL_POFF")
         self.sel_phaseoffset_rdbk_PV: PV = PV(self.pvPrefix + "SEL_POFF_RBV")
 
         self.feedback_phase_high_PV: PV = PV(self.pvPrefix + "PHAFB_HSUM")
         self.feedback_phase_low_PV: PV = PV(self.pvPrefix + "PHAFB_LSUM")
         self.feedback_amplitude_high_PV: PV = PV(self.pvPrefix + "AMPFB_HSUM")
         self.feedback_amplitude_low_PV: PV = PV(self.pvPrefix + "AMPFB_LSUM")
+
+        self.freq_search_select_PV: PV = PV(self.pvPrefix + "FSCAN:SEL")
+        self.freq_search_8pi9_PV: PV = PV(self.pvPrefix + "FSCAN:8PI9MODE")
+        self.freq_search_push_PV: PV = PV(self.pvPrefix + "FSCAN:PUSH_8PI9.PROC")
 
     @property
     def interlocks_cleared(self):
@@ -73,6 +77,18 @@ class CommissioningCavity(Cavity):
             raise ProbeQError('Measured probe Q value out of tolerance')
 
 
+class CommissioningRack(Rack):
+    def __init__(self, rackName, cryoObject, cavityClass):
+        super().__init__(rackName=rackName, cryoObject=cryoObject, cavityClass=CommissioningCavity)
+
+        self.freq_search_low_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_START")
+        self.freq_search_high_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_STOP")
+        self.freq_search_rms_thresh_PV: PV = PV(self.pvPrefix + "FSCAN:RMS_THRESH")
+        self.freq_search_modeoverlap_PV: PV = PV(self.pvPrefix + "FSCAN:MODE+OVERLAP")
+        self.freq_search_start_PV: PV = PV(self.pvPrefix + "FSCAN:START")
+        self.freq_search_status_PV: PV = PV(self.pvPrefix + "FSCAN:STAT")
+
+
 class CommissioningMagnet(Magnet):
     def __init__(self, magnettype, cryomodule):
         super(CommissioningMagnet, self).__init__(magnettype, cryomodule)
@@ -84,8 +100,9 @@ class CommissioningMagnet(Magnet):
 
 
 class CommissioningCryomodule(Cryomodule):
-    def __init__(self, cryoName, linacObject, cavityClass=CommissioningCavity, magnetClass=CommissioningMagnet):
-        super().__init__(cryoName, linacObject, CommissioningCavity, CommissioningMagnet)
+    def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass):
+        super().__init__(cryoName=cryoName, linacObject=linacObject, cavityClass=CommissioningCavity,
+                         magnetClass=CommissioningMagnet, rackClass=CommissioningRack)
 
         self.results = CommissioningCryomoduleResults()
         self.cavity_results = {cavity.number: cavity.results for cavity in self.cavities.values()}
@@ -114,6 +131,7 @@ COMMISSIONING_LINAC_OBJECTS: List[Linac] = []
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = {}
 
 for idx, (name, cryomoduleList) in enumerate(LINAC_TUPLES):
-    linac = Linac(name, cryomoduleList, cavityClass=CommissioningCavity, cryomoduleClass=CommissioningCryomodule)
+    linac = Linac(linacName=name, cryomoduleStringList=cryomoduleList, cavityClass=CommissioningCavity,
+                  cryomoduleClass=CommissioningCryomodule, rackClass=CommissioningRack, magnetClass=CommissioningMagnet)
     COMMISSIONING_LINAC_OBJECTS.append(linac)
     COMMISSIONING_CRYOMODULE_OBJECTS.update(linac.cryomodules)
