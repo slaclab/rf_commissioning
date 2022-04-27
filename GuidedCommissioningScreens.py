@@ -254,6 +254,8 @@ class GuidedCommissioningScreens(Display):
         self.waveform_plot_updater.updatePlots(rfwaveformplot_update_map)
 
     def update_rf_controls(self):
+        # TODO implement microphonics measurement (or connect button to microphonics GUI)
+        # TODO add piezo with-rf check
         ui = self.rf_controls_window.ui
         ui.button_ssa_on.clicked.connect(self.current_cavity.ssa.turnOn)
         ui.button_ssa_off.clicked.connect(self.current_cavity.ssa.turnOff)

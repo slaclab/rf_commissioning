@@ -36,6 +36,9 @@ class CommissioningCavity(Cavity):
         self.piezo_capacitance_b_PV: PV = PV(self.pvPrefix + "PZT:CHB_C")
         self.piezo_prerf_check_status_PV: PV = PV(self.pvPrefix + "PZT:TESTSTS")
 
+        self.piezo_withrf_run_check_PV: PV = PV(self.pvPrefix + "PZT:RFSTART")
+        self.piezo_withrf_check_status_PV: PV = PV(self.pvPrefix + "PZT:RFTESTS")
+        
         self.measured_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE_CALC2")
         self.inuse_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE")
         self.calculate_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE_CALC1.PROC")
