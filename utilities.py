@@ -63,6 +63,7 @@ class CommissioningCavityResults:
     microphonics_captured: bool = False
     final_phase_offset: Optional[float] = None
     onehourrun_complete: bool = False
+    max_amplitude: Optional[float] = None
 
 
 @dataclasses.dataclass
