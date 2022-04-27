@@ -1,12 +1,68 @@
-from typing import Dict, List, Tuple, Optional
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple
 
 from epics import PV
+from lcls_tools.data_analysis.archiver import Archiver
+from lcls_tools.devices.scLinac.scLinac import Cavity, Cryomodule, LINAC_TUPLES, Linac, Magnet, Rack
+from numpy import nanmean
 
-from lcls_tools.devices.scLinac.scLinac import Cavity, Magnet, Cryomodule, Linac, LINAC_TUPLES, Rack
-from utilities import CommissioningCavityResults, ProbeQError, CommissioningCryomoduleResults
+from utilities import CommissioningCavityResults, CommissioningCryomoduleResults, ProbeQError
 
 PROBE_QEXT_UPPER_LIMIT = 3e12
 PROBE_QEXT_LOWER_LIMIT = 1e11
+
+DECARAD_ON_VALUE = 0
+DECARAD_OFF_VALUE = 1
+
+ARCHIVER = Archiver("lcls")
+
+
+class DecaradHead:
+    def __init__(self, number, decarad):
+        # type (int, Decarad) -> None
+
+        if number not in range(1, 11):
+            raise AttributeError("Decarad Head number need to be between 1 and 10")
+
+        self.decarad = decarad
+        self.number = number
+
+        # Adds leading 0 to numbers with less than 2 digits
+        self.pvPrefix = self.decarad.pvPrefix + "{:02d}:".format(self.number)
+
+        self.doseRatePV = PV(self.pvPrefix + "GAMMA_DOSE_RATE")
+
+    @property
+    def avgDose(self) -> float:
+        # try to do averaging of the last NUM_LL_POINTS_TO_AVG points to account
+        # for signal noise
+        try:
+            archiverData = ARCHIVER.getDataWithTimeInterval(pvList=[self.doseRatePV.pvname],
+                                                            startTime=(datetime.now() - timedelta(minutes=1)),
+                                                            endTime=datetime.now(),
+                                                            timeDelta=timedelta(seconds=1))
+
+            averageDose = nanmean(archiverData.values[self.doseRatePV.pvname])
+
+            return max(averageDose - 4, 0)
+
+        # return the most recent value if we can't average for whatever reason
+        except AttributeError:
+            return self.doseRatePV.value
+
+
+class Decarad:
+    def __init__(self, number: int):
+        if number not in [1, 2]:
+            raise AttributeError("Decarad needs to be 1 or 2")
+        self.number = number
+        self.pvPrefix = "RADM:SYS0:{num}00:".format(num=self.number)
+        self.powerControlPV = PV(self.pvPrefix + "HVCTRL")
+        self.powerStatusPV = PV(self.pvPrefix + "HVSTATUS")
+        self.voltageReadbackPV = PV(self.pvPrefix + "HVMON")
+
+        self.heads = {head: DecaradHead(number=head, decarad=self)
+                      for head in range(1, 11)}
 
 
 class CommissioningCavity(Cavity):
@@ -65,8 +121,29 @@ class CommissioningCavity(Cavity):
         self.freq_search_8pi9_PV: PV = PV(self.pvPrefix + "FSCAN:8PI9MODE")
         self.freq_search_push_PV: PV = PV(self.pvPrefix + "FSCAN:PUSH_8PI9.PROC")
 
+        self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
+
+        # To be populated from the GUI
+        self.decaradHead: Optional[DecaradHead] = None
+        self.decaradHead.doseRatePV.add_callback(self.checkRadiation)
+
+    def checkRadiation(self):
+        if self.decaradHead.avgDose > 0:
+            threshold = 16 * self.length
+            if self.selAmplitudeActPV.value <= threshold:
+                self.results.max_amplitude = threshold
+
+            else:
+                self.results.max_amplitude = self.selAmplitudeDesPV.value
+
+            # TODO do we want this? I think we want this
+            self.ades_max_srf_PV.put(min(threshold, self.ades_max_srf_PV.value))
+
+        if self.decaradHead.avgDose >= 50:
+            self.ades_max_srf_PV.put(self.selAmplitudeDesPV.value)
+
     @property
-    def interlocks_cleared(self):
+    def interlocks_cleared(self) -> bool:
         return self.interlock_PV.value == 1
 
     def calculate_probe_q(self):
@@ -126,6 +203,9 @@ class CommissioningCryomodule(Cryomodule):
             self.detune_PVs.append(cavity.detune_PV.pvname)
 
         self.magnet_name_map: Dict[str, CommissioningMagnet] = {'Quad': self.quad, 'XCor': self.xcor, 'YCor': self.ycor}
+
+        # To be populated from the GUI
+        self.decarad: Optional[Decarad] = None
 
 
 COMMISSIONING_LINAC_OBJECTS: List[Linac] = []
