@@ -4,19 +4,18 @@ import sys
 from functools import partial
 from os import path
 from time import sleep
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
-from PyQt5.QtWidgets import QMessageBox, QPushButton, QVBoxLayout, QWidget
+import lcls_tools.devices.scLinac.scLinacUtils as scLinacUtils
+from PyQt5.QtWidgets import QMessageBox, QWidget
 from edmbutton import PyDMEDMDisplayButton
 from epics.ca import CASeverityException
+from lcls_tools.devices.scLinac.scLinac import CRYOMODULE_OBJECTS
 from pydm import Display
-from pydm.widgets import PyDMByteIndicator, PyDMLabel
 from qtpy.QtCore import Slot
 
 import commissioningUtilities as util
-import lcls_tools.devices.scLinac.scLinacUtils as scLinacUtils
 from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad
-from lcls_tools.devices.scLinac.scLinac import CRYOMODULE_OBJECTS
 from lcls_tools.pydm_tools.pydmPlotUtil import TimePlotParams, TimePlotUpdater, WaveformPlotParams, WaveformPlotUpdater
 
 FREQ_SEARCH_MODEOVERLAP = 1000
@@ -54,7 +53,7 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity: Optional[CommissioningCavity] = None
         self.current_pvprefix = None
 
-        self.magnet_checkout_window = Display(ui_filename=self.getPath("MagnetScreen.ui"))
+        self.magnet_checkout_window = Display(ui_filename=self.getPath("gui/MagnetScreen.ui"))
         self.ui.button_magnet_checkout.clicked.connect(partial(self.showDisplay, self.magnet_checkout_window))
 
         self._magnet_edm_buttons: Dict[str, PyDMEDMDisplayButton] = {}
@@ -74,9 +73,9 @@ class GuidedCommissioningScreens(Display):
 
         self.get_magnet_labels()
 
-        self.rf_controls_window = Display(ui_filename=self.getPath("RFControls.ui"))
+        self.rf_controls_window = Display(ui_filename=self.getPath("gui/RFControls.ui"))
 
-        self.live_signals_window = Display(ui_filename=self.getPath("LiveSignals.ui"))
+        self.live_signals_window = Display(ui_filename=self.getPath("gui/LiveSignals.ui"))
         self.ui.button_livesignals.clicked.connect(partial(self.showDisplay, self.live_signals_window))
 
         time_plot_updater = {STEPPERTEMP_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
@@ -105,68 +104,8 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
 
-    def get_magnet_labels(self):
-        magnet_VBoxLayout_list: List[
-            QVBoxLayout] = self.magnet_checkout_window.ui.magnet_template_repeater.findChildren(QVBoxLayout)
-        for VBoxLayout in magnet_VBoxLayout_list:
-            # the interlock status is the first element in the ui-file, with the byte indicator in 2nd and the text
-            # label in 3rd position, hence '0' then '1' and '2'
-            interlock_indicator: PyDMByteIndicator = VBoxLayout.itemAt(0).itemAt(1).widget()
-            interlock_label: PyDMLabel = VBoxLayout.itemAt(0).itemAt(2).widget()
-            self.magnet_interlock_labels[interlock_label.accessibleName()] = interlock_label
-            self.magnet_interlock_indicators[interlock_indicator.accessibleName()] = interlock_indicator
-
-            # the magnet reset button is the second item in the ui-file, hence '1'
-            reset_button: QPushButton = VBoxLayout.itemAt(1).widget()
-            reset_button.clicked.connect(partial(self.magnet_control, reset_button.accessibleName(),
-                                                 util.MAGNET_RESET_VALUE))
-
-            # the power supply status is the third element in the ui-file, with the byte indicator in 2nd and the
-            # text label in 3rd position, hence '2' then '1' and '2'
-            ps_status_indicator: PyDMByteIndicator = VBoxLayout.itemAt(2).itemAt(1).widget()
-            ps_status_label: PyDMLabel = VBoxLayout.itemAt(2).itemAt(2).widget()
-            self.magnet_ps_status_labels[ps_status_label.accessibleName()] = ps_status_label
-            self.magnet_ps_status_indicators[ps_status_indicator.accessibleName()] = ps_status_indicator
-
-            # the power supply on button is the 1st item in a horizontal layout in 4th place in the ui-file,
-            # hence '3' and then '0'
-            on_button: QPushButton = VBoxLayout.itemAt(3).itemAt(0).widget()
-            on_button.clicked.connect(partial(self.magnet_control, on_button.accessibleName(), util.MAGNET_ON_VALUE))
-
-            # the power supply off button is the 2nd item in a horizontal layout in 4th place in the ui-file,
-            # hence '3' and then '1'
-            off_button: QPushButton = VBoxLayout.itemAt(3).itemAt(1).widget()
-            off_button.clicked.connect(partial(self.magnet_control, off_button.accessibleName(), util.MAGNET_OFF_VALUE))
-
-            # the degauss button is the 5th item in the ui-file, hence '4'
-            degauss_button: QPushButton = VBoxLayout.itemAt(4).widget()
-            degauss_button.clicked.connect(
-                partial(self.magnet_control, degauss_button.accessibleName(), util.MAGNET_DEGAUSS_VALUE))
-
-            # the nominal trim button is the 6th element in the ui-file, hence '5'
-            nominal_trim_button: QPushButton = VBoxLayout.itemAt(5).widget()
-            nominal_trim_button.setText('Set BDES to {nominalbdes} and trim'.format(nominalbdes=util.NOMINAL_BDES))
-            nominal_trim_button.clicked.connect(
-                partial(self.magnet_trim, nominal_trim_button.accessibleName(), util.NOMINAL_BDES))
-
-            # the zero trim button is the 7th element in the ui-file, hence '6'
-            zero_trim_button: QPushButton = VBoxLayout.itemAt(6).widget()
-            zero_trim_button.clicked.connect(
-                partial(self.magnet_trim, zero_trim_button.accessibleName(), 0))
-
-            # the edm expert display button is the 9th element in the ui-file, hence '8'
-            magnet_expert_button: PyDMEDMDisplayButton = VBoxLayout.itemAt(8).widget()
-            self._magnet_edm_buttons[magnet_expert_button.accessibleName()] = magnet_expert_button
-
-    def magnet_control(self, accessible_name, enum_value):
-        self.current_cm.magnet_name_map[accessible_name].controlPV.put(enum_value)
-
-    def magnet_trim(self, accessible_name, bdes):
-        self.current_cm.magnet_name_map[accessible_name].bdesPV.put(bdes)
-        self.magnet_control(accessible_name, util.MAGNET_TRIM_VALUE)
-
     def ui_filename(self):
-        return 'GuidedCommissioningScreens.ui'
+        return 'gui/GuidedCommissioningScreens.ui'
 
     def getPath(self, fileName):
         return path.join(self.pathHere, fileName)
@@ -271,7 +210,6 @@ class GuidedCommissioningScreens(Display):
 
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)
-        # TODO add piezo with-rf check
         ui = self.rf_controls_window.ui
         ui.button_ssa_on.clicked.connect(self.current_cavity.ssa.turnOn)
         ui.button_ssa_off.clicked.connect(self.current_cavity.ssa.turnOff)
@@ -362,60 +300,54 @@ class GuidedCommissioningScreens(Display):
         display.activateWindow()
 
     def run_piezo_prerf_check(self):
-        # turn RF off
         self.current_cavity.turnOff()
-        # set piezo to 'enabled'
-        self.current_cavity.piezo.enable_PV.put(1)
-        # set piezo to 'manual' mode
-        self.current_cavity.piezo.feedback_mode_PV.put(0)
+        piezo = self.current_cavity.piezo
+        piezo.enable_PV.put(util.PIEZO_ENABLE_VALUE)
+        piezo.feedback_mode_PV.put(util.PIEZO_MANUAL_VALUE)
         # set piezo DC voltage offset to 0V
-        self.current_cavity.piezo.dc_setpoint_PV.put(0)
+        piezo.dc_setpoint_PV.put(0)
         # run the test script
-        self.current_cavity.piezo.prerf_run_check_PV.put(1)
+        piezo.prerf_run_check_PV.put(1)
 
-        while self.current_cavity.piezo.prerf_check_status_PV.value == 2:
+        while piezo.prerf_check_status_PV.value == util.PIEZO_SCRIPT_RUNNING_VALUE:
             sleep(1)
-        if self.current_cavity.piezo.prerf_check_status_PV.value != 1:
+        if piezo.prerf_check_status_PV.value != util.PIEZO_SCRIPT_COMPLETE_VALUE:
             raise util.PiezoError('Piezo pre-rf test script has exited with status \'crash\' ')
 
-        if self.current_cavity.piezo.prerf_cha_status_PV.value == 0 and self.current_cavity.piezo.prerf_chb_status_PV \
-                == 0:
-            self.current_cavity.results.piezo_capacitance_a = self.current_cavity.piezo.capacitance_a_PV.value
-            self.current_cavity.results.piezo_capacitance_b = self.current_cavity.piezo.capacitance_b_PV.value
+        if (piezo.prerf_cha_status_PV.value == util.PIEZO_PRERF_CHECKOUT_STATUS_VALUE
+                and piezo.prerf_chb_status_PV == util.PIEZO_PRERF_CHECKOUT_STATUS_VALUE):
+            self.current_cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
+            self.current_cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
             self.current_cavity.results.piezo_prerf_checked = True
 
     def run_piezo_withrf_check(self):
         # make sure the RF is off
         self.current_cavity.turnOff()
-        # turn ssa on
         self.current_cavity.ssa.turnOn()
         # set desired amplitude to 5MV
         self.current_cavity.selAmplitudeDesPV.put(5)
-        # set RF mode to SEL
-        self.current_cavity.rfModeCtrlPV.put(2)
-        # turn on cavity
+        self.current_cavity.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SEL)
         self.current_cavity.turnOn()
-        # set piezo to 'enabled'
-        self.current_cavity.piezo.enable_PV.put(1)
-        # set piezo to 'manual' mode
-        self.current_cavity.piezo.feedback_mode_PV.put(0)
+        piezo = self.current_cavity.piezo
+        piezo.enable_PV.put(util.PIEZO_ENABLE_VALUE)
+        piezo.feedback_mode_PV.put(util.PIEZO_MANUAL_VALUE)
         # verify that RFS detune is <100Hz
         if (self.current_cavity.detune_rfs_PV.severity == 3
                 or abs(self.current_cavity.detune_rfs_PV.value) > 100):
             raise util.PiezoError('Detuning is invalid or larger than 100Hz')
         # run the test script
-        self.current_cavity.piezo.withrf_run_check_PV.put(1)
+        piezo.withrf_run_check_PV.put(1)
 
-        while self.current_cavity.piezo.withrf_check_status_PV.value == 2:
+        while piezo.withrf_check_status_PV.value == util.PIEZO_SCRIPT_RUNNING_VALUE:
             sleep(1)
-        if self.current_cavity.piezo.withrf_check_status_PV.value != 1:
+        if piezo.withrf_check_status_PV.value != util.PIEZO_SCRIPT_COMPLETE_VALUE:
             raise util.PiezoError('Piezo with-rf test script has exited with status \'crash\' ')
 
-        self.current_cavity.results.piezo_amplifiergain_a = self.current_cavity.piezo.amplifiergain_a_PV.value
-        self.current_cavity.results.piezo_amplifiergain_b = self.current_cavity.piezo.amplifiergain_b_PV.value
-        self.current_cavity.piezo.withrf_push_dfgain_PV.put(1)
-        self.current_cavity.piezo.withrf_save_dfgain_PV.put(1)
-        self.current_cavity.results.piezo_detune_gain = self.current_cavity.piezo.detunegain_new_PV.value
+        self.current_cavity.results.piezo_amplifiergain_a = piezo.amplifiergain_a_PV.value
+        self.current_cavity.results.piezo_amplifiergain_b = piezo.amplifiergain_b_PV.value
+        piezo.withrf_push_dfgain_PV.put(1)
+        piezo.withrf_save_dfgain_PV.put(1)
+        self.current_cavity.results.piezo_detune_gain = piezo.detunegain_new_PV.value
         self.current_cavity.results.piezo_withrf_checked = True
 
     def run_ssa_calibration(self, drivemax=0.8, attemptnumber=1):
@@ -570,11 +502,11 @@ class GuidedCommissioningScreens(Display):
                             exception=e, action_func=self.piezo_withrf_actionbutton_clicked)
 
     def load_results(self):
-        with open('cryomodule_results.json', 'r+') as f:
+        with open('results/cryomodule_results.json', 'r+') as f:
             data = json.load(f)
             if self.current_cm.name in data:
                 self.current_cm.results.__dict__.update(data[self.current_cm.name])
-        with open('cavity_results.json', 'r+') as f:
+        with open('results/cavity_results.json', 'r+') as f:
             data = json.load(f)
             if self.current_cm.name in data:
                 cav_data = data[self.current_cm.name]
@@ -586,14 +518,14 @@ class GuidedCommissioningScreens(Display):
         if not self.current_cm:
             return
 
-        with open('cryomodule_results.json', 'r+') as f:
+        with open('results/cryomodule_results.json', 'r+') as f:
             data = json.load(f)
 
             data[self.current_cm.name] = self.current_cm.results.__dict__
             f.seek(0)
             json.dump(data, f)
             f.truncate()
-        with open('cavity_results.json', 'r+') as f:
+        with open('results/cavity_results.json', 'r+') as f:
             data = json.load(f)
             if self.current_cm.name not in data:
                 data[self.current_cm.name] = {cav_number: {} for cav_number in self.current_cm.cavities.keys()}

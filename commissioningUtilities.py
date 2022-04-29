@@ -1,6 +1,8 @@
 import dataclasses
 from typing import Optional
 
+from lcls_tools.data_analysis.archiver import Archiver
+
 TESTLEAD_LIST = [
     'Aderhold, Sebastian',
     'Gonnella, Dan',
@@ -24,6 +26,21 @@ RADIATION_LIMIT = 50
 GRADIENT_THRESHOLD_RADLIMIT = 16
 # this value is based on historical data, when the decarads were on, but not seeing any FE from a cavity
 DECARAD_BACKGROUND_READING = 4
+
+PROBE_QEXT_UPPER_LIMIT = 3e12
+PROBE_QEXT_LOWER_LIMIT = 1e11
+
+DECARAD_ON_VALUE = 0
+DECARAD_OFF_VALUE = 1
+
+PIEZO_ENABLE_VALUE = 1
+PIEZO_DISABLE_VALUE = 0
+PIEZO_MANUAL_VALUE = 0
+PIEZO_SCRIPT_RUNNING_VALUE = 2
+PIEZO_SCRIPT_COMPLETE_VALUE = 1
+PIEZO_PRERF_CHECKOUT_STATUS_VALUE = 1
+
+ARCHIVER = Archiver("lcls")
 
 
 class ProbeQError(Exception):
@@ -55,7 +72,7 @@ class RadError(Exception):
         self.message = message
         super().__init__(self.message)
 
-        
+
 class PiezoError(Exception):
     """
     Exception thrown piezo checks

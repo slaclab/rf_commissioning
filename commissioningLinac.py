@@ -5,16 +5,7 @@ from epics import PV
 from numpy import nanmean
 
 import commissioningUtilities as utils
-from lcls_tools.data_analysis.archiver import Archiver
 from lcls_tools.devices.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
-
-PROBE_QEXT_UPPER_LIMIT = 3e12
-PROBE_QEXT_LOWER_LIMIT = 1e11
-
-DECARAD_ON_VALUE = 0
-DECARAD_OFF_VALUE = 1
-
-ARCHIVER = Archiver("lcls")
 
 
 class DecaradHead:
@@ -36,10 +27,10 @@ class DecaradHead:
     def avgDose(self) -> float:
         # try to do averaging of the last 60 points to account for signal noise
         try:
-            archiverData = ARCHIVER.getDataWithTimeInterval(pvList=[self.doseRatePV.pvname],
-                                                            startTime=(datetime.now() - timedelta(minutes=1)),
-                                                            endTime=datetime.now(),
-                                                            timeDelta=timedelta(seconds=1))
+            archiverData = utils.ARCHIVER.getDataWithTimeInterval(pvList=[self.doseRatePV.pvname],
+                                                                  startTime=(datetime.now() - timedelta(minutes=1)),
+                                                                  endTime=datetime.now(),
+                                                                  timeDelta=timedelta(seconds=1))
 
             averageDose = nanmean(archiverData.values[self.doseRatePV.pvname])
 
@@ -178,7 +169,7 @@ class CommissioningCavity(Cavity):
     def calculate_probe_q(self):
         # TODO check if '1' is actually the right thing to put
         self.calculate_probe_qext_PV.put(1)
-        if PROBE_QEXT_LOWER_LIMIT <= self.measured_probe_qext_PV.value <= PROBE_QEXT_UPPER_LIMIT:
+        if utils.PROBE_QEXT_LOWER_LIMIT <= self.measured_probe_qext_PV.value <= utils.PROBE_QEXT_UPPER_LIMIT:
             self.push_probe_qext_PV.put(1)
             self.results.probe_qext_value = self.measured_probe_qext_PV.value
             self.results.probe_qext_measured = True
