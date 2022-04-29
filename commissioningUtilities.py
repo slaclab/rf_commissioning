@@ -20,6 +20,11 @@ MAGNET_TRIM_VALUE = 1
 # TODO convert to IDES of 20A
 NOMINAL_BDES = 8.5
 
+RADIATION_LIMIT = 50
+GRADIENT_THRESHOLD_RADLIMIT = 16
+# this value is based on historical data, when the decarads were on, but not seeing any FE from a cavity
+DECARAD_BACKGROUND_READING = 4
+
 
 class ProbeQError(Exception):
     """
@@ -34,6 +39,16 @@ class ProbeQError(Exception):
 class FreqSearchError(Exception):
     """
     Exception thrown during 8pi/9 frequency search
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+class RadError(Exception):
+    """
+    Exception thrown during SELAP ramp up
     """
 
     def __init__(self, message):

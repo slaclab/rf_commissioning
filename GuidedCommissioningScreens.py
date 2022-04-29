@@ -4,18 +4,18 @@ import sys
 from functools import partial
 from os import path
 from time import sleep
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
-from PyQt5.QtWidgets import QVBoxLayout, QWidget, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QPushButton, QVBoxLayout, QWidget
 from edmbutton import PyDMEDMDisplayButton
 from epics.ca import CASeverityException
 from pydm import Display
 from pydm.widgets import PyDMByteIndicator, PyDMLabel
 from qtpy.QtCore import Slot
 
+import commissioningUtilities as util
 import lcls_tools.devices.scLinac.scLinacUtils as scLinacUtils
-import utilities as util
-from commissioningLinac import CommissioningCryomodule, CommissioningCavity, COMMISSIONING_CRYOMODULE_OBJECTS
+from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad
 from lcls_tools.devices.scLinac.scLinac import CRYOMODULE_OBJECTS
 from lcls_tools.pydm_tools.pydmPlotUtil import TimePlotParams, TimePlotUpdater, WaveformPlotParams, WaveformPlotUpdater
 
@@ -38,6 +38,7 @@ CPLRBOT_PLOT_KEY = 'cplrbot'
 SINGLE_CAVITY_PLOT_KEY = 'singlecavity'
 FREQUENCY_PLOT_KEY = 'frequency'
 RFWAVEFORM_PLOT_KEY = 'rfwaveform'
+DECARAD_PLOT_KEY = 'decarad'
 
 
 class GuidedCommissioningScreens(Display):
@@ -51,7 +52,6 @@ class GuidedCommissioningScreens(Display):
         # declare class variables
         self.current_cm: Optional[CommissioningCryomodule] = None
         self.current_cavity: Optional[CommissioningCavity] = None
-        self.current_decarad = None
         self.current_pvprefix = None
 
         self.magnet_checkout_window = Display(ui_filename=self.getPath("MagnetScreen.ui"))
@@ -66,7 +66,6 @@ class GuidedCommissioningScreens(Display):
         # button_decaradgui is an PyDMRelatedDisplayButton
         self.ui.button_decaradgui.filenames = ["$TOOLS/pydm/display/ads/decarad_main.ui"]
         self.ui.button_decaradgui.openInNewWindow = True
-        self.update_current_decarad()
 
         self.magnet_interlock_labels = {}
         self.magnet_interlock_indicators = {}
@@ -90,14 +89,15 @@ class GuidedCommissioningScreens(Display):
                              CRYOSIGNALS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
                              SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
                                  plot=self.live_signals_window.ui.plot_single_cavity_overview),
-                             FREQUENCY_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_frequency)
+                             FREQUENCY_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
+                             DECARAD_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_decarad)
                              }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
         self.waveform_plot_updater = WaveformPlotUpdater({RFWAVEFORM_PLOT_KEY: WaveformPlotParams(
             plot=self.rf_controls_window.ui.waveform_rfsignals)})
 
-        self.update_current_cavity_and_cm()
+        self.update_selection()
 
         self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
         self.ui.button_cavity_calibration.clicked.connect(self.cavity_calibration_button_pushed)
@@ -107,7 +107,8 @@ class GuidedCommissioningScreens(Display):
         magnet_VBoxLayout_list: List[
             QVBoxLayout] = self.magnet_checkout_window.ui.magnet_template_repeater.findChildren(QVBoxLayout)
         for VBoxLayout in magnet_VBoxLayout_list:
-            # the interlock status is the first element in the ui-file, with the byte indicator in 2nd and the text label in 3rd position, hence '0' then '1' and '2'
+            # the interlock status is the first element in the ui-file, with the byte indicator in 2nd and the text
+            # label in 3rd position, hence '0' then '1' and '2'
             interlock_indicator: PyDMByteIndicator = VBoxLayout.itemAt(0).itemAt(1).widget()
             interlock_label: PyDMLabel = VBoxLayout.itemAt(0).itemAt(2).widget()
             self.magnet_interlock_labels[interlock_label.accessibleName()] = interlock_label
@@ -118,7 +119,8 @@ class GuidedCommissioningScreens(Display):
             reset_button.clicked.connect(partial(self.magnet_control, reset_button.accessibleName(),
                                                  util.MAGNET_RESET_VALUE))
 
-            # the power supply status is the third element in the ui-file, with the byte indicator in 2nd and the text label in 3rd position, hence '2' then '1' and '2'
+            # the power supply status is the third element in the ui-file, with the byte indicator in 2nd and the
+            # text label in 3rd position, hence '2' then '1' and '2'
             ps_status_indicator: PyDMByteIndicator = VBoxLayout.itemAt(2).itemAt(1).widget()
             ps_status_label: PyDMLabel = VBoxLayout.itemAt(2).itemAt(2).widget()
             self.magnet_ps_status_labels[ps_status_label.accessibleName()] = ps_status_label
@@ -170,13 +172,13 @@ class GuidedCommissioningScreens(Display):
     def setup_combo_boxes(self):
         self.ui.testlead.addItems(util.TESTLEAD_LIST)
 
-        self.ui.pick_cavity.currentIndexChanged.connect(self.update_current_cavity_and_cm)
+        self.ui.pick_cavity.currentIndexChanged.connect(self.update_selection)
 
-        self.ui.pick_radmonitor.currentIndexChanged.connect(self.update_current_decarad)
+        self.ui.pick_decarad.currentIndexChanged.connect(self.update_selection)
 
         self.ui.pick_cm.addItems(CRYOMODULE_OBJECTS.keys())
 
-        self.ui.pick_cm.currentIndexChanged.connect(self.update_current_cavity_and_cm)
+        self.ui.pick_cm.currentIndexChanged.connect(self.update_selection)
 
     def populate_status_labels(self):
         @dataclasses.dataclass
@@ -218,12 +220,19 @@ class GuidedCommissioningScreens(Display):
             label.setText(status_map[status].message)
             label.setStyleSheet(status_map[status].stylesheet)
 
-    def update_current_cavity_and_cm(self):
+    def update_selection(self):
         self.save_results()
+
+        current_decarad = self.ui.pick_decarad.currentText()
+        P = "RADM:SYS0:{decarad}00".format(decarad=current_decarad)
+        self.ui.button_decaradgui.macros = ["P={pstring}".format(pstring=P),
+                                            "M={mstring}".format(mstring=current_decarad)]
 
         self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
             self.ui.pick_cm.currentText()]
+        self.current_cm.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
         self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
+        self.current_cavity.connect_to_decarad()
 
         self.load_results()
 
@@ -246,7 +255,10 @@ class GuidedCommissioningScreens(Display):
                            HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
                            CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
                            CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
-                           FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs}
+                           FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
+                           DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
+                           CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
+                           CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs}
 
         self.time_plot_updater.updatePlots(plot_update_map)
 
@@ -301,12 +313,6 @@ class GuidedCommissioningScreens(Display):
             self.magnet_interlock_labels[magnetprefix].channel = magnet_object.interlockPV.pvname
             self.magnet_ps_status_labels[magnetprefix].channel = magnet_object.ps_statusPV.pvname
             self.magnet_ps_status_indicators[magnetprefix].channel = magnet_object.ps_statusPV.pvname
-
-    def update_current_decarad(self):
-        self.current_decarad = self.ui.pick_radmonitor.currentText()
-        P = "RADM:SYS0:{decarad}00".format(decarad=self.current_decarad)
-        self.ui.button_decaradgui.macros = ["P={pstring}".format(pstring=P),
-                                            "M={mstring}".format(mstring=self.current_decarad)]
 
     @property
     def macro_string(self):
@@ -368,7 +374,8 @@ class GuidedCommissioningScreens(Display):
         if self.current_cavity.piezo_prerf_check_status_PV.value == 0:
             print('Piezo pre-rf test script has exited with status \'crash\' ')
 
-        if self.current_cavity.piezo_prerf_cha_status_PV.value == 0 and self.current_cavity.piezo_prerf_chb_status_PV == 0:
+        if self.current_cavity.piezo_prerf_cha_status_PV.value == 0 and self.current_cavity.piezo_prerf_chb_status_PV \
+                == 0:
             self.current_cavity.results.piezo_capacitance_a = self.current_cavity.piezo_capacitance_a_PV.value
             self.current_cavity.results.piezo_capacitance_b = self.current_cavity.piezo_capacitance_b_PV.value
             self.current_cavity.results.piezo_prerf_checked = True

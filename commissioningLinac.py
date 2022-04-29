@@ -2,11 +2,11 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
 from epics import PV
-from lcls_tools.data_analysis.archiver import Archiver
-from lcls_tools.devices.scLinac.scLinac import Cavity, Cryomodule, LINAC_TUPLES, Linac, Magnet, Rack
 from numpy import nanmean
 
-from utilities import CommissioningCavityResults, CommissioningCryomoduleResults, ProbeQError
+import commissioningUtilities as utils
+from lcls_tools.data_analysis.archiver import Archiver
+from lcls_tools.devices.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, make_lcls_cryomodules
 
 PROBE_QEXT_UPPER_LIMIT = 3e12
 PROBE_QEXT_LOWER_LIMIT = 1e11
@@ -30,12 +30,11 @@ class DecaradHead:
         # Adds leading 0 to numbers with less than 2 digits
         self.pvPrefix = self.decarad.pvPrefix + "{:02d}:".format(self.number)
 
-        self.doseRatePV = PV(self.pvPrefix + "GAMMA_DOSE_RATE")
+        self.doseRatePV: PV = PV(self.pvPrefix + "GAMMA_DOSE_RATE")
 
     @property
     def avgDose(self) -> float:
-        # try to do averaging of the last NUM_LL_POINTS_TO_AVG points to account
-        # for signal noise
+        # try to do averaging of the last 60 points to account for signal noise
         try:
             archiverData = ARCHIVER.getDataWithTimeInterval(pvList=[self.doseRatePV.pvname],
                                                             startTime=(datetime.now() - timedelta(minutes=1)),
@@ -44,7 +43,7 @@ class DecaradHead:
 
             averageDose = nanmean(archiverData.values[self.doseRatePV.pvname])
 
-            return max(averageDose - 4, 0)
+            return max(averageDose - utils.DECARAD_BACKGROUND_READING, 0)
 
         # return the most recent value if we can't average for whatever reason
         except AttributeError:
@@ -52,7 +51,8 @@ class DecaradHead:
 
 
 class Decarad:
-    def __init__(self, number: int):
+    def __init__(self, number):
+        # type: (int) -> None
         if number not in [1, 2]:
             raise AttributeError("Decarad needs to be 1 or 2")
         self.number = number
@@ -64,12 +64,16 @@ class Decarad:
         self.heads = {head: DecaradHead(number=head, decarad=self)
                       for head in range(1, 11)}
 
+    @property
+    def max_avg_dose(self):
+        return max([head.avgDose for head in self.heads.values()])
+
 
 class CommissioningCavity(Cavity):
-    def __init__(self, cavityNum, rackObject):
-        super().__init__(cavityNum, rackObject)
+    def __init__(self, cavityNum, rackObject, length):
+        super().__init__(cavityNum, rackObject, length=length)
 
-        self.results = CommissioningCavityResults()
+        self.results = utils.CommissioningCavityResults()
 
         self.interlock_PV: PV = PV(self.pvPrefix + "RFPERMIT")
         self.stepper_temp_PV: PV = PV(self.pvPrefix + "STEPTEMP")
@@ -94,7 +98,7 @@ class CommissioningCavity(Cavity):
 
         self.piezo_withrf_run_check_PV: PV = PV(self.pvPrefix + "PZT:RFSTART")
         self.piezo_withrf_check_status_PV: PV = PV(self.pvPrefix + "PZT:RFTESTS")
-        
+
         self.measured_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE_CALC2")
         self.inuse_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE")
         self.calculate_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE_CALC1.PROC")
@@ -123,24 +127,32 @@ class CommissioningCavity(Cavity):
 
         self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
 
-        # To be populated from the GUI
-        self.decaradHead: Optional[DecaradHead] = None
-        self.decaradHead.doseRatePV.add_callback(self.checkRadiation)
+    def connect_to_decarad(self):
+        for decaradhead in self.cryomodule.decarad.heads.values():
+            decaradhead.doseRatePV.clear_callbacks()
+            decaradhead.doseRatePV.add_callback(self.check_radiation)
 
-    def checkRadiation(self):
-        if self.decaradHead.avgDose > 0:
-            threshold = 16 * self.length
+    def check_radiation(self):
+        # TODO link ADESMAX puts to GUI
+        if utils.RADIATION_LIMIT > self.cryomodule.decarad.max_avg_dose > 0:
+            threshold = utils.GRADIENT_THRESHOLD_RADLIMIT * self.length
+            self.ades_max_srf_PV.put(min(threshold, self.ades_max_srf_PV.value))
+
             if self.selAmplitudeActPV.value <= threshold:
                 self.results.max_amplitude = threshold
+                raise utils.RadError('Field emission detected. Proceed with caution without exceeding {thresh} MV.'
+                                     .format(thresh=threshold))
 
             else:
                 self.results.max_amplitude = self.selAmplitudeDesPV.value
+                raise utils.RadError('Field emission detected above {thresh} MV. Please stop.'
+                                     .format(thresh=threshold))
 
-            # TODO do we want this? I think we want this
-            self.ades_max_srf_PV.put(min(threshold, self.ades_max_srf_PV.value))
-
-        if self.decaradHead.avgDose >= 50:
+        elif self.cryomodule.decarad.max_avg_dose >= utils.RADIATION_LIMIT:
             self.ades_max_srf_PV.put(self.selAmplitudeDesPV.value)
+            raise utils.RadError('Radiation exceeds {limit}mR/hr'.format(limit=utils.RADIATION_LIMIT))
+        else:
+            raise utils.RadError('Negative radiation values detected. Verify that the decarads are reading correctly')
 
     @property
     def interlocks_cleared(self) -> bool:
@@ -154,17 +166,18 @@ class CommissioningCavity(Cavity):
             self.results.probe_qext_value = self.measured_probe_qext_PV.value
             self.results.probe_qext_measured = True
         else:
-            raise ProbeQError('Measured probe Q value out of tolerance')
+            raise utils.ProbeQError('Measured probe Q value out of tolerance')
 
 
 class CommissioningRack(Rack):
-    def __init__(self, rackName, cryoObject, cavityClass):
-        super().__init__(rackName=rackName, cryoObject=cryoObject, cavityClass=CommissioningCavity)
+    def __init__(self, rackName, cryoObject, cavityClass, cavityLength):
+        super().__init__(rackName=rackName, cryoObject=cryoObject, cavityClass=CommissioningCavity,
+                         cavityLength=cavityLength)
 
         self.freq_search_low_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_START")
         self.freq_search_high_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_STOP")
         self.freq_search_rms_thresh_PV: PV = PV(self.pvPrefix + "FSCAN:RMS_THRESH")
-        self.freq_search_modeoverlap_PV: PV = PV(self.pvPrefix + "FSCAN:MODE+OVERLAP")
+        self.freq_search_modeoverlap_PV: PV = PV(self.pvPrefix + "FSCAN:MODE_OVERLAP")
         self.freq_search_start_PV: PV = PV(self.pvPrefix + "FSCAN:START")
         self.freq_search_status_PV: PV = PV(self.pvPrefix + "FSCAN:STAT")
 
@@ -180,11 +193,12 @@ class CommissioningMagnet(Magnet):
 
 
 class CommissioningCryomodule(Cryomodule):
-    def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass):
+    def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass, isHarmonicLinearizer):
         super().__init__(cryoName=cryoName, linacObject=linacObject, cavityClass=CommissioningCavity,
-                         magnetClass=CommissioningMagnet, rackClass=CommissioningRack)
+                         magnetClass=CommissioningMagnet, rackClass=CommissioningRack,
+                         isHarmonicLinearizer=isHarmonicLinearizer)
 
-        self.results = CommissioningCryomoduleResults()
+        self.results = utils.CommissioningCryomoduleResults()
         self.cavity_results = {cavity.number: cavity.results for cavity in self.cavities.values()}
 
         self.stepper_temp_PVs = []
@@ -202,19 +216,23 @@ class CommissioningCryomodule(Cryomodule):
             self.hom_ds_PVs.append(cavity.hom_ds_PV.pvname)
             self.detune_PVs.append(cavity.detune_PV.pvname)
 
+        self.cryo_signal_PVs = [self.dsLevelPV.pvname, self.usLevelPV.pvname,
+                                self.dsPressurePV.pvname, self.jtValveRdbkPV.pvname]
+
         self.magnet_name_map: Dict[str, CommissioningMagnet] = {'Quad': self.quad, 'XCor': self.xcor, 'YCor': self.ycor}
 
         # To be populated from the GUI
         self.decarad: Optional[Decarad] = None
 
+    @property
+    def decarad_PVs(self):
+        decarad_PVs = []
+        for decaradhead in self.decarad.heads.values():
+            decarad_PVs.append(decaradhead.doseRatePV.pvname)
+        return decarad_PVs
 
-COMMISSIONING_LINAC_OBJECTS: List[Linac] = []
 
-# Utility dictionary to map cryomodule name strings to cryomodule objects
-COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = {}
-
-for idx, (name, cryomoduleList) in enumerate(LINAC_TUPLES):
-    linac = Linac(linacName=name, cryomoduleStringList=cryomoduleList, cavityClass=CommissioningCavity,
-                  cryomoduleClass=CommissioningCryomodule, rackClass=CommissioningRack, magnetClass=CommissioningMagnet)
-    COMMISSIONING_LINAC_OBJECTS.append(linac)
-    COMMISSIONING_CRYOMODULE_OBJECTS.update(linac.cryomodules)
+COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
+    cryomoduleClass=CommissioningCryomodule,
+    magnetClass=CommissioningMagnet,
+    rackClass=CommissioningRack, cavityClass=CommissioningCavity)

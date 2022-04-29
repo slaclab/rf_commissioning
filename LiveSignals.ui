@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1260</width>
-    <height>589</height>
+    <width>768</width>
+    <height>618</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,19 +24,6 @@
        <string>Full CM Overview</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="0" column="0">
-        <widget class="PyDMTimePlot" name="plot_steppertemps">
-         <property name="toolTip">
-          <string/>
-         </property>
-         <property name="updatesAsynchronously">
-          <bool>true</bool>
-         </property>
-         <property name="timeSpan">
-          <double>300.000000000000000</double>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="1">
         <widget class="PyDMTimePlot" name="plot_homus_temp">
          <property name="toolTip">
@@ -45,34 +32,11 @@
          <property name="yAxes">
           <stringlist/>
          </property>
+         <property name="title" stdset="0">
+          <string>Upstream HOM temperatures</string>
+         </property>
          <property name="curves">
           <stringlist/>
-         </property>
-         <property name="updatesAsynchronously">
-          <bool>true</bool>
-         </property>
-         <property name="timeSpan">
-          <double>300.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="PyDMTimePlot" name="plot_couplertop_temp">
-         <property name="toolTip">
-          <string/>
-         </property>
-         <property name="updatesAsynchronously">
-          <bool>true</bool>
-         </property>
-         <property name="timeSpan">
-          <double>300.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="PyDMTimePlot" name="plot_cmvacuum">
-         <property name="toolTip">
-          <string/>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
@@ -88,7 +52,7 @@
           <string/>
          </property>
          <property name="title" stdset="0">
-          <string>Magnets</string>
+          <string>Magnet signals</string>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
@@ -98,16 +62,13 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="PyDMTimePlot" name="plot_homds_temp">
+       <item row="0" column="0">
+        <widget class="PyDMTimePlot" name="plot_steppertemps">
          <property name="toolTip">
           <string/>
          </property>
-         <property name="yAxes">
-          <stringlist/>
-         </property>
-         <property name="curves">
-          <stringlist/>
+         <property name="title" stdset="0">
+          <string>Stepper temperatures</string>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
@@ -122,6 +83,9 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="title" stdset="0">
+          <string>Coupler bottom temperatures</string>
+         </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
@@ -130,10 +94,83 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="3">
+       <item row="2" column="0">
+        <widget class="PyDMTimePlot" name="plot_cmvacuum">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="title" stdset="0">
+          <string>CM vacuum signals</string>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="PyDMTimePlot" name="plot_homds_temp">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="yAxes">
+          <stringlist/>
+         </property>
+         <property name="title" stdset="0">
+          <string>Downstream HOM temperatures</string>
+         </property>
+         <property name="curves">
+          <stringlist/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="PyDMTimePlot" name="plot_couplertop_temp">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="title" stdset="0">
+          <string>Coupler top temperatures</string>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
         <widget class="PyDMTimePlot" name="plot_cryosignals">
          <property name="toolTip">
           <string/>
+         </property>
+         <property name="title" stdset="0">
+          <string>Cryo signals</string>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="PyDMTimePlot" name="plot_decarad">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="title" stdset="0">
+          <string>Decarad</string>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>

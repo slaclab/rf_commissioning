@@ -267,7 +267,7 @@
            </widget>
           </item>
           <item row="6" column="0">
-           <widget class="QComboBox" name="pick_radmonitor">
+           <widget class="QComboBox" name="pick_decarad">
             <item>
              <property name="text">
               <string>1</string>
