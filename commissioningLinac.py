@@ -6,7 +6,7 @@ from numpy import nanmean
 
 import commissioningUtilities as utils
 from lcls_tools.data_analysis.archiver import Archiver
-from lcls_tools.devices.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, make_lcls_cryomodules
+from lcls_tools.devices.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
 
 PROBE_QEXT_UPPER_LIMIT = 3e12
 PROBE_QEXT_LOWER_LIMIT = 1e11
@@ -70,7 +70,7 @@ class Decarad:
 
 
 class CommissioningCavity(Cavity):
-    def __init__(self, cavityNum, rackObject, length):
+    def __init__(self, cavityNum, rackObject, length, ssaClass=SSA):
         super().__init__(cavityNum, rackObject, length=length)
 
         self.results = utils.CommissioningCavityResults()
@@ -170,7 +170,7 @@ class CommissioningCavity(Cavity):
 
 
 class CommissioningRack(Rack):
-    def __init__(self, rackName, cryoObject, cavityClass, cavityLength):
+    def __init__(self, rackName, cryoObject, cavityClass, cavityLength, ssaClass=SSA):
         super().__init__(rackName=rackName, cryoObject=cryoObject, cavityClass=CommissioningCavity,
                          cavityLength=cavityLength)
 
@@ -193,7 +193,7 @@ class CommissioningMagnet(Magnet):
 
 
 class CommissioningCryomodule(Cryomodule):
-    def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass, isHarmonicLinearizer):
+    def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass, isHarmonicLinearizer, ssaClass=SSA):
         super().__init__(cryoName=cryoName, linacObject=linacObject, cavityClass=CommissioningCavity,
                          magnetClass=CommissioningMagnet, rackClass=CommissioningRack,
                          isHarmonicLinearizer=isHarmonicLinearizer)
