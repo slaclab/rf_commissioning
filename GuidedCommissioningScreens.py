@@ -102,6 +102,8 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
         self.ui.button_cavity_calibration.clicked.connect(self.cavity_calibration_button_pushed)
         self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
+        self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
+        self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
 
     def get_magnet_labels(self):
         magnet_VBoxLayout_list: List[
@@ -201,6 +203,7 @@ class GuidedCommissioningScreens(Display):
                                      and cav_results.is_tuned
                                      and cav_results.eightpiovernine_frequency_measured
                                      and cav_results.cavity_calibration_run
+                                     and cav_results.piezo_withrf_checked
                                      and cav_results.onehourrun_complete
                                      and cm_results.unit_test_complete
                                      )
@@ -212,6 +215,7 @@ class GuidedCommissioningScreens(Display):
                               (self.ui.label_measure_8pi9,
                                cav_results.eightpiovernine_frequency_measured),
                               (self.ui.label_cavity_calibration, cav_results.cavity_calibration_run),
+                              (self.ui.label_piezo_withrf, cav_results.piezo_withrf_checked),
                               (self.ui.label_selap_rampup, cav_results.onehourrun_complete),
                               (self.ui.label_12hrun, cm_results.unit_test_complete),
                               (self.ui.label_overall_completion, overall_completion_status)]
@@ -361,27 +365,58 @@ class GuidedCommissioningScreens(Display):
         # turn RF off
         self.current_cavity.turnOff()
         # set piezo to 'enabled'
-        self.current_cavity.piezo_enable_PV.put(1)
+        self.current_cavity.piezo.enable_PV.put(1)
         # set piezo to 'manual' mode
-        self.current_cavity.piezo_feedback_mode_PV.put(0)
+        self.current_cavity.piezo.feedback_mode_PV.put(0)
         # set piezo DC voltage offset to 0V
-        self.current_cavity.piezo_dc_setpoint_PV.put(0)
+        self.current_cavity.piezo.dc_setpoint_PV.put(0)
         # run the test script
-        self.current_cavity.piezo_prerf_run_check_PV.put(1)
+        self.current_cavity.piezo.prerf_run_check_PV.put(1)
 
-        while self.current_cavity.piezo_prerf_check_status_PV.value == 2:
+        while self.current_cavity.piezo.prerf_check_status_PV.value == 2:
             sleep(1)
-        if self.current_cavity.piezo_prerf_check_status_PV.value == 0:
-            print('Piezo pre-rf test script has exited with status \'crash\' ')
+        if self.current_cavity.piezo.prerf_check_status_PV.value != 1:
+            raise util.PiezoError('Piezo pre-rf test script has exited with status \'crash\' ')
 
-        if self.current_cavity.piezo_prerf_cha_status_PV.value == 0 and self.current_cavity.piezo_prerf_chb_status_PV \
+        if self.current_cavity.piezo.prerf_cha_status_PV.value == 0 and self.current_cavity.piezo.prerf_chb_status_PV \
                 == 0:
-            self.current_cavity.results.piezo_capacitance_a = self.current_cavity.piezo_capacitance_a_PV.value
-            self.current_cavity.results.piezo_capacitance_b = self.current_cavity.piezo_capacitance_b_PV.value
+            self.current_cavity.results.piezo_capacitance_a = self.current_cavity.piezo.capacitance_a_PV.value
+            self.current_cavity.results.piezo_capacitance_b = self.current_cavity.piezo.capacitance_b_PV.value
             self.current_cavity.results.piezo_prerf_checked = True
-            self.ui.label_piezo_prerf.setText('Complete')
-        else:
-            self.ui.label_piezo_prerf.setText('Failed')
+
+    def run_piezo_withrf_check(self):
+        # make sure the RF is off
+        self.current_cavity.turnOff()
+        # turn ssa on
+        self.current_cavity.ssa.turnOn()
+        # set desired amplitude to 5MV
+        self.current_cavity.selAmplitudeDesPV.put(5)
+        # set RF mode to SEL
+        self.current_cavity.rfModeCtrlPV.put(2)
+        # turn on cavity
+        self.current_cavity.turnOn()
+        # set piezo to 'enabled'
+        self.current_cavity.piezo.enable_PV.put(1)
+        # set piezo to 'manual' mode
+        self.current_cavity.piezo.feedback_mode_PV.put(0)
+        # verify that RFS detune is <100Hz
+        if (self.current_cavity.detune_rfs_PV.severity == 3
+                or abs(self.current_cavity.detune_rfs_PV.value) > 100):
+            raise util.PiezoError('Detuning is invalid or larger than 100Hz')
+        # run the test script
+        self.current_cavity.piezo.withrf_run_check_PV.put(1)
+
+        while self.current_cavity.piezo.withrf_check_status_PV.value == 2:
+            sleep(1)
+        if self.current_cavity.piezo.withrf_check_status_PV.value != 1:
+            raise util.PiezoError('Piezo with-rf test script has exited with status \'crash\' ')
+
+        self.current_cavity.results.piezo_amplifiergain_a = self.current_cavity.piezo.amplifiergain_a_PV.value
+        self.current_cavity.results.piezo_amplifiergain_b = self.current_cavity.piezo.amplifiergain_b_PV.value
+        self.current_cavity.piezo.withrf_push_dfgain_PV.put(1)
+        self.current_cavity.piezo.withrf_save_dfgain_PV.put(1)
+        self.current_cavity.results.piezo_detune_gain = self.current_cavity.piezo.detunegain_new_PV.value
+        self.current_cavity.results.piezo_withrf_checked = True
 
     def run_ssa_calibration(self, drivemax=0.8, attemptnumber=1):
         if self.current_cavity.results.ssa_maxdrive:
@@ -396,7 +431,7 @@ class GuidedCommissioningScreens(Display):
             if attemptnumber <= 3:
                 self.run_ssa_calibration(drivemax - 0.05, attemptnumber + 1)
             else:
-                raise scLinacUtils.SSACalibrationError
+                raise
 
     def ssa_calibration_button_pushed(self):
         try:
@@ -434,6 +469,25 @@ class GuidedCommissioningScreens(Display):
         clickedbutton = qmessagebox.clickedButton()
         if qmessagebox.buttonRole(clickedbutton) == QMessageBox.AcceptRole:
             self.current_cavity.results.eightpiovernine_frequency_measured = True
+        self.populate_status_labels()
+
+    def piezo_prerf_actionbutton_clicked(self, qmessagebox: QMessageBox):
+        clickedbutton = qmessagebox.clickedButton()
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.AcceptRole:
+            self.current_cavity.results.piezo_capacitance_a = self.current_cavity.piezo.capacitance_a_PV.value
+            self.current_cavity.results.piezo_capacitance_b = self.current_cavity.piezo.capacitance_b_PV.value
+            self.current_cavity.results.piezo_prerf_checked = True
+        self.populate_status_labels()
+
+    def piezo_withrf_actionbutton_clicked(self, qmessagebox: QMessageBox):
+        clickedbutton = qmessagebox.clickedButton()
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.AcceptRole:
+            self.current_cavity.results.piezo_amplifiergain_a = self.current_cavity.piezo.amplifiergain_a_PV.value
+            self.current_cavity.results.piezo_amplifiergain_b = self.current_cavity.piezo.amplifiergain_b_PV.value
+            self.current_cavity.piezo.withrf_push_dfgain_PV.put(1)
+            self.current_cavity.piezo.withrf_save_dfgain_PV.put(1)
+            self.current_cavity.results.piezo_detune_gain = self.current_cavity.piezo.detunegain_new_PV.value
+            self.current_cavity.results.piezo_withrf_checked = True
         self.populate_status_labels()
 
     def cavity_calibration_button_pushed(self):
@@ -498,6 +552,22 @@ class GuidedCommissioningScreens(Display):
             freq_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_freq_scan_rack_embed_search.edl')
             self.make_popup(title='Error finding 8pi/9 frequency', expert_edmbutton=freq_edmbutton,
                             exception=e, action_func=self.freq_actionbutton_clicked)
+
+    def piezo_prerf_button_pressed(self):
+        try:
+            self.run_piezo_prerf_check()
+        except util.PiezoError as e:
+            piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
+            self.make_popup(title='Error during piezo pre-rf check', expert_edmbutton=piezo_prerf_edmbutton,
+                            exception=e, action_func=self.piezo_prerf_actionbutton_clicked)
+
+    def piezo_withrf_button_pressed(self):
+        try:
+            self.run_piezo_withrf_check()
+        except (util.PiezoError, scLinacUtils.SSAPowerError) as e:
+            piezo_withrf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt_rf.edl')
+            self.make_popup(title='Error during piezo with-rf check', expert_edmbutton=piezo_withrf_edmbutton,
+                            exception=e, action_func=self.piezo_withrf_actionbutton_clicked)
 
     def load_results(self):
         with open('cryomodule_results.json', 'r+') as f:

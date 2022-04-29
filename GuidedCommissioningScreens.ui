@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>592</width>
-    <height>719</height>
+    <height>722</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,24 +51,10 @@
           </item>
           <item row="0" column="1">
            <layout class="QGridLayout" name="gridLayout_5">
-            <item row="0" column="0">
-             <widget class="QPushButton" name="button_magnet_checkout">
-              <property name="text">
-               <string>Checkout magnet</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="label_checkout_magnet">
+            <item row="3" column="1">
+             <widget class="QLabel" name="label_tune_cavity">
               <property name="text">
                <string>Status</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="button_piezo_prerf">
-              <property name="text">
-               <string>Run piezo pre-RF check</string>
               </property>
              </widget>
             </item>
@@ -79,38 +65,10 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="QPushButton" name="button_ssa_char">
+            <item row="7" column="0">
+             <widget class="QPushButton" name="button_selap_rampup">
               <property name="text">
-               <string>Run SSA characterization</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QLabel" name="label_ssa_char">
-              <property name="text">
-               <string>Status</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QPushButton" name="button_tune_cavity">
-              <property name="text">
-               <string>Tune cavity</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QLabel" name="label_tune_cavity">
-              <property name="text">
-               <string>Status</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QPushButton" name="button_measure_8pi9">
-              <property name="text">
-               <string>Measure 8pi/9 mode frequency</string>
+               <string>Ramp up cavity in SELAP</string>
               </property>
              </widget>
             </item>
@@ -128,6 +86,27 @@
               </property>
              </widget>
             </item>
+            <item row="4" column="0">
+             <widget class="QPushButton" name="button_measure_8pi9">
+              <property name="text">
+               <string>Measure 8pi/9 mode frequency</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="button_piezo_prerf">
+              <property name="text">
+               <string>Run piezo pre-RF check</string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="1">
+             <widget class="QLabel" name="label_12hrun">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
             <item row="5" column="1">
              <widget class="QLabel" name="label_cavity_calibration">
               <property name="text">
@@ -135,29 +114,64 @@
               </property>
              </widget>
             </item>
-            <item row="6" column="0">
-             <widget class="QPushButton" name="button_selap_rampup">
-              <property name="text">
-               <string>Ramp up cavity in SELAP</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="1">
-             <widget class="QLabel" name="label_selap_rampup">
-              <property name="text">
-               <string>Status</string>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="0">
+            <item row="8" column="0">
              <widget class="QPushButton" name="button_12hrun">
               <property name="text">
                <string>Full CM 12h run</string>
               </property>
              </widget>
             </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_checkout_magnet">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_ssa_char">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
             <item row="7" column="1">
-             <widget class="QLabel" name="label_12hrun">
+             <widget class="QLabel" name="label_selap_rampup">
+              <property name="text">
+               <string>Status</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QPushButton" name="button_tune_cavity">
+              <property name="text">
+               <string>Tune cavity</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="button_ssa_char">
+              <property name="text">
+               <string>Run SSA characterization</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="button_magnet_checkout">
+              <property name="text">
+               <string>Checkout magnet</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QPushButton" name="button_piezo_withrf">
+              <property name="text">
+               <string>Run piezo with-RF check</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLabel" name="label_piezo_withrf">
               <property name="text">
                <string>Status</string>
               </property>

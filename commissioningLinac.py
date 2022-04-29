@@ -69,11 +69,41 @@ class Decarad:
         return max([head.avgDose for head in self.heads.values()])
 
 
+class Piezo:
+    def __init__(self, cavity):
+        # type (CommissioningCavity) -> None
+        self.cavity: CommissioningCavity = cavity
+        self.pvPrefix: str = self.cavity.pvPrefix + "PZT:"
+
+        self.enable_PV: PV = PV(self.pvPrefix + "ENABLE")
+        self.feedback_mode_PV: PV = PV(self.pvPrefix + "MODECTRL")
+        self.dc_setpoint_PV: PV = PV(self.pvPrefix + "DAC_SP")
+        self.prerf_run_check_PV: PV = PV(self.pvPrefix + "TESTSTRT")
+        self.prerf_cha_status_PV: PV = PV(self.pvPrefix + "CHA_TESTSTAT")
+        self.prerf_chb_status_PV: PV = PV(self.pvPrefix + "CHB_TESTSTAT")
+        self.prerf_cha_testmsg_PV: PV = PV(self.pvPrefix + "CHA_TESTMSG1")
+        self.prerf_chb_testmsg_PV: PV = PV(self.pvPrefix + "CHA_TESTMSG2")
+        self.capacitance_a_PV: PV = PV(self.pvPrefix + "CHA_C")
+        self.capacitance_b_PV: PV = PV(self.pvPrefix + "CHB_C")
+        self.prerf_check_status_PV: PV = PV(self.pvPrefix + "TESTSTS")
+
+        self.withrf_run_check_PV: PV = PV(self.pvPrefix + "RFSTART")
+        self.withrf_check_status_PV: PV = PV(self.pvPrefix + "RFTESTS")
+        self.withrf_status_PV: PV = PV(self.pvPrefix + "RFSTESTSTAT")
+        self.amplifiergain_a_PV: PV = PV(self.pvPrefix + "CHA_AMPGAIN")
+        self.amplifiergain_b_PV: PV = PV(self.pvPrefix + "CHB_AMPGAIN")
+        self.withrf_push_dfgain_PV: PV = PV(self.pvPrefix + "PUSH_DFGAIN.PROC")
+        self.withrf_save_dfgain_PV: PV = PV(self.pvPrefix + "SAVE_DFGAIN.PROC")
+        self.detunegain_new_PV: PV = PV(self.pvPrefix + "DFGAIN_NEW")
+
+
 class CommissioningCavity(Cavity):
     def __init__(self, cavityNum, rackObject, length, ssaClass=SSA):
         super().__init__(cavityNum, rackObject, length=length)
 
         self.results = utils.CommissioningCavityResults()
+
+        self.piezo = Piezo(self)
 
         self.interlock_PV: PV = PV(self.pvPrefix + "RFPERMIT")
         self.stepper_temp_PV: PV = PV(self.pvPrefix + "STEPTEMP")
@@ -81,23 +111,10 @@ class CommissioningCavity(Cavity):
         self.coupler_bot_PV: PV = PV(self.pvPrefix + "CPLRTEMP2")
         self.hom_us_PV: PV = PV("CTE:CM{cm}:1{cavity}18:UH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
         self.hom_ds_PV: PV = PV("CTE:CM{cm}:1{cavity}20:DH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
-        self.detune_PV: PV = PV(self.pvPrefix + "DFBEST")
+        self.detune_best_PV: PV = PV(self.pvPrefix + "DFBEST")
+        self.detune_rfs_PV: PV = PV(self.pvPrefix + "DF")
 
         self.ssa_maxdrive_PV: PV = PV(self.pvPrefix + "SSA:DRV_MAX_REQ")
-        self.piezo_enable_PV: PV = PV(self.pvPrefix + "PZT:ENABLE")
-        self.piezo_feedback_mode_PV: PV = PV(self.pvPrefix + "PZT:MODECTRL")
-        self.piezo_dc_setpoint_PV: PV = PV(self.pvPrefix + "PZT:DAC_SP")
-        self.piezo_prerf_run_check_PV: PV = PV(self.pvPrefix + "PZT:TESTSTRT")
-        self.piezo_prerf_cha_status_PV: PV = PV(self.pvPrefix + "PZT:CHA_TESTSTAT")
-        self.piezo_prerf_chb_status_PV: PV = PV(self.pvPrefix + "PZT:CHB_TESTSTAT")
-        self.piezo_prerf_cha_testmsg_PV: PV = PV(self.pvPrefix + "PZT:CHA_TESTMSG1")
-        self.piezo_prerf_chb_testmsg_PV: PV = PV(self.pvPrefix + "PZT:CHA_TESTMSG2")
-        self.piezo_capacitance_a_PV: PV = PV(self.pvPrefix + "PZT:CHA_C")
-        self.piezo_capacitance_b_PV: PV = PV(self.pvPrefix + "PZT:CHB_C")
-        self.piezo_prerf_check_status_PV: PV = PV(self.pvPrefix + "PZT:TESTSTS")
-
-        self.piezo_withrf_run_check_PV: PV = PV(self.pvPrefix + "PZT:RFSTART")
-        self.piezo_withrf_check_status_PV: PV = PV(self.pvPrefix + "PZT:RFTESTS")
 
         self.measured_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE_CALC2")
         self.inuse_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE")
@@ -214,7 +231,7 @@ class CommissioningCryomodule(Cryomodule):
             self.coupler_bot_PVs.append(cavity.coupler_bot_PV.pvname)
             self.hom_us_PVs.append(cavity.hom_us_PV.pvname)
             self.hom_ds_PVs.append(cavity.hom_ds_PV.pvname)
-            self.detune_PVs.append(cavity.detune_PV.pvname)
+            self.detune_PVs.append(cavity.detune_best_PV.pvname)
 
         self.cryo_signal_PVs = [self.dsLevelPV.pvname, self.usLevelPV.pvname,
                                 self.dsPressurePV.pvname, self.jtValveRdbkPV.pvname]

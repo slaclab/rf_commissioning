@@ -55,6 +55,16 @@ class RadError(Exception):
         self.message = message
         super().__init__(self.message)
 
+        
+class PiezoError(Exception):
+    """
+    Exception thrown piezo checks
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
 
 @dataclasses.dataclass
 class CommissioningCavityResults:
