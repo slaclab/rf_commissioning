@@ -2,10 +2,10 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
 from epics import PV
+from lcls_tools.superconducting.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
 from numpy import nanmean
 
 import commissioningUtilities as utils
-from lcls_tools.superconducting.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
 
 
 class DecaradHead:
@@ -189,16 +189,6 @@ class CommissioningRack(Rack):
         self.freq_search_status_PV: PV = PV(self.pvPrefix + "FSCAN:STAT")
 
 
-class CommissioningMagnet(Magnet):
-    def __init__(self, magnettype, cryomodule):
-        super(CommissioningMagnet, self).__init__(magnettype, cryomodule)
-
-        self.bdesPV: PV = PV(self.pvprefix + 'BDES')
-        self.controlPV: PV = PV(self.pvprefix + 'CTRL')
-        self.interlockPV: PV = PV(self.pvprefix + 'INTLKSUMY')
-        self.ps_statusPV: PV = PV(self.pvprefix + 'STATE')
-
-
 class CommissioningCryomodule(Cryomodule):
     def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass, isHarmonicLinearizer, ssaClass=SSA):
         super().__init__(cryoName=cryoName, linacObject=linacObject, cavityClass=CommissioningCavity,
@@ -226,7 +216,7 @@ class CommissioningCryomodule(Cryomodule):
         self.cryo_signal_PVs = [self.dsLevelPV.pvname, self.usLevelPV.pvname,
                                 self.dsPressurePV.pvname, self.jtValveRdbkPV.pvname]
 
-        self.magnet_name_map: Dict[str, CommissioningMagnet] = {'Quad': self.quad, 'XCor': self.xcor, 'YCor': self.ycor}
+        self.magnet_name_map: Dict[str, Magnet] = {'Quad': self.quad, 'XCor': self.xcor, 'YCor': self.ycor}
 
         # To be populated from the GUI
         self.decarad: Optional[Decarad] = None
@@ -240,6 +230,6 @@ class CommissioningCryomodule(Cryomodule):
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-    cryomoduleClass=CommissioningCryomodule,
-    magnetClass=CommissioningMagnet,
-    rackClass=CommissioningRack, cavityClass=CommissioningCavity)
+        cryomoduleClass=CommissioningCryomodule,
+        magnetClass=CommissioningMagnet,
+        rackClass=CommissioningRack, cavityClass=CommissioningCavity)
