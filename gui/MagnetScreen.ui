@@ -6,52 +6,52 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>907</width>
-    <height>432</height>
+    <width>1002</width>
+    <height>618</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
     <widget class="QGroupBox" name="magnet_groupbox">
      <property name="title">
       <string/>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
-       <widget class="PyDMTemplateRepeater" name="magnet_template_repeater">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::Box</enum>
-        </property>
-        <property name="layoutType" stdset="0">
-         <enum>PyDMTemplateRepeater::Horizontal</enum>
-        </property>
-        <property name="countShownInDesigner" stdset="0">
-         <number>3</number>
-        </property>
-        <property name="templateFilename" stdset="0">
-         <string>MagnetTemplate.ui</string>
-        </property>
-        <property name="dataSource" stdset="0">
-         <string>MagnetTemplate.json</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="magnet_layout"/>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="PyDMTimePlot" name="plot_magnet">
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="title" stdset="0">
+      <string>Magnet signals</string>
+     </property>
+     <property name="showLegend">
+      <bool>true</bool>
+     </property>
+     <property name="updatesAsynchronously">
+      <bool>true</bool>
+     </property>
+     <property name="timeSpan">
+      <double>300.000000000000000</double>
+     </property>
     </widget>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>PyDMTemplateRepeater</class>
-   <extends>QFrame</extends>
-   <header>pydm.widgets.template_repeater</header>
+   <class>PyDMTimePlot</class>
+   <extends>QGraphicsView</extends>
+   <header>pydm.widgets.timeplot</header>
   </customwidget>
  </customwidgets>
  <resources/>

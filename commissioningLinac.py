@@ -2,10 +2,10 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
 from epics import PV
-from lcls_tools.superconducting.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
 from numpy import nanmean
 
 import commissioningUtilities as utils
+from lcls_tools.superconducting.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
 
 
 class DecaradHead:
@@ -192,7 +192,7 @@ class CommissioningRack(Rack):
 class CommissioningCryomodule(Cryomodule):
     def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass, isHarmonicLinearizer, ssaClass=SSA):
         super().__init__(cryoName=cryoName, linacObject=linacObject, cavityClass=CommissioningCavity,
-                         magnetClass=CommissioningMagnet, rackClass=CommissioningRack,
+                         rackClass=CommissioningRack,
                          isHarmonicLinearizer=isHarmonicLinearizer)
 
         self.results = utils.CommissioningCryomoduleResults()
@@ -230,6 +230,5 @@ class CommissioningCryomodule(Cryomodule):
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-        cryomoduleClass=CommissioningCryomodule,
-        magnetClass=CommissioningMagnet,
-        rackClass=CommissioningRack, cavityClass=CommissioningCavity)
+    cryomoduleClass=CommissioningCryomodule,
+    rackClass=CommissioningRack, cavityClass=CommissioningCavity)

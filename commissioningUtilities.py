@@ -12,13 +12,6 @@ TESTLEAD_LIST = [
     'Zacarias, Lisa',
 ]
 
-# these values are based on the list of enum states found by probing {Magnettype}:L{x}B:{cm}85:CTRL
-MAGNET_RESET_VALUE = 10
-MAGNET_ON_VALUE = 11
-MAGNET_OFF_VALUE = 12
-MAGNET_DEGAUSS_VALUE = 13
-MAGNET_TRIM_VALUE = 1
-
 # TODO convert to IDES of 20A
 NOMINAL_BDES = 8.5
 

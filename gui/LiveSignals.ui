@@ -35,6 +35,9 @@
          <property name="title" stdset="0">
           <string>Upstream HOM temperatures</string>
          </property>
+         <property name="showLegend">
+          <bool>true</bool>
+         </property>
          <property name="curves">
           <stringlist/>
          </property>
@@ -54,6 +57,9 @@
          <property name="title" stdset="0">
           <string>Magnet signals</string>
          </property>
+         <property name="showLegend">
+          <bool>true</bool>
+         </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
@@ -69,6 +75,9 @@
          </property>
          <property name="title" stdset="0">
           <string>Stepper temperatures</string>
+         </property>
+         <property name="showLegend">
+          <bool>true</bool>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
@@ -86,6 +95,9 @@
          <property name="title" stdset="0">
           <string>Coupler bottom temperatures</string>
          </property>
+         <property name="showLegend">
+          <bool>true</bool>
+         </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
@@ -101,6 +113,9 @@
          </property>
          <property name="title" stdset="0">
           <string>CM vacuum signals</string>
+         </property>
+         <property name="showLegend">
+          <bool>true</bool>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
@@ -121,6 +136,9 @@
          <property name="title" stdset="0">
           <string>Downstream HOM temperatures</string>
          </property>
+         <property name="showLegend">
+          <bool>true</bool>
+         </property>
          <property name="curves">
           <stringlist/>
          </property>
@@ -140,6 +158,9 @@
          <property name="title" stdset="0">
           <string>Coupler top temperatures</string>
          </property>
+         <property name="showLegend">
+          <bool>true</bool>
+         </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
@@ -156,6 +177,9 @@
          <property name="title" stdset="0">
           <string>Cryo signals</string>
          </property>
+         <property name="showLegend">
+          <bool>true</bool>
+         </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
@@ -171,6 +195,9 @@
          </property>
          <property name="title" stdset="0">
           <string>Decarad</string>
+         </property>
+         <property name="showLegend">
+          <bool>true</bool>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
