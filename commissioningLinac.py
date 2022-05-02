@@ -5,7 +5,7 @@ from epics import PV
 from numpy import nanmean
 
 import commissioningUtilities as utils
-from lcls_tools.devices.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
+from lcls_tools.superconducting.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
 
 
 class DecaradHead:
@@ -97,7 +97,6 @@ class CommissioningCavity(Cavity):
         self.piezo = Piezo(self)
 
         self.interlock_PV: PV = PV(self.pvPrefix + "RFPERMIT")
-        self.stepper_temp_PV: PV = PV(self.pvPrefix + "STEPTEMP")
         self.coupler_top_PV: PV = PV(self.pvPrefix + "CPLRTEMP1")
         self.coupler_bot_PV: PV = PV(self.pvPrefix + "CPLRTEMP2")
         self.hom_us_PV: PV = PV("CTE:CM{cm}:1{cavity}18:UH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
