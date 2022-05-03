@@ -14,11 +14,11 @@ from pydm.widgets import PyDMEmbeddedDisplay
 from qtpy.QtCore import Slot
 
 import commissioningUtilities as util
-import lcls_tools.superconducting.scLinac.scLinacUtils as scLinacUtils
+import lcls_tools.superconducting.scLinacUtils as scLinacUtils
 from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad
-from lcls_tools.pydm_tools.magnet import MagnetScreen
-from lcls_tools.pydm_tools.pydmPlotUtil import TimePlotParams, TimePlotUpdater, WaveformPlotParams, WaveformPlotUpdater
-from lcls_tools.superconducting.scLinac.scLinac import CRYOMODULE_OBJECTS
+from lcls_tools.common.pydm_tools.magnet import MagnetScreen
+from lcls_tools.common.pydm_tools.pydmPlotUtil import TimePlotParams, TimePlotUpdater, WaveformPlotParams, WaveformPlotUpdater
+from lcls_tools.superconducting.scLinac import CRYOMODULE_OBJECTS
 
 FREQ_SEARCH_MODEOVERLAP = 1000
 

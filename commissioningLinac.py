@@ -5,7 +5,7 @@ from epics import PV
 from numpy import nanmean
 
 import commissioningUtilities as utils
-from lcls_tools.superconducting.scLinac.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
+from lcls_tools.superconducting.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
 
 
 class DecaradHead:

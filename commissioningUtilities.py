@@ -1,7 +1,7 @@
 import dataclasses
 from typing import Optional
 
-from lcls_tools.data_analysis.archiver import Archiver
+from lcls_tools.common.data_analysis.archiver import Archiver
 
 TESTLEAD_LIST = [
     'Aderhold, Sebastian',
