@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from time import sleep
 from typing import Dict, List, Optional, Tuple
 
 from epics import PV
@@ -189,6 +190,20 @@ class CommissioningRack(Rack):
         self.freq_search_status_PV: PV = PV(self.pvPrefix + "FSCAN:STAT")
 
 
+class CommissioningMagnet(Magnet):
+    def __init__(self, magnettype, cryomodule):
+        super().__init__(magnettype, cryomodule)
+
+    def checkout(self):
+        self.reset()
+        self.turnOn()
+        self.degauss()
+        self.bdes = utils.NOMINAL_BDES
+        sleep(3600)
+        self.bdes = 0
+        self.turnOff()
+
+
 class CommissioningCryomodule(Cryomodule):
     def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass, isHarmonicLinearizer, ssaClass=SSA):
         super().__init__(cryoName=cryoName, linacObject=linacObject, cavityClass=CommissioningCavity,
@@ -231,4 +246,4 @@ class CommissioningCryomodule(Cryomodule):
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
     cryomoduleClass=CommissioningCryomodule,
-    rackClass=CommissioningRack, cavityClass=CommissioningCavity)
+    rackClass=CommissioningRack, cavityClass=CommissioningCavity, magnetClass=CommissioningMagnet)
