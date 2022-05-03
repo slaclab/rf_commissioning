@@ -12,8 +12,7 @@ TESTLEAD_LIST = [
     'Zacarias, Lisa',
 ]
 
-# TODO convert to IDES of 20A
-NOMINAL_BDES = 8.5
+
 
 RADIATION_LIMIT = 50
 GRADIENT_THRESHOLD_RADLIMIT = 16

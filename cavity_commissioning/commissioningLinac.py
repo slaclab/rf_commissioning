@@ -190,18 +190,7 @@ class CommissioningRack(Rack):
         self.freq_search_status_PV: PV = PV(self.pvPrefix + "FSCAN:STAT")
 
 
-class CommissioningMagnet(Magnet):
-    def __init__(self, magnettype, cryomodule):
-        super().__init__(magnettype, cryomodule)
 
-    def checkout(self):
-        self.reset()
-        self.turnOn()
-        self.degauss()
-        self.bdes = utils.NOMINAL_BDES
-        sleep(3600)
-        self.bdes = 0
-        self.turnOff()
 
 
 class CommissioningCryomodule(Cryomodule):
@@ -246,4 +235,4 @@ class CommissioningCryomodule(Cryomodule):
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
     cryomoduleClass=CommissioningCryomodule,
-    rackClass=CommissioningRack, cavityClass=CommissioningCavity, magnetClass=CommissioningMagnet)
+    rackClass=CommissioningRack, cavityClass=CommissioningCavity)
