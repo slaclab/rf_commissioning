@@ -9,16 +9,21 @@ from typing import Dict, Optional
 from PyQt5.QtWidgets import QMessageBox, QWidget
 from edmbutton import PyDMEDMDisplayButton
 from epics.ca import CASeverityException
+from lcls_tools.common.pydm_tools.magnet import MagnetScreen
+from lcls_tools.common.pydm_tools.pydmPlotUtil import (TimePlotParams,
+                                                       TimePlotUpdater,
+                                                       WaveformPlotParams,
+                                                       WaveformPlotUpdater)
+from lcls_tools.superconducting import scLinacUtils
+from lcls_tools.superconducting.scLinac import CRYOMODULE_OBJECTS
 from pydm import Display
 from pydm.widgets import PyDMEmbeddedDisplay
 from qtpy.QtCore import Slot
 
 import commissioningUtilities as util
-import lcls_tools.superconducting.scLinac.scLinacUtils as scLinacUtils
-from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad
-from lcls_tools.pydm_tools.magnet import MagnetScreen
-from lcls_tools.pydm_tools.pydmPlotUtil import TimePlotParams, TimePlotUpdater, WaveformPlotParams, WaveformPlotUpdater
-from lcls_tools.superconducting.scLinac.scLinac import CRYOMODULE_OBJECTS
+from commissioningLinac import (COMMISSIONING_CRYOMODULE_OBJECTS,
+                                CommissioningCavity, CommissioningCryomodule,
+                                Decarad)
 
 FREQ_SEARCH_MODEOVERLAP = 1000
 
@@ -58,6 +63,12 @@ class GuidedCommissioningScreens(Display):
         self.magnet_checkout_window = Display(ui_filename=self.getPath("gui/MagnetScreen.ui"))
         self.ui.button_magnet_checkout.clicked.connect(partial(self.showDisplay, self.magnet_checkout_window))
 
+        self.quadMagnetScreen: MagnetScreen = MagnetScreen()
+        self.xcorMagnetScreen: MagnetScreen = MagnetScreen()
+        self.ycorMagnetScreen: MagnetScreen = MagnetScreen()
+
+        self.setupMagnetScreen()
+
         self._magnet_edm_buttons: Dict[str, PyDMEDMDisplayButton] = {}
 
         # setup: initial setup tab
@@ -73,25 +84,25 @@ class GuidedCommissioningScreens(Display):
         self.live_signals_window = Display(ui_filename=self.getPath("gui/LiveSignals.ui"))
         self.ui.button_livesignals.clicked.connect(partial(self.showDisplay, self.live_signals_window))
 
-        time_plot_updater = {STEPPERTEMP_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
-                             MAGNET_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_magnet),
-                             HOMUS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
-                             HOMDS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
-                             CPLRTOP_PLOT_KEY: TimePlotParams(
-                                 plot=self.live_signals_window.ui.plot_couplertop_temp),
-                             CPLRBOT_PLOT_KEY: TimePlotParams(
-                                 plot=self.live_signals_window.ui.plot_couplerbot_temp),
-                             CMVACUUM_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
-                             CRYOSIGNALS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
+        time_plot_updater = {STEPPERTEMP_PLOT_KEY  : TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
+                             MAGNET_PLOT_KEY       : TimePlotParams(plot=self.live_signals_window.ui.plot_magnet),
+                             HOMUS_PLOT_KEY        : TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
+                             HOMDS_PLOT_KEY        : TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
+                             CPLRTOP_PLOT_KEY      : TimePlotParams(
+                                     plot=self.live_signals_window.ui.plot_couplertop_temp),
+                             CPLRBOT_PLOT_KEY      : TimePlotParams(
+                                     plot=self.live_signals_window.ui.plot_couplerbot_temp),
+                             CMVACUUM_PLOT_KEY     : TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
+                             CRYOSIGNALS_PLOT_KEY  : TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
                              SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
-                                 plot=self.live_signals_window.ui.plot_single_cavity_overview),
-                             FREQUENCY_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
-                             DECARAD_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_decarad)
+                                     plot=self.live_signals_window.ui.plot_single_cavity_overview),
+                             FREQUENCY_PLOT_KEY    : TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
+                             DECARAD_PLOT_KEY      : TimePlotParams(plot=self.live_signals_window.ui.plot_decarad)
                              }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
         self.waveform_plot_updater = WaveformPlotUpdater({RFWAVEFORM_PLOT_KEY: WaveformPlotParams(
-            plot=self.rf_controls_window.ui.waveform_rfsignals)})
+                plot=self.rf_controls_window.ui.waveform_rfsignals)})
 
         self.update_selection()
 
@@ -100,6 +111,14 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
+
+    def setupMagnetScreen(self):
+
+        for magnetScreen in [self.quadMagnetScreen, self.xcorMagnetScreen,
+                             self.ycorMagnetScreen]:
+            embeddedDisplay: PyDMEmbeddedDisplay = PyDMEmbeddedDisplay()
+            embeddedDisplay.embedded_widget = magnetScreen
+            self.magnet_checkout_window.ui.magnet_layout.addWidget(embeddedDisplay)
 
     def ui_filename(self):
         return 'gui/GuidedCommissioningScreens.ui'
@@ -128,7 +147,7 @@ class GuidedCommissioningScreens(Display):
             def stylesheet(self):
                 return 'color: {color};'.format(color=self.color)
 
-        status_map = {True: StatusMap('Complete', 'green'),
+        status_map = {True : StatusMap('Complete', 'green'),
                       False: StatusMap('Incomplete', 'red')}
 
         cm_results = self.current_cm.results
@@ -161,9 +180,9 @@ class GuidedCommissioningScreens(Display):
             label.setStyleSheet(status_map[status].stylesheet)
 
     def update_magnets(self):
-        quad_embedded_display: PyDMEmbeddedDisplay = PyDMEmbeddedDisplay()
-        quad_embedded_display.embedded_widget = MagnetScreen()
-        self.magnet_checkout_window.ui.magnet_layout.addWidget(quad_embedded_display)
+        self.quadMagnetScreen.connectSignals(self.current_cm.quad)
+        self.xcorMagnetScreen.connectSignals(self.current_cm.xcor)
+        self.ycorMagnetScreen.connectSignals(self.current_cm.ycor)
 
     def update_selection(self):
         self.save_results()
@@ -188,7 +207,7 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.button_striptools.commands = [
             'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
-                prefix=self.current_cm.pvPrefix[:-2])
+                    prefix=self.current_cm.pvPrefix[:-2])
         ]
 
         self.update_magnets()
@@ -196,13 +215,13 @@ class GuidedCommissioningScreens(Display):
         self.update_rf_controls()
 
         plot_update_map = {STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
-                           HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
-                           HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
-                           CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
-                           CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
-                           FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
-                           DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
-                           CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
+                           HOMDS_PLOT_KEY      : self.current_cm.hom_ds_PVs,
+                           HOMUS_PLOT_KEY      : self.current_cm.hom_us_PVs,
+                           CPLRTOP_PLOT_KEY    : self.current_cm.coupler_top_PVs,
+                           CPLRBOT_PLOT_KEY    : self.current_cm.coupler_bot_PVs,
+                           FREQUENCY_PLOT_KEY  : self.current_cm.detune_PVs,
+                           DECARAD_PLOT_KEY    : self.current_cm.decarad_PVs,
+                           CMVACUUM_PLOT_KEY   : self.current_cm.vacuumPVs,
                            CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs}
 
         self.time_plot_updater.updatePlots(plot_update_map)
@@ -276,8 +295,8 @@ class GuidedCommissioningScreens(Display):
             ch = 1
 
         macro_string = ",".join(
-            ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
-             "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
+                ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
+                 "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
         return macro_string
 
     @Slot()
@@ -374,7 +393,7 @@ class GuidedCommissioningScreens(Display):
         popup.setIcon(QMessageBox.Critical)
         popup.setWindowTitle(title)
         popup.setText(
-            '{error}\nPlease check expert screen and select from the options below'.format(error=exception))
+                '{error}\nPlease check expert screen and select from the options below'.format(error=exception))
         popup.addButton('Abort', QMessageBox.RejectRole)
         popup.addButton('Acknowledge manual completion and continue', QMessageBox.AcceptRole)
         popup.addButton(expert_edmbutton, QMessageBox.ActionRole)
