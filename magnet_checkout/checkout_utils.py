@@ -1,5 +1,7 @@
 from time import sleep
-from typing import Dict
+from typing import Dict, List
+
+from epics import PV
 
 from lcls_tools.superconducting.scLinac import Cryomodule, Magnet, make_lcls_cryomodules
 
@@ -21,5 +23,28 @@ class CheckoutMagnet(Magnet):
         self.turnOff()
 
 
+class CheckoutCryomodule(Cryomodule):
+    def __init__(self, cryoName, linacObject):
+        super().__init__(cryoName, linacObject)
 
-CHECKOUT_CRYOMODULE_OBJECTS: Dict[str, Cryomodule] = make_lcls_cryomodules(magnetClass=CheckoutMagnet)
+        mag_temp_formatter = "240{num}:MP:TEMP"
+        self.magnet_temp_1_PV: PV = PV(self.ctePrefix + mag_temp_formatter.format(num=1))
+        self.magnet_temp_2_PV: PV = PV(self.ctePrefix + mag_temp_formatter.format(num=2))
+        self.magnet_temp_3_PV: PV = PV(self.ctePrefix + mag_temp_formatter.format(num=3))
+        self.magnet_temp_4_PV: PV = PV(self.ctePrefix + mag_temp_formatter.format(num=4))
+
+        self.magnet_voltage_12_vd_PV: PV = PV(self.cvtPrefix + "12:VD:VOLTAGE")
+        self.magnet_voltage_34_vd_PV: PV = PV(self.cvtPrefix + "34:VD:VOLTAGE")
+        self.magnet_voltage_12_hd_PV: PV = PV(self.cvtPrefix + "12:HD:VOLTAGE")
+        self.magnet_voltage_34_hd_PV: PV = PV(self.cvtPrefix + "34:HD:VOLTAGE")
+        self.magnet_voltage_12_sq_PV: PV = PV(self.cvtPrefix + "12:SQ:VOLTAGE")
+        self.magnet_voltage_34_sq_PV: PV = PV(self.cvtPrefix + "34:SQ:VOLTAGE")
+
+        self.magnet_PVs: List[PV] = [self.magnet_temp_1_PV.pvname, self.magnet_temp_2_PV.pvname,
+                                     self.magnet_temp_3_PV.pvname, self.magnet_temp_4_PV.pvname,
+                                     self.magnet_voltage_12_vd_PV.pvname, self.magnet_voltage_34_vd_PV.pvname,
+                                     self.magnet_voltage_12_hd_PV.pvname, self.magnet_voltage_34_hd_PV.pvname,
+                                     self.magnet_voltage_12_sq_PV.pvname, self.magnet_voltage_34_sq_PV.pvname]
+
+CHECKOUT_CRYOMODULE_OBJECTS: Dict[str, Cryomodule] = make_lcls_cryomodules(magnetClass=CheckoutMagnet,
+                                                                           cryomoduleClass=CheckoutCryomodule)

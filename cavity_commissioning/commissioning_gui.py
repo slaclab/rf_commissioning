@@ -56,16 +56,8 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity: Optional[CommissioningCavity] = None
         self.current_pvprefix = None
 
-        self.magnet_checkout_window = Display(ui_filename=self.getPath("gui/MagnetScreen.ui"))
-        self.ui.button_magnet_checkout.clicked.connect(self.magnet_button_clicked)
 
-        self.quadMagnetScreen: MagnetScreen = MagnetScreen()
-        self.xcorMagnetScreen: MagnetScreen = MagnetScreen()
-        self.ycorMagnetScreen: MagnetScreen = MagnetScreen()
 
-        self.setupMagnetScreen()
-
-        self._magnet_edm_buttons: Dict[str, PyDMEDMDisplayButton] = {}
 
         # setup: initial setup tab
         self.setup_combo_boxes()
@@ -108,13 +100,7 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
 
-    def setupMagnetScreen(self):
 
-        for magnetScreen in [self.quadMagnetScreen, self.xcorMagnetScreen,
-                             self.ycorMagnetScreen]:
-            embeddedDisplay: PyDMEmbeddedDisplay = PyDMEmbeddedDisplay()
-            embeddedDisplay.embedded_widget = magnetScreen
-            self.magnet_checkout_window.ui.magnet_layout.addWidget(embeddedDisplay)
 
     def ui_filename(self):
         return 'gui/GuidedCommissioningScreens.ui'
@@ -175,17 +161,7 @@ class GuidedCommissioningScreens(Display):
             label.setText(status_map[status].message)
             label.setStyleSheet(status_map[status].stylesheet)
 
-    def update_magnetscreen(self):
-        self.quadMagnetScreen.connectSignals(self.current_cm.quad)
-        self.xcorMagnetScreen.connectSignals(self.current_cm.xcor)
-        self.ycorMagnetScreen.connectSignals(self.current_cm.ycor)
 
-    def magnet_button_clicked(self):
-        self.showDisplay(self.magnet_checkout_window)
-        self.current_cm.quad.start_checkout()
-        self.current_cm.xcor.start_checkout()
-        self.current_cm.ycor.start_checkout()
-        QTimer.singleShot(3600000, partial(self.make_info_popup, 'Magnet has been running for 1 hour'))
 
     def update_selection(self):
         self.save_results()
@@ -212,8 +188,6 @@ class GuidedCommissioningScreens(Display):
             'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
                 prefix=self.current_cm.pvPrefix[:-2])
         ]
-
-        self.update_magnetscreen()
 
         self.update_rf_controls()
 

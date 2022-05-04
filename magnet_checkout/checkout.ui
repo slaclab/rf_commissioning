@@ -14,6 +14,13 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="3" column="0">
+    <widget class="QPushButton" name="signals_button">
+     <property name="text">
+      <string>Show live signals</string>
+     </property>
+    </widget>
+   </item>
    <item row="1" column="0">
     <widget class="QPushButton" name="start_button">
      <property name="text">
@@ -44,9 +51,9 @@
     </widget>
    </item>
    <item row="2" column="0">
-    <widget class="QPushButton" name="signals_button">
+    <widget class="QPushButton" name="controls_button">
      <property name="text">
-      <string>Show live signals</string>
+      <string>Show controls</string>
      </property>
     </widget>
    </item>

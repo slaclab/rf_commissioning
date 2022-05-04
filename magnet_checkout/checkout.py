@@ -1,7 +1,13 @@
+from functools import partial
 from typing import Dict, List
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QCheckBox
 from pydm import Display
+from pydm.widgets import PyDMEmbeddedDisplay
+
+from lcls_tools.common.pydm_tools.magnet import MagnetScreen
+from lcls_tools.common.pydm_tools.pydmPlotUtil import TimePlotParams, TimePlotUpdater
 from lcls_tools.superconducting.scLinac import Cryomodule
 import checkout_utils as utils
 
@@ -23,6 +29,42 @@ class MagnetCheckoutGUI(Display):
                 checkbox = QCheckBox(cryomodule_list[list_index].name)
                 self.ui.checkbox_layout.addWidget(checkbox, i, j)
                 list_index += 1
+
+        self.magnet_checkout_window = Display(ui_filename=self.getPath("magnet_screen.ui"))
+        self.ui.button_magnet_checkout.clicked.connect(self.magnet_button_clicked)
+
+        self.quadMagnetScreen: MagnetScreen = MagnetScreen()
+        self.xcorMagnetScreen: MagnetScreen = MagnetScreen()
+        self.ycorMagnetScreen: MagnetScreen = MagnetScreen()
+
+        self.setupMagnetScreen()
+
+        self.current_cm = None
+
+        self.magnet_plot_params: TimePlotParams = TimePlotParams(plot=self.magnet_checkout_window.ui.plot_magnet,
+                                                                 formLayout=self.magnet_checkout_window.ui.magnet_plot_layout)
+
+        self.magnet_plot_updater: TimePlotUpdater = TimePlotUpdater({'magnetplot' : self.magnet_plot_params})
+
+    def update_magnetscreen(self):
+        self.quadMagnetScreen.connectSignals(self.current_cm.quad)
+        self.xcorMagnetScreen.connectSignals(self.current_cm.xcor)
+        self.ycorMagnetScreen.connectSignals(self.current_cm.ycor)
+
+    def magnet_button_clicked(self):
+        self.showDisplay(self.magnet_checkout_window)
+        self.current_cm.quad.start_checkout()
+        self.current_cm.xcor.start_checkout()
+        self.current_cm.ycor.start_checkout()
+        QTimer.singleShot(3600000, partial(self.make_info_popup, 'Magnet has been running for 1 hour'))
+
+    def setupMagnetScreen(self):
+
+        for magnetScreen in [self.quadMagnetScreen, self.xcorMagnetScreen,
+                             self.ycorMagnetScreen]:
+            embeddedDisplay: PyDMEmbeddedDisplay = PyDMEmbeddedDisplay()
+            embeddedDisplay.embedded_widget = magnetScreen
+            self.magnet_checkout_window.ui.magnet_layout.addWidget(embeddedDisplay)
 
     def ui_filename(self):
         return 'checkout.ui'
