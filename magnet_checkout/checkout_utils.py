@@ -24,8 +24,9 @@ class CheckoutMagnet(Magnet):
 
 
 class CheckoutCryomodule(Cryomodule):
-    def __init__(self, cryoName, linacObject):
-        super().__init__(cryoName, linacObject)
+    def __init__(self, cryoName, linacObject, cavityClass, magnetClass,
+                 rackClass, isHarmonicLinearizer, ssaClass):
+        super().__init__(cryoName, linacObject, magnetClass=CheckoutMagnet)
 
         mag_temp_formatter = "240{num}:MP:TEMP"
         self.magnet_temp_1_PV: PV = PV(self.ctePrefix + mag_temp_formatter.format(num=1))

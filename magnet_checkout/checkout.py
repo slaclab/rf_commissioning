@@ -1,4 +1,6 @@
+import sys
 from functools import partial
+from os import path
 from typing import Dict, List
 
 from PyQt5.QtCore import QTimer
@@ -6,16 +8,19 @@ from PyQt5.QtWidgets import QCheckBox
 from pydm import Display
 from pydm.widgets import PyDMEmbeddedDisplay
 
+import checkout_utils as utils
+from lcls_tools.common.pydm_tools.displayUtils import showDisplay
 from lcls_tools.common.pydm_tools.magnet import MagnetScreen
 from lcls_tools.common.pydm_tools.pydmPlotUtil import TimePlotParams, TimePlotUpdater
 from lcls_tools.superconducting.scLinac import Cryomodule
-import checkout_utils as utils
 
 
 class MagnetCheckoutGUI(Display):
 
     def __init__(self, parent=None, args=None):
         super(MagnetCheckoutGUI, self).__init__(parent=parent, args=args)
+
+        self.pathHere = path.dirname(sys.modules[self.__module__].__file__)
 
         self.selected_cryomodules: Dict = {}
 
@@ -31,7 +36,7 @@ class MagnetCheckoutGUI(Display):
                 list_index += 1
 
         self.magnet_checkout_window = Display(ui_filename=self.getPath("magnet_screen.ui"))
-        self.ui.button_magnet_checkout.clicked.connect(self.magnet_button_clicked)
+        self.ui.start_button.clicked.connect(self.magnet_button_clicked)
 
         self.quadMagnetScreen: MagnetScreen = MagnetScreen()
         self.xcorMagnetScreen: MagnetScreen = MagnetScreen()
@@ -44,7 +49,10 @@ class MagnetCheckoutGUI(Display):
         self.magnet_plot_params: TimePlotParams = TimePlotParams(plot=self.magnet_checkout_window.ui.plot_magnet,
                                                                  formLayout=self.magnet_checkout_window.ui.magnet_plot_layout)
 
-        self.magnet_plot_updater: TimePlotUpdater = TimePlotUpdater({'magnetplot' : self.magnet_plot_params})
+        self.magnet_plot_updater: TimePlotUpdater = TimePlotUpdater({'magnetplot': self.magnet_plot_params})
+
+    def getPath(self, fileName):
+        return path.join(self.pathHere, fileName)
 
     def update_magnetscreen(self):
         self.quadMagnetScreen.connectSignals(self.current_cm.quad)
@@ -52,7 +60,7 @@ class MagnetCheckoutGUI(Display):
         self.ycorMagnetScreen.connectSignals(self.current_cm.ycor)
 
     def magnet_button_clicked(self):
-        self.showDisplay(self.magnet_checkout_window)
+        showDisplay(self.magnet_checkout_window)
         self.current_cm.quad.start_checkout()
         self.current_cm.xcor.start_checkout()
         self.current_cm.ycor.start_checkout()
@@ -80,5 +88,3 @@ class MagnetCheckoutGUI(Display):
             cryomodule.quad.checkout()
             cryomodule.xcor.checkout()
             cryomodule.ycor.checkout()
-
-
