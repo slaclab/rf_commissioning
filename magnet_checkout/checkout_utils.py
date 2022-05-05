@@ -1,4 +1,3 @@
-from time import sleep
 from typing import Dict, List
 
 from epics import PV
@@ -8,17 +7,21 @@ from lcls_tools.superconducting.scLinac import Cryomodule, Magnet, make_lcls_cry
 # TODO convert to IDES of 20A
 NOMINAL_BDES = 8.5
 
+CONTROL_PLOT_KEY = 'controlplot'
+LIVE_PLOT_KEY = 'liveplot'
+
 
 class CheckoutMagnet(Magnet):
     def __init__(self, magnettype, cryomodule):
         super().__init__(magnettype, cryomodule)
 
-    def checkout(self):
+    def start_checkout(self):
         self.reset()
         self.turnOn()
         self.degauss()
         self.bdes = NOMINAL_BDES
-        sleep(3600)
+
+    def end_checkout(self):
         self.bdes = 0
         self.turnOff()
 
@@ -41,11 +44,12 @@ class CheckoutCryomodule(Cryomodule):
         self.magnet_voltage_12_sq_PV: PV = PV(self.cvtPrefix + "12:SQ:VOLTAGE")
         self.magnet_voltage_34_sq_PV: PV = PV(self.cvtPrefix + "34:SQ:VOLTAGE")
 
-        self.magnet_PVs: List[PV] = [self.magnet_temp_1_PV.pvname, self.magnet_temp_2_PV.pvname,
-                                     self.magnet_temp_3_PV.pvname, self.magnet_temp_4_PV.pvname,
-                                     self.magnet_voltage_12_vd_PV.pvname, self.magnet_voltage_34_vd_PV.pvname,
-                                     self.magnet_voltage_12_hd_PV.pvname, self.magnet_voltage_34_hd_PV.pvname,
-                                     self.magnet_voltage_12_sq_PV.pvname, self.magnet_voltage_34_sq_PV.pvname]
+        self.magnet_PVs: List[str] = [self.magnet_temp_1_PV.pvname, self.magnet_temp_2_PV.pvname,
+                                      self.magnet_temp_3_PV.pvname, self.magnet_temp_4_PV.pvname,
+                                      self.magnet_voltage_12_vd_PV.pvname, self.magnet_voltage_34_vd_PV.pvname,
+                                      self.magnet_voltage_12_hd_PV.pvname, self.magnet_voltage_34_hd_PV.pvname,
+                                      self.magnet_voltage_12_sq_PV.pvname, self.magnet_voltage_34_sq_PV.pvname]
+
 
 CHECKOUT_CRYOMODULE_OBJECTS: Dict[str, Cryomodule] = make_lcls_cryomodules(magnetClass=CheckoutMagnet,
                                                                            cryomoduleClass=CheckoutCryomodule)

@@ -348,25 +348,6 @@ class GuidedCommissioningScreens(Display):
             self.make_error_popup('SSA calibration failed', ssa_expert_button, e, self.ssa_actionbutton_clicked)
         self.save_results()
 
-    @staticmethod
-    def make_error_popup(title, expert_edmbutton, exception, action_func):
-        popup = QMessageBox()
-        popup.setIcon(QMessageBox.Critical)
-        popup.setWindowTitle(title)
-        popup.setText(
-                '{error}\nPlease check expert screen and select from the options below'.format(error=exception))
-        popup.addButton('Abort', QMessageBox.RejectRole)
-        popup.addButton('Acknowledge manual completion and continue', QMessageBox.AcceptRole)
-        popup.addButton(expert_edmbutton, QMessageBox.ActionRole)
-        popup.buttonClicked.connect(partial(action_func, popup))
-        popup.exec()
-
-    @staticmethod
-    def make_info_popup(text):
-        popup = QMessageBox()
-        popup.setIcon(QMessageBox.Information)
-        popup.setText(text)
-        popup.exec()
 
     def ssa_actionbutton_clicked(self, qmessagebox: QMessageBox):
         clickedbutton = qmessagebox.clickedButton()

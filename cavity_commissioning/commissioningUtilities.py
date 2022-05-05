@@ -74,7 +74,7 @@ class PiezoError(Exception):
         self.message = message
         super().__init__(self.message)
 
-
+# TODO add handling of multiple GUI instances
 @dataclasses.dataclass
 class CommissioningCavityResults:
     piezo_prerf_checked: bool = False
