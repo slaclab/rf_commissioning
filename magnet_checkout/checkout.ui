@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>683</width>
-    <height>528</height>
+    <width>172</width>
+    <height>164</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -34,18 +34,8 @@
       <string>Magnets to checkout</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="1" column="0">
-       <layout class="QGridLayout" name="checkbox_layout"/>
-      </item>
       <item row="0" column="0">
-       <widget class="QCheckBox" name="select_all_checkbox">
-        <property name="text">
-         <string>Select all</string>
-        </property>
-        <property name="tristate">
-         <bool>true</bool>
-        </property>
-       </widget>
+       <layout class="QGridLayout" name="checkbox_layout"/>
       </item>
      </layout>
     </widget>

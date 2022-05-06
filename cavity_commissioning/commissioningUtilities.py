@@ -33,10 +33,47 @@ PIEZO_PRERF_CHECKOUT_STATUS_VALUE = 1
 
 ARCHIVER = Archiver("lcls")
 
+FREQ_SEARCH_MODEOVERLAP = 1000
+FREQ_SEARCH_RMS_THRESH = 10
+FREQ_SEARCH_HIGH = 50000
+FREQ_SEARCH_LOW = -900000
+
+STEPPERTEMP_PLOT_KEY = 'steppertemp'
+CMVACUUM_PLOT_KEY = 'cmvacuum'
+CRYOSIGNALS_PLOT_KEY = 'cryosignals'
+MAGNET_PLOT_KEY = 'magnet'
+HOMUS_PLOT_KEY = 'homus'
+HOMDS_PLOT_KEY = 'homds'
+CPLRTOP_PLOT_KEY = 'cplrtop'
+CPLRBOT_PLOT_KEY = 'cplrbot'
+SINGLE_CAVITY_PLOT_KEY = 'singlecavity'
+FREQUENCY_PLOT_KEY = 'frequency'
+RFWAVEFORM_PLOT_KEY = 'rfwaveform'
+DECARAD_PLOT_KEY = 'decarad'
+DETUNE_PLOT_KEY = "detune"
+
+STEPPER_MAX_STEPS = 5000000
+
+MICROSTEPS_PER_STEP = 256
+
+# These are very rough values obtained empirically
+ESTIMATED_STEPS_PER_HZ = MICROSTEPS_PER_STEP / 1.4
+ESTIMATED_STEPS_PER_HZ_HL = MICROSTEPS_PER_STEP / 18.3
+
 
 class ProbeQError(Exception):
     """
     Exception thrown during cavity probe Q calculation
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+class DetuneError(Exception):
+    """
+    Exception thrown during cavity tuning
     """
 
     def __init__(self, message):

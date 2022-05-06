@@ -133,6 +133,8 @@ class CommissioningCavity(Cavity):
         self.freq_search_push_PV: PV = PV(self.pvPrefix + "FSCAN:PUSH_8PI9.PROC")
 
         self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
+        self.tuning_pvs: List[str] = [self.detune_best_PV.pvname,
+                                      self.stepper_temp_PV.pvname]
 
     def connect_to_decarad(self):
         for decaradhead in self.cryomodule.decarad.heads.values():
@@ -228,5 +230,5 @@ class CommissioningCryomodule(Cryomodule):
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-    cryomoduleClass=CommissioningCryomodule,
-    rackClass=CommissioningRack, cavityClass=CommissioningCavity)
+        cryomoduleClass=CommissioningCryomodule,
+        rackClass=CommissioningRack, cavityClass=CommissioningCavity)

@@ -20,28 +20,8 @@ from lcls_tools.common.pydm_tools.pydmPlotUtil import (TimePlotParams,
                                                        TimePlotUpdater,
                                                        WaveformPlotParams,
                                                        WaveformPlotUpdater)
+from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.superconducting.scLinac import CRYOMODULE_OBJECTS
-
-FREQ_SEARCH_MODEOVERLAP = 1000
-
-FREQ_SEARCH_RMS_THRESH = 10
-
-FREQ_SEARCH_HIGH = 50000
-
-FREQ_SEARCH_LOW = -900000
-
-STEPPERTEMP_PLOT_KEY = 'steppertemp'
-CMVACUUM_PLOT_KEY = 'cmvacuum'
-CRYOSIGNALS_PLOT_KEY = 'cryosignals'
-MAGNET_PLOT_KEY = 'magnet'
-HOMUS_PLOT_KEY = 'homus'
-HOMDS_PLOT_KEY = 'homds'
-CPLRTOP_PLOT_KEY = 'cplrtop'
-CPLRBOT_PLOT_KEY = 'cplrbot'
-SINGLE_CAVITY_PLOT_KEY = 'singlecavity'
-FREQUENCY_PLOT_KEY = 'frequency'
-RFWAVEFORM_PLOT_KEY = 'rfwaveform'
-DECARAD_PLOT_KEY = 'decarad'
 
 
 class GuidedCommissioningScreens(Display):
@@ -69,24 +49,30 @@ class GuidedCommissioningScreens(Display):
         self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
         self.ui.button_livesignals.clicked.connect(partial(showDisplay, self.live_signals_window))
 
-        time_plot_updater = {STEPPERTEMP_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
-                             HOMUS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
-                             HOMDS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
-                             CPLRTOP_PLOT_KEY: TimePlotParams(
-                                 plot=self.live_signals_window.ui.plot_couplertop_temp),
-                             CPLRBOT_PLOT_KEY: TimePlotParams(
-                                 plot=self.live_signals_window.ui.plot_couplerbot_temp),
-                             CMVACUUM_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
-                             CRYOSIGNALS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
-                             SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
-                                 plot=self.live_signals_window.ui.plot_single_cavity_overview),
-                             FREQUENCY_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
-                             DECARAD_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_decarad)
-                             }
+        self.tuner_window = Display(ui_filename=self.getPath("gui/tuning.ui"))
+
+        time_plot_updater = {
+            util.STEPPERTEMP_PLOT_KEY  : TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
+            util.HOMUS_PLOT_KEY        : TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
+            util.HOMDS_PLOT_KEY        : TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
+            util.CPLRTOP_PLOT_KEY      : TimePlotParams(
+                    plot=self.live_signals_window.ui.plot_couplertop_temp),
+            util.CPLRBOT_PLOT_KEY      : TimePlotParams(
+                    plot=self.live_signals_window.ui.plot_couplerbot_temp),
+            util.CMVACUUM_PLOT_KEY     : TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
+            util.CRYOSIGNALS_PLOT_KEY  : TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
+            util.SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
+                    plot=self.live_signals_window.ui.plot_single_cavity_overview),
+            util.FREQUENCY_PLOT_KEY    : TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
+            util.DECARAD_PLOT_KEY      : TimePlotParams(plot=self.live_signals_window.ui.plot_decarad),
+            util.DETUNE_PLOT_KEY       : TimePlotParams(plot=self.tuner_window.ui.tuning_plot,
+                                                        formLayout=self.tuner_window.ui.plot_layout)
+        }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
-        self.waveform_plot_updater = WaveformPlotUpdater({RFWAVEFORM_PLOT_KEY: WaveformPlotParams(
-            plot=self.rf_controls_window.ui.waveform_rfsignals)})
+        self.waveform_plot_updater = WaveformPlotUpdater(
+                {util.RFWAVEFORM_PLOT_KEY:
+                     WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals)})
 
         self.update_selection()
 
@@ -95,12 +81,28 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
+        self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
+
+        self.tuner_window.ui.step_des_line_edit.returnPressed.connect(self.des_step_changed)
 
     def ui_filename(self):
         return 'gui/commissioning.ui'
 
     def getPath(self, fileName):
         return path.join(self.pathHere, fileName)
+
+    def tune_cavity(self):
+        self.current_cavity.turnOff()
+        self.current_cavity.drivelevelPV.put(scLinacUtils.SAFE_PULSED_DRIVE_LEVEL)
+        self.current_cavity.rfModeCtrlPV.put(scLinacUtils.RF_MODE_CHIRP)
+        self.current_cavity.turnOn()
+
+        if self.current_cavity.detune_best_PV.severity == pyepicsUtils.EPICS_INVALID_VAL:
+            raise util.DetuneError("Detune PV invalid. Either expand the chirp"
+                                   " range or use the rack large frequency scan"
+                                   " to find the detune.")
+
+        showDisplay(self.tuner_window)
 
     def setup_combo_boxes(self):
         self.ui.testlead.addItems(util.TESTLEAD_LIST)
@@ -123,7 +125,7 @@ class GuidedCommissioningScreens(Display):
             def stylesheet(self):
                 return 'color: {color};'.format(color=self.color)
 
-        status_map = {True: StatusMap('Complete', 'green'),
+        status_map = {True : StatusMap('Complete', 'green'),
                       False: StatusMap('Incomplete', 'red')}
 
         cm_results = self.current_cm.results
@@ -176,25 +178,42 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.button_striptools.commands = [
             'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
-                prefix=self.current_cm.pvPrefix[:-2])
+                    prefix=self.current_cm.pvPrefix[:-2])
         ]
 
         self.update_rf_controls()
 
-        plot_update_map = {STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
-                           HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
-                           HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
-                           CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
-                           CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
-                           FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
-                           DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
-                           CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
-                           CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs}
+        plot_update_map = {util.STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
+                           util.HOMDS_PLOT_KEY      : self.current_cm.hom_ds_PVs,
+                           util.HOMUS_PLOT_KEY      : self.current_cm.hom_us_PVs,
+                           util.CPLRTOP_PLOT_KEY    : self.current_cm.coupler_top_PVs,
+                           util.CPLRBOT_PLOT_KEY    : self.current_cm.coupler_bot_PVs,
+                           util.FREQUENCY_PLOT_KEY  : self.current_cm.detune_PVs,
+                           util.DECARAD_PLOT_KEY    : self.current_cm.decarad_PVs,
+                           util.CMVACUUM_PLOT_KEY   : self.current_cm.vacuumPVs,
+                           util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs,
+                           util.DETUNE_PLOT_KEY     : self.current_cavity.tuning_pvs}
 
         self.time_plot_updater.updatePlots(plot_update_map)
 
-        rfwaveformplot_update_map = {RFWAVEFORM_PLOT_KEY: self.current_cavity.waveformplot_channelpairs}
-        self.waveform_plot_updater.updatePlots(rfwaveformplot_update_map)
+        self.waveform_plot_updater.updatePlot(util.RFWAVEFORM_PLOT_KEY,
+                                              self.current_cavity.waveformplot_channelpairs)
+
+        self.current_cavity.detune_best_PV.clear_callbacks()
+        self.current_cavity.detune_best_PV.add_callback(self.detune_callback)
+        self.tuner_window.ui.detune_label.channel = self.current_cavity.detune_best_PV.pvname
+
+    def detune_callback(self, value, **kwargs):
+        est_steps = value * (util.ESTIMATED_STEPS_PER_HZ_HL
+                             if self.current_cm.isHarmonicLinearizer
+                             else util.ESTIMATED_STEPS_PER_HZ)
+        self.tuner_window.ui.estimated_steps_label.setText(str(est_steps))
+        
+    def des_step_changed(self):
+        des_steps = int(self.tuner_window.ui.step_des_line_edit.text())
+        self.current_cavity.steppertuner.move(des_steps,
+                                              maxSteps=util.STEPPER_MAX_STEPS,
+                                              speed=scLinacUtils.MAX_STEPPER_SPEED)
 
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)
@@ -262,8 +281,8 @@ class GuidedCommissioningScreens(Display):
             ch = 1
 
         macro_string = ",".join(
-            ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
-             "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
+                ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
+                 "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
         return macro_string
 
     def run_piezo_prerf_check(self):
@@ -417,10 +436,10 @@ class GuidedCommissioningScreens(Display):
             self.current_cm.cavities[cavity].freq_search_select_PV.put(0)
         self.current_cavity.freq_search_select_PV.put(1)
 
-        self.current_cavity.rack.freq_search_low_PV.put(FREQ_SEARCH_LOW)
-        self.current_cavity.rack.freq_search_high_PV.put(FREQ_SEARCH_HIGH)
-        self.current_cavity.rack.freq_search_rms_thresh_PV.put(FREQ_SEARCH_RMS_THRESH)
-        self.current_cavity.rack.freq_search_modeoverlap_PV.put(FREQ_SEARCH_MODEOVERLAP)
+        self.current_cavity.rack.freq_search_low_PV.put(util.FREQ_SEARCH_LOW)
+        self.current_cavity.rack.freq_search_high_PV.put(util.FREQ_SEARCH_HIGH)
+        self.current_cavity.rack.freq_search_rms_thresh_PV.put(util.FREQ_SEARCH_RMS_THRESH)
+        self.current_cavity.rack.freq_search_modeoverlap_PV.put(util.FREQ_SEARCH_MODEOVERLAP)
 
         self.current_cavity.rack.freq_search_start_PV.put(1)
         while self.current_cavity.rack.freq_search_status_PV.value == 3:
