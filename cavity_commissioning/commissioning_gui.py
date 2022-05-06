@@ -52,27 +52,27 @@ class GuidedCommissioningScreens(Display):
         self.tuner_window = Display(ui_filename=self.getPath("gui/tuning.ui"))
 
         time_plot_updater = {
-            util.STEPPERTEMP_PLOT_KEY  : TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
-            util.HOMUS_PLOT_KEY        : TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
-            util.HOMDS_PLOT_KEY        : TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
-            util.CPLRTOP_PLOT_KEY      : TimePlotParams(
-                    plot=self.live_signals_window.ui.plot_couplertop_temp),
-            util.CPLRBOT_PLOT_KEY      : TimePlotParams(
-                    plot=self.live_signals_window.ui.plot_couplerbot_temp),
-            util.CMVACUUM_PLOT_KEY     : TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
-            util.CRYOSIGNALS_PLOT_KEY  : TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
+            util.STEPPERTEMP_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
+            util.HOMUS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
+            util.HOMDS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
+            util.CPLRTOP_PLOT_KEY: TimePlotParams(
+                plot=self.live_signals_window.ui.plot_couplertop_temp),
+            util.CPLRBOT_PLOT_KEY: TimePlotParams(
+                plot=self.live_signals_window.ui.plot_couplerbot_temp),
+            util.CMVACUUM_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
+            util.CRYOSIGNALS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
             util.SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
-                    plot=self.live_signals_window.ui.plot_single_cavity_overview),
-            util.FREQUENCY_PLOT_KEY    : TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
-            util.DECARAD_PLOT_KEY      : TimePlotParams(plot=self.live_signals_window.ui.plot_decarad),
-            util.DETUNE_PLOT_KEY       : TimePlotParams(plot=self.tuner_window.ui.tuning_plot,
-                                                        formLayout=self.tuner_window.ui.plot_layout)
+                plot=self.live_signals_window.ui.plot_single_cavity_overview),
+            util.FREQUENCY_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
+            util.DECARAD_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_decarad),
+            util.DETUNE_PLOT_KEY: TimePlotParams(plot=self.tuner_window.ui.tuning_plot,
+                                                 formLayout=self.tuner_window.ui.plot_layout)
         }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
         self.waveform_plot_updater = WaveformPlotUpdater(
-                {util.RFWAVEFORM_PLOT_KEY:
-                     WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals)})
+            {util.RFWAVEFORM_PLOT_KEY:
+                 WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals)})
 
         self.update_selection()
 
@@ -81,6 +81,8 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
+        # TODO make popup that asks to record cold landing frequency
+        # TODO add radio buttons for sanity check, have options for 'positive step = freq decrease' etc.
         self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
 
         self.tuner_window.ui.step_des_line_edit.returnPressed.connect(self.des_step_changed)
@@ -93,6 +95,11 @@ class GuidedCommissioningScreens(Display):
 
     def tune_cavity(self):
         self.current_cavity.turnOff()
+        piezo = self.current_cavity.piezo
+        piezo.enable_PV.put(util.PIEZO_ENABLE_VALUE)
+        piezo.feedback_mode_PV.put(util.PIEZO_MANUAL_VALUE)
+        # set piezo DC voltage offset to 0V
+        piezo.dc_setpoint_PV.put(0)
         self.current_cavity.drivelevelPV.put(scLinacUtils.SAFE_PULSED_DRIVE_LEVEL)
         self.current_cavity.rfModeCtrlPV.put(scLinacUtils.RF_MODE_CHIRP)
         self.current_cavity.turnOn()
@@ -125,7 +132,7 @@ class GuidedCommissioningScreens(Display):
             def stylesheet(self):
                 return 'color: {color};'.format(color=self.color)
 
-        status_map = {True : StatusMap('Complete', 'green'),
+        status_map = {True: StatusMap('Complete', 'green'),
                       False: StatusMap('Incomplete', 'red')}
 
         cm_results = self.current_cm.results
@@ -178,21 +185,21 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.button_striptools.commands = [
             'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
-                    prefix=self.current_cm.pvPrefix[:-2])
+                prefix=self.current_cm.pvPrefix[:-2])
         ]
 
         self.update_rf_controls()
 
         plot_update_map = {util.STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
-                           util.HOMDS_PLOT_KEY      : self.current_cm.hom_ds_PVs,
-                           util.HOMUS_PLOT_KEY      : self.current_cm.hom_us_PVs,
-                           util.CPLRTOP_PLOT_KEY    : self.current_cm.coupler_top_PVs,
-                           util.CPLRBOT_PLOT_KEY    : self.current_cm.coupler_bot_PVs,
-                           util.FREQUENCY_PLOT_KEY  : self.current_cm.detune_PVs,
-                           util.DECARAD_PLOT_KEY    : self.current_cm.decarad_PVs,
-                           util.CMVACUUM_PLOT_KEY   : self.current_cm.vacuumPVs,
+                           util.HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
+                           util.HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
+                           util.CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
+                           util.CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
+                           util.FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
+                           util.DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
+                           util.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
                            util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs,
-                           util.DETUNE_PLOT_KEY     : self.current_cavity.tuning_pvs}
+                           util.DETUNE_PLOT_KEY: self.current_cavity.tuning_pvs}
 
         self.time_plot_updater.updatePlots(plot_update_map)
 
@@ -207,8 +214,8 @@ class GuidedCommissioningScreens(Display):
         est_steps = value * (util.ESTIMATED_STEPS_PER_HZ_HL
                              if self.current_cm.isHarmonicLinearizer
                              else util.ESTIMATED_STEPS_PER_HZ)
-        self.tuner_window.ui.estimated_steps_label.setText(str(est_steps))
-        
+        self.tuner_window.ui.estimated_steps_label.setText(str(int(est_steps)))
+
     def des_step_changed(self):
         des_steps = int(self.tuner_window.ui.step_des_line_edit.text())
         self.current_cavity.steppertuner.move(des_steps,
@@ -281,8 +288,8 @@ class GuidedCommissioningScreens(Display):
             ch = 1
 
         macro_string = ",".join(
-                ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
-                 "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
+            ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
+             "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
         return macro_string
 
     def run_piezo_prerf_check(self):

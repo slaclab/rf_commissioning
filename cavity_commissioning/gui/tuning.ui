@@ -22,6 +22,9 @@
      <property name="title" stdset="0">
       <string>Tuning Signals</string>
      </property>
+     <property name="showLegend">
+      <bool>true</bool>
+     </property>
      <property name="updatesAsynchronously">
       <bool>true</bool>
      </property>
