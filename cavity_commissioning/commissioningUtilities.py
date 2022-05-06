@@ -1,4 +1,5 @@
 import dataclasses
+import fcntl
 from typing import Optional
 
 from lcls_tools.common.data_analysis.archiver import Archiver
@@ -11,8 +12,6 @@ TESTLEAD_LIST = [
     'Porter, Ryan',
     'Zacarias, Lisa',
 ]
-
-
 
 RADIATION_LIMIT = 50
 GRADIENT_THRESHOLD_RADLIMIT = 16
@@ -74,6 +73,7 @@ class PiezoError(Exception):
         self.message = message
         super().__init__(self.message)
 
+
 # TODO add handling of multiple GUI instances
 @dataclasses.dataclass
 class CommissioningCavityResults:
@@ -104,3 +104,16 @@ class CommissioningCavityResults:
 class CommissioningCryomoduleResults:
     magnet_checked: bool = False
     unit_test_complete: bool = False
+
+
+# got this from stackoverflow: https://stackoverflow.com/questions/4843359/python-lock-a-file
+def acquireLock():
+    ''' acquire exclusive lock file access '''
+    locked_file_descriptor = open('lockfile.LOCK', 'w+')
+    fcntl.lockf(locked_file_descriptor, fcntl.LOCK_EX)
+    return locked_file_descriptor
+
+
+def releaseLock(locked_file_descriptor):
+    ''' release exclusive lock file access '''
+    locked_file_descriptor.close()

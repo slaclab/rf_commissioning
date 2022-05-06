@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta
-from time import sleep
 from typing import Dict, List, Optional, Tuple
 
 from epics import PV
 from numpy import nanmean
 
 import commissioningUtilities as utils
-from lcls_tools.superconducting.scLinac import Cavity, Cryomodule, Magnet, Rack, SSA, make_lcls_cryomodules
+from lcls_tools.superconducting.scLinac import Cavity, Cryomodule, Rack, SSA, make_lcls_cryomodules
 
 
 class DecaradHead:
@@ -190,9 +189,6 @@ class CommissioningRack(Rack):
         self.freq_search_status_PV: PV = PV(self.pvPrefix + "FSCAN:STAT")
 
 
-
-
-
 class CommissioningCryomodule(Cryomodule):
     def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass, isHarmonicLinearizer, ssaClass=SSA):
         super().__init__(cryoName=cryoName, linacObject=linacObject, cavityClass=CommissioningCavity,
@@ -219,8 +215,6 @@ class CommissioningCryomodule(Cryomodule):
 
         self.cryo_signal_PVs = [self.dsLevelPV.pvname, self.usLevelPV.pvname,
                                 self.dsPressurePV.pvname, self.jtValveRdbkPV.pvname]
-
-        self.magnet_name_map: Dict[str, Magnet] = {'Quad': self.quad, 'XCor': self.xcor, 'YCor': self.ycor}
 
         # To be populated from the GUI
         self.decarad: Optional[Decarad] = None

@@ -3,6 +3,7 @@ import json
 import sys
 from functools import partial
 from os import path
+from threading import Lock
 from time import sleep
 from typing import Optional
 
@@ -14,7 +15,7 @@ from pydm import Display
 import commissioningUtilities as util
 import lcls_tools.superconducting.scLinacUtils as scLinacUtils
 from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad
-from lcls_tools.common.pydm_tools.displayUtils import showDisplay
+from lcls_tools.common.pydm_tools.displayUtils import make_error_popup, showDisplay
 from lcls_tools.common.pydm_tools.pydmPlotUtil import (TimePlotParams,
                                                        TimePlotUpdater,
                                                        WaveformPlotParams,
@@ -51,43 +52,41 @@ class GuidedCommissioningScreens(Display):
 
         self.pathHere = path.dirname(sys.modules[self.__module__].__file__)
 
-        # declare class variables
+        self.mutex = Lock()
+
         self.current_cm: Optional[CommissioningCryomodule] = None
         self.current_cavity: Optional[CommissioningCavity] = None
         self.current_pvprefix = None
 
-        # setup: initial setup tab
         self.setup_combo_boxes()
 
-        # setup: StripTool & Interlock
         # button_decaradgui is an PyDMRelatedDisplayButton
         self.ui.button_decaradgui.filenames = ["$TOOLS/pydm/display/ads/decarad_main.ui"]
         self.ui.button_decaradgui.openInNewWindow = True
 
-        self.rf_controls_window = Display(ui_filename=self.getPath("gui/RFControls.ui"))
+        self.rf_controls_window = Display(ui_filename=self.getPath("gui/rf_controls.ui"))
 
-        self.live_signals_window = Display(ui_filename=self.getPath("gui/LiveSignals.ui"))
+        self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
         self.ui.button_livesignals.clicked.connect(partial(showDisplay, self.live_signals_window))
 
-        time_plot_updater = {STEPPERTEMP_PLOT_KEY  : TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
-                             MAGNET_PLOT_KEY       : TimePlotParams(plot=self.live_signals_window.ui.plot_magnet),
-                             HOMUS_PLOT_KEY        : TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
-                             HOMDS_PLOT_KEY        : TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
-                             CPLRTOP_PLOT_KEY      : TimePlotParams(
-                                     plot=self.live_signals_window.ui.plot_couplertop_temp),
-                             CPLRBOT_PLOT_KEY      : TimePlotParams(
-                                     plot=self.live_signals_window.ui.plot_couplerbot_temp),
-                             CMVACUUM_PLOT_KEY     : TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
-                             CRYOSIGNALS_PLOT_KEY  : TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
+        time_plot_updater = {STEPPERTEMP_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
+                             HOMUS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
+                             HOMDS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
+                             CPLRTOP_PLOT_KEY: TimePlotParams(
+                                 plot=self.live_signals_window.ui.plot_couplertop_temp),
+                             CPLRBOT_PLOT_KEY: TimePlotParams(
+                                 plot=self.live_signals_window.ui.plot_couplerbot_temp),
+                             CMVACUUM_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
+                             CRYOSIGNALS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
                              SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
-                                     plot=self.live_signals_window.ui.plot_single_cavity_overview),
-                             FREQUENCY_PLOT_KEY    : TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
-                             DECARAD_PLOT_KEY      : TimePlotParams(plot=self.live_signals_window.ui.plot_decarad)
+                                 plot=self.live_signals_window.ui.plot_single_cavity_overview),
+                             FREQUENCY_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
+                             DECARAD_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_decarad)
                              }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
         self.waveform_plot_updater = WaveformPlotUpdater({RFWAVEFORM_PLOT_KEY: WaveformPlotParams(
-                plot=self.rf_controls_window.ui.waveform_rfsignals)})
+            plot=self.rf_controls_window.ui.waveform_rfsignals)})
 
         self.update_selection()
 
@@ -98,7 +97,7 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
 
     def ui_filename(self):
-        return 'gui/GuidedCommissioningScreens.ui'
+        return 'gui/commissioning.ui'
 
     def getPath(self, fileName):
         return path.join(self.pathHere, fileName)
@@ -124,7 +123,7 @@ class GuidedCommissioningScreens(Display):
             def stylesheet(self):
                 return 'color: {color};'.format(color=self.color)
 
-        status_map = {True : StatusMap('Complete', 'green'),
+        status_map = {True: StatusMap('Complete', 'green'),
                       False: StatusMap('Incomplete', 'red')}
 
         cm_results = self.current_cm.results
@@ -140,8 +139,7 @@ class GuidedCommissioningScreens(Display):
                                      and cm_results.unit_test_complete
                                      )
 
-        label_status_pairs = [(self.ui.label_checkout_magnet, cm_results.magnet_checked),
-                              (self.ui.label_piezo_prerf, cav_results.piezo_prerf_checked),
+        label_status_pairs = [(self.ui.label_piezo_prerf, cav_results.piezo_prerf_checked),
                               (self.ui.label_ssa_char, cav_results.ssa_characterized),
                               (self.ui.label_tune_cavity, cav_results.is_tuned),
                               (self.ui.label_measure_8pi9,
@@ -149,7 +147,6 @@ class GuidedCommissioningScreens(Display):
                               (self.ui.label_cavity_calibration, cav_results.cavity_calibration_run),
                               (self.ui.label_piezo_withrf, cav_results.piezo_withrf_checked),
                               (self.ui.label_selap_rampup, cav_results.onehourrun_complete),
-                              (self.ui.label_12hrun, cm_results.unit_test_complete),
                               (self.ui.label_overall_completion, overall_completion_status)]
 
         for label, status in label_status_pairs:
@@ -179,19 +176,19 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.button_striptools.commands = [
             'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
-                    prefix=self.current_cm.pvPrefix[:-2])
+                prefix=self.current_cm.pvPrefix[:-2])
         ]
 
         self.update_rf_controls()
 
         plot_update_map = {STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
-                           HOMDS_PLOT_KEY      : self.current_cm.hom_ds_PVs,
-                           HOMUS_PLOT_KEY      : self.current_cm.hom_us_PVs,
-                           CPLRTOP_PLOT_KEY    : self.current_cm.coupler_top_PVs,
-                           CPLRBOT_PLOT_KEY    : self.current_cm.coupler_bot_PVs,
-                           FREQUENCY_PLOT_KEY  : self.current_cm.detune_PVs,
-                           DECARAD_PLOT_KEY    : self.current_cm.decarad_PVs,
-                           CMVACUUM_PLOT_KEY   : self.current_cm.vacuumPVs,
+                           HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
+                           HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
+                           CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
+                           CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
+                           FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
+                           DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
+                           CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
                            CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs}
 
         self.time_plot_updater.updatePlots(plot_update_map)
@@ -265,8 +262,8 @@ class GuidedCommissioningScreens(Display):
             ch = 1
 
         macro_string = ",".join(
-                ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
-                 "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
+            ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
+             "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
         return macro_string
 
     def run_piezo_prerf_check(self):
@@ -345,9 +342,8 @@ class GuidedCommissioningScreens(Display):
             ssa_expert_button.macros = self.macro_string
             ssa_expert_button.setText('Open SSA EDM expert screen')
             ssa_expert_button.setDefault(True)
-            self.make_error_popup('SSA calibration failed', ssa_expert_button, e, self.ssa_actionbutton_clicked)
+            make_error_popup('SSA calibration failed', ssa_expert_button, e, self.ssa_actionbutton_clicked)
         self.save_results()
-
 
     def ssa_actionbutton_clicked(self, qmessagebox: QMessageBox):
         clickedbutton = qmessagebox.clickedButton()
@@ -394,8 +390,8 @@ class GuidedCommissioningScreens(Display):
                 scLinacUtils.CavityQLoadedCalibrationError, scLinacUtils.CavityScaleFactorCalibrationError,
                 TypeError, CASeverityException) as e:
             cavity_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl')
-            self.make_error_popup('Cavity calibration failed', cavity_expert_button, e,
-                                  self.cavity_actionbutton_clicked)
+            make_error_popup('Cavity calibration failed', cavity_expert_button, e,
+                             self.cavity_actionbutton_clicked)
 
     def make_edmbutton(self, filepath: str):
         edmbutton = PyDMEDMDisplayButton()
@@ -442,24 +438,24 @@ class GuidedCommissioningScreens(Display):
             self.measure_8pi9mode()
         except util.FreqSearchError as e:
             freq_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_freq_scan_rack_embed_search.edl')
-            self.make_error_popup(title='Error finding 8pi/9 frequency', expert_edmbutton=freq_edmbutton,
-                                  exception=e, action_func=self.freq_actionbutton_clicked)
+            make_error_popup(title='Error finding 8pi/9 frequency', expert_edmbutton=freq_edmbutton,
+                             exception=e, action_func=self.freq_actionbutton_clicked)
 
     def piezo_prerf_button_pressed(self):
         try:
             self.run_piezo_prerf_check()
         except util.PiezoError as e:
             piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
-            self.make_error_popup(title='Error during piezo pre-rf check', expert_edmbutton=piezo_prerf_edmbutton,
-                                  exception=e, action_func=self.piezo_prerf_actionbutton_clicked)
+            make_error_popup(title='Error during piezo pre-rf check', expert_edmbutton=piezo_prerf_edmbutton,
+                             exception=e, action_func=self.piezo_prerf_actionbutton_clicked)
 
     def piezo_withrf_button_pressed(self):
         try:
             self.run_piezo_withrf_check()
         except (util.PiezoError, scLinacUtils.SSAPowerError) as e:
             piezo_withrf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt_rf.edl')
-            self.make_error_popup(title='Error during piezo with-rf check', expert_edmbutton=piezo_withrf_edmbutton,
-                                  exception=e, action_func=self.piezo_withrf_actionbutton_clicked)
+            make_error_popup(title='Error during piezo with-rf check', expert_edmbutton=piezo_withrf_edmbutton,
+                             exception=e, action_func=self.piezo_withrf_actionbutton_clicked)
 
     def load_results(self):
         with open('results/cryomodule_results.json', 'r+') as f:
@@ -478,6 +474,8 @@ class GuidedCommissioningScreens(Display):
         if not self.current_cm:
             return
 
+        fd = util.acquireLock()
+
         with open('results/cryomodule_results.json', 'r+') as f:
             data = json.load(f)
 
@@ -493,3 +491,4 @@ class GuidedCommissioningScreens(Display):
             f.seek(0)
             json.dump(data, f)
             f.truncate()
+        util.releaseLock(fd)
