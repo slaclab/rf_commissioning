@@ -40,10 +40,6 @@ class GuidedCommissioningScreens(Display):
 
         self.setup_combo_boxes()
 
-        # button_decaradgui is an PyDMRelatedDisplayButton
-        self.ui.button_decaradgui.filenames = ["$TOOLS/pydm/display/ads/decarad_main.ui"]
-        self.ui.button_decaradgui.openInNewWindow = True
-
         self.rf_controls_window = Display(ui_filename=self.getPath("gui/rf_controls.ui"))
 
         self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
@@ -81,11 +77,14 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
-        self.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
+        self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
         # TODO add radio buttons for sanity check, have options for 'positive step = freq decrease' etc.
         self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
 
         self.tuner_window.ui.step_des_line_edit.returnPressed.connect(self.des_step_changed)
+        self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
+        self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
+        self.tuner_window.ui.button_mark_tuned.clicked.connect(self.tuned_button_clicked)
 
     def ui_filename(self):
         return 'gui/commissioning.ui'
@@ -165,11 +164,6 @@ class GuidedCommissioningScreens(Display):
     def update_selection(self):
         self.save_results()
 
-        current_decarad = self.ui.pick_decarad.currentText()
-        P = "RADM:SYS0:{decarad}00".format(decarad=current_decarad)
-        self.ui.button_decaradgui.macros = ["P={pstring}".format(pstring=P),
-                                            "M={mstring}".format(mstring=current_decarad)]
-
         self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
             self.ui.pick_cm.currentText()]
         self.current_cm.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
@@ -180,16 +174,19 @@ class GuidedCommissioningScreens(Display):
 
         self.populate_status_labels()
 
-        # button_interlockoverview is an PyDMEDMDisplaybutton
-        self.ui.button_interlockoverview.macros = [self.macro_string]
-
-        self.ui.button_striptools.commands = [
-            'srf_stavDisplayCfg.py st cmcryos {prefix}; StripTool $STRIP_CONFIGFILE_DIR/srf_cmcryos.stp'.format(
-                prefix=self.current_cm.pvPrefix[:-2])
-        ]
-
         self.update_rf_controls()
 
+        self.update_plots()
+
+        self.update_tuner_window()
+
+    def update_interlock(self):
+        # button_interlockoverview is an PyDMEDMDisplaybutton
+        self.ui.button_interlockoverview.macros = [self.macro_string]
+        self.ui.indicator_interlock.channel = self.current_cavity.interlock_PV.pvname
+        self.ui.label_interlock.channel = self.current_cavity.interlock_PV.pvname
+
+    def update_plots(self):
         plot_update_map = {util.STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
                            util.HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
                            util.HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
@@ -200,27 +197,47 @@ class GuidedCommissioningScreens(Display):
                            util.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
                            util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs,
                            util.DETUNE_PLOT_KEY: self.current_cavity.tuning_pvs}
-
         self.time_plot_updater.updatePlots(plot_update_map)
-
         self.waveform_plot_updater.updatePlot(util.RFWAVEFORM_PLOT_KEY,
                                               self.current_cavity.waveformplot_channelpairs)
 
+    def update_tuner_window(self):
         self.current_cavity.detune_best_PV.clear_callbacks()
         self.current_cavity.detune_best_PV.add_callback(self.detune_callback)
-        self.tuner_window.ui.detune_label.channel = self.current_cavity.detune_best_PV.pvname
+        ui = self.tuner_window.ui
+        ui.detune_label.channel = self.current_cavity.detune_best_PV.pvname
+        ui.label_cold_steps.channel = self.current_cavity.steppertuner.steps_cold_landing_pv.pvname
+        ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_landing_frequency))
+        ui.label_session_steps.setText(str(self.current_cavity.current_steps))
+
+    def replace_button_clicked(self):
+        self.current_cavity.steppertuner.steps_cold_landing_pv.put(self.current_cavity.current_steps)
+
+    def add_button_clicked(self):
+        self.current_cavity.steppertuner.steps_cold_landing_pv.put(self.current_cavity.current_steps
+                                                                   +
+                                                                   self.current_cavity.steppertuner.steps_cold_landing_pv.value)
+
+    def tuned_button_clicked(self):
+        self.current_cavity.results.is_tuned = True
+        self.save_results()
+        self.populate_status_labels()
 
     def detune_callback(self, value, **kwargs):
         est_steps = value * (util.ESTIMATED_STEPS_PER_HZ_HL
                              if self.current_cm.isHarmonicLinearizer
                              else util.ESTIMATED_STEPS_PER_HZ)
-        self.tuner_window.ui.estimated_steps_label.setText(str(int(est_steps)))
+        ui = self.tuner_window.ui
+        ui.estimated_steps_label.setText(str(int(est_steps)))
+        ui.label_current_freq.setText(str(value + self.current_cavity.frequency))
 
     def des_step_changed(self):
         des_steps = int(self.tuner_window.ui.step_des_line_edit.text())
         self.current_cavity.steppertuner.move(des_steps,
                                               maxSteps=util.STEPPER_MAX_STEPS,
                                               speed=scLinacUtils.MAX_STEPPER_SPEED)
+        self.current_cavity.current_steps += des_steps
+        self.tuner_window.ui.label_session_steps.setText(self.current_cavity.current_steps)
 
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)
@@ -484,7 +501,9 @@ class GuidedCommissioningScreens(Display):
                              exception=e, action_func=self.piezo_withrf_actionbutton_clicked)
 
     def cold_freq_button_pressed(self):
-
+        self.current_cavity.results.cold_landing_frequency = float(self.tuner_window.ui.label_current_freq.text())
+        self.tuner_window.ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_landing_frequency))
+        self.save_results()
 
     def load_results(self):
         with open('results/cryomodule_results.json', 'r+') as f:

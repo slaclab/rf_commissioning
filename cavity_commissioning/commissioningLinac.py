@@ -136,6 +136,8 @@ class CommissioningCavity(Cavity):
         self.tuning_pvs: List[str] = [self.detune_best_PV.pvname,
                                       self.stepper_temp_PV.pvname]
 
+        self.current_steps = 0
+
     def connect_to_decarad(self):
         for decaradhead in self.cryomodule.decarad.heads.values():
             decaradhead.doseRatePV.clear_callbacks()
