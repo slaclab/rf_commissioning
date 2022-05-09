@@ -81,7 +81,7 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
-        # TODO make popup that asks to record cold landing frequency
+        self.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
         # TODO add radio buttons for sanity check, have options for 'positive step = freq decrease' etc.
         self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
 
@@ -482,6 +482,9 @@ class GuidedCommissioningScreens(Display):
             piezo_withrf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt_rf.edl')
             make_error_popup(title='Error during piezo with-rf check', expert_edmbutton=piezo_withrf_edmbutton,
                              exception=e, action_func=self.piezo_withrf_actionbutton_clicked)
+
+    def cold_freq_button_pressed(self):
+
 
     def load_results(self):
         with open('results/cryomodule_results.json', 'r+') as f:

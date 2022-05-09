@@ -89,8 +89,8 @@ class Piezo:
 
 
 class CommissioningCavity(Cavity):
-    def __init__(self, cavityNum, rackObject, length, ssaClass=SSA):
-        super().__init__(cavityNum, rackObject, length=length)
+    def __init__(self, cavityNum, rackObject, ssaClass=SSA):
+        super().__init__(cavityNum, rackObject)
 
         self.results = utils.CommissioningCavityResults()
 
@@ -179,9 +179,8 @@ class CommissioningCavity(Cavity):
 
 
 class CommissioningRack(Rack):
-    def __init__(self, rackName, cryoObject, cavityClass, cavityLength, ssaClass=SSA):
-        super().__init__(rackName=rackName, cryoObject=cryoObject, cavityClass=CommissioningCavity,
-                         cavityLength=cavityLength)
+    def __init__(self, rackName, cryoObject, cavityClass, ssaClass=SSA):
+        super().__init__(rackName=rackName, cryoObject=cryoObject, cavityClass=CommissioningCavity)
 
         self.freq_search_low_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_START")
         self.freq_search_high_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_STOP")
@@ -230,5 +229,5 @@ class CommissioningCryomodule(Cryomodule):
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-        cryomoduleClass=CommissioningCryomodule,
-        rackClass=CommissioningRack, cavityClass=CommissioningCavity)
+    cryomoduleClass=CommissioningCryomodule,
+    rackClass=CommissioningRack, cavityClass=CommissioningCavity)
