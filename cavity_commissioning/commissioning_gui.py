@@ -20,7 +20,6 @@ from lcls_tools.common.pydm_tools.pydmPlotUtil import (TimePlotParams,
                                                        TimePlotUpdater,
                                                        WaveformPlotParams,
                                                        WaveformPlotUpdater)
-from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.superconducting.scLinac import CRYOMODULE_OBJECTS
 
 
@@ -47,6 +46,25 @@ class GuidedCommissioningScreens(Display):
 
         self.tuner_window = Display(ui_filename=self.getPath("gui/tuning.ui"))
 
+        self.setup_plots()
+
+        self.update_selection()
+
+        self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
+        self.ui.button_cavity_calibration.clicked.connect(self.cavity_calibration_button_pushed)
+        self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
+        self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
+        self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
+        self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
+        # TODO add radio buttons for sanity check, have options for 'positive step = freq decrease' etc.
+        self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
+
+        self.tuner_window.ui.step_des_line_edit.returnPressed.connect(self.des_step_changed)
+        self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
+        self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
+        self.tuner_window.ui.button_mark_tuned.clicked.connect(self.tuned_button_clicked)
+
+    def setup_plots(self):
         time_plot_updater = {
             util.STEPPERTEMP_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
             util.HOMUS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
@@ -65,26 +83,9 @@ class GuidedCommissioningScreens(Display):
                                                  formLayout=self.tuner_window.ui.plot_layout)
         }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
-
         self.waveform_plot_updater = WaveformPlotUpdater(
             {util.RFWAVEFORM_PLOT_KEY:
                  WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals)})
-
-        self.update_selection()
-
-        self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
-        self.ui.button_cavity_calibration.clicked.connect(self.cavity_calibration_button_pushed)
-        self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
-        self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
-        self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
-        self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
-        # TODO add radio buttons for sanity check, have options for 'positive step = freq decrease' etc.
-        self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
-
-        self.tuner_window.ui.step_des_line_edit.returnPressed.connect(self.des_step_changed)
-        self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
-        self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
-        self.tuner_window.ui.button_mark_tuned.clicked.connect(self.tuned_button_clicked)
 
     def ui_filename(self):
         return 'gui/commissioning.ui'
@@ -93,20 +94,11 @@ class GuidedCommissioningScreens(Display):
         return path.join(self.pathHere, fileName)
 
     def tune_cavity(self):
-        self.current_cavity.turnOff()
-        piezo = self.current_cavity.piezo
-        piezo.enable_PV.put(util.PIEZO_ENABLE_VALUE)
-        piezo.feedback_mode_PV.put(util.PIEZO_MANUAL_VALUE)
-        # set piezo DC voltage offset to 0V
-        piezo.dc_setpoint_PV.put(0)
-        self.current_cavity.drivelevelPV.put(scLinacUtils.SAFE_PULSED_DRIVE_LEVEL)
-        self.current_cavity.rfModeCtrlPV.put(scLinacUtils.RF_MODE_CHIRP)
-        self.current_cavity.turnOn()
-
-        if self.current_cavity.detune_best_PV.severity == pyepicsUtils.EPICS_INVALID_VAL:
-            raise util.DetuneError("Detune PV invalid. Either expand the chirp"
-                                   " range or use the rack large frequency scan"
-                                   " to find the detune.")
+        try:
+            self.current_cavity.tune()
+        except util.DetuneError as e:
+            tuner_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_tuner_embed.edl')
+            make_error_popup('Detune PV invalid', tuner_expert_button, e, None)
 
         showDisplay(self.tuner_window)
 
@@ -166,7 +158,7 @@ class GuidedCommissioningScreens(Display):
 
         self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
             self.ui.pick_cm.currentText()]
-        self.current_cm.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
+        self.update_decarad()
         self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
         self.current_cavity.connect_to_decarad()
 
@@ -179,6 +171,13 @@ class GuidedCommissioningScreens(Display):
         self.update_plots()
 
         self.update_tuner_window()
+
+    def update_decarad(self):
+        self.current_cm.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
+        self.ui.indicator_decarad.channel = self.current_cm.decarad.powerStatusPV.pvname
+        self.ui.label_decarad_onoff.channel = self.current_cm.decarad.powerStatusPV.pvname
+        self.ui.button_decarad_on.channel = self.current_cm.decarad.powerControlPV.pvname
+        self.ui.button_decarad_off.channel = self.current_cm.decarad.powerControlPV.pvname
 
     def update_interlock(self):
         # button_interlockoverview is an PyDMEDMDisplaybutton

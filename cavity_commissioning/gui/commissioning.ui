@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>555</width>
-    <height>709</height>
+    <height>745</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -88,20 +88,6 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
-       <widget class="QComboBox" name="pick_decarad">
-        <item>
-         <property name="text">
-          <string>1</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>2</string>
-         </property>
-        </item>
-       </widget>
-      </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
@@ -156,15 +142,128 @@
         </column>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="2" column="1">
+       <widget class="QComboBox" name="pick_cm"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>Decarad</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>Select Decarad in use</string>
+         <string>Select Decarad in use:</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QComboBox" name="pick_cm"/>
+      <item>
+       <widget class="QComboBox" name="pick_decarad">
+        <item>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>2</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="PyDMByteIndicator" name="indicator_decarad">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="accessibleName">
+         <string>${magnetType}</string>
+        </property>
+        <property name="alarmSensitiveContent" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="channel" stdset="0">
+         <string/>
+        </property>
+        <property name="onColor" stdset="0">
+         <color>
+          <red>255</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="offColor" stdset="0">
+         <color>
+          <red>0</red>
+          <green>255</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="PyDMLabel" name="label_decarad_onoff">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="accessibleName">
+         <string>${magnetType}</string>
+        </property>
+        <property name="alarmSensitiveContent" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="PyDMPushButton" name="button_decarad_on">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>On</string>
+        </property>
+        <property name="alarmSensitiveContent" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="alarmSensitiveBorder" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="PyDMPushButton" name="button_decarad_off">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>Off</string>
+        </property>
+        <property name="alarmSensitiveContent" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="alarmSensitiveBorder" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -427,6 +526,11 @@
    <class>PyDMDrawingLine</class>
    <extends>QWidget</extends>
    <header>pydm.widgets.drawing</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMPushButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.pushbutton</header>
   </customwidget>
   <customwidget>
    <class>PyDMRelatedDisplayButton</class>

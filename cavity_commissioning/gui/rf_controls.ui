@@ -6,173 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>735</width>
-    <height>867</height>
+    <width>849</width>
+    <height>944</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="6" column="1">
-    <widget class="PyDMRelatedDisplayButton" name="button_open_microphonics_gui">
-     <property name="toolTip">
-      <string/>
-     </property>
-     <property name="text">
-      <string>Microphonics GUI</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QGroupBox" name="groupBox">
-     <property name="title">
-      <string>Group of RF control buttons</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QPushButton" name="button_ssa_on">
-          <property name="text">
-           <string>SSA on</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_ssa_off">
-          <property name="text">
-           <string>SSA off</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="PyDMLabel" name="label_ssa_status">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="text">
-           <string>SSA status</string>
-          </property>
-          <property name="channel" stdset="0">
-           <string>${ssa_status_PV}</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>RF mode</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_rfmode_chirp">
-          <property name="toolTip">
-           <string>Sweeps the RF across frequency window</string>
-          </property>
-          <property name="text">
-           <string>Chirp</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_rfmode_pulsed">
-          <property name="toolTip">
-           <string>Pulses the RF with a predetermined pulse width</string>
-          </property>
-          <property name="text">
-           <string>Pulsed</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_rfmode_sel">
-          <property name="toolTip">
-           <string>CW mode, no amplitude or phase feedback</string>
-          </property>
-          <property name="text">
-           <string>SEL</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_rfmode_sela">
-          <property name="toolTip">
-           <string>CW mode with amplitude feedback</string>
-          </property>
-          <property name="text">
-           <string>SELA</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_rfmode_selap">
-          <property name="toolTip">
-           <string>CW mode with amplitude and phase feedback</string>
-          </property>
-          <property name="text">
-           <string>SELAP</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="PyDMLabel" name="label_rfmode_rdbk">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="text">
-           <string>RF mode readback</string>
-          </property>
-          <property name="channel" stdset="0">
-           <string>${rf_mode_PV}</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QPushButton" name="button_rf_on">
-          <property name="text">
-           <string>RF on</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_rf_off">
-          <property name="text">
-           <string>RF off</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="PyDMLabel" name="label_rfstatus_rdbk">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="text">
-           <string>RF status readback</string>
-          </property>
-          <property name="channel" stdset="0">
-           <string>${rf_status_rdbk_PV}</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="5" column="1">
+   <item row="5" column="2">
     <widget class="QGroupBox" name="groupBox_5">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+      <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -195,6 +40,9 @@
           <property name="toolTip">
            <string/>
           </property>
+          <property name="text">
+           <string/>
+          </property>
          </widget>
         </item>
        </layout>
@@ -213,6 +61,9 @@
           <property name="toolTip">
            <string/>
           </property>
+          <property name="text">
+           <string>el</string>
+          </property>
          </widget>
         </item>
        </layout>
@@ -229,6 +80,9 @@
         <item row="1" column="1">
          <widget class="PyDMLabel" name="label_fe_onset">
           <property name="toolTip">
+           <string/>
+          </property>
+          <property name="text">
            <string/>
           </property>
          </widget>
@@ -249,6 +103,9 @@
           <property name="toolTip">
            <string/>
           </property>
+          <property name="text">
+           <string/>
+          </property>
          </widget>
         </item>
        </layout>
@@ -256,152 +113,501 @@
      </layout>
     </widget>
    </item>
-   <item row="4" column="1">
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
-     <item>
-      <widget class="QGroupBox" name="groupBox_3">
-       <property name="title">
-        <string>feedback drive limits</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="1">
-         <widget class="PyDMByteIndicator" name="indicator_phas_high">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="channel" stdset="0">
-           <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
-          </property>
-          <property name="onColor" stdset="0">
-           <color>
-            <red>255</red>
-            <green>0</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="offColor" stdset="0">
-           <color>
-            <red>0</red>
-            <green>255</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="showLabels" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="PyDMByteIndicator" name="indicator_amp_low">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="channel" stdset="0">
-           <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
-          </property>
-          <property name="onColor" stdset="0">
-           <color>
-            <red>255</red>
-            <green>0</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="offColor" stdset="0">
-           <color>
-            <red>0</red>
-            <green>255</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="showLabels" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="PyDMByteIndicator" name="indicator_amp_high">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="channel" stdset="0">
-           <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
-          </property>
-          <property name="onColor" stdset="0">
-           <color>
-            <red>255</red>
-            <green>0</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="offColor" stdset="0">
-           <color>
-            <red>0</red>
-            <green>255</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="showLabels" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="PyDMByteIndicator" name="indicator_phas_low">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="channel" stdset="0">
-           <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
-          </property>
-          <property name="onColor" stdset="0">
-           <color>
-            <red>255</red>
-            <green>0</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="offColor" stdset="0">
-           <color>
-            <red>0</red>
-            <green>255</green>
-            <blue>0</blue>
-           </color>
-          </property>
-          <property name="showLabels" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox_4">
-       <property name="title">
-        <string>AMAX setter</string>
-       </property>
-       <layout class="QGridLayout" name="gridLayout_3">
-        <item row="0" column="0">
-         <widget class="PyDMLabel" name="PyDMLabel_5">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
+   <item row="7" column="2">
+    <widget class="PyDMRelatedDisplayButton" name="button_open_microphonics_gui">
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="text">
+      <string>Microphonics GUI</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QGroupBox" name="groupBox_7">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>SRF amplitude limits </string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_5">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>SRF MAX:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
          <widget class="PyDMLineEdit" name="PyDMLineEdit_2">
           <property name="toolTip">
            <string/>
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="PyDMLabel" name="PyDMLabel_5">
+          <property name="toolTip">
+           <string/>
+          </property>
+         </widget>
+        </item>
        </layout>
-      </widget>
-     </item>
-    </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>AMAX:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="PyDMLabel" name="PyDMLabel">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </item>
-   <item row="1" column="1">
+   <item row="0" column="1">
+    <widget class="QGroupBox" name="groupBox_6">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Amplitude controls</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_7">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Stepsize:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEdit_2">
+        <property name="text">
+         <string>0.5</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>ADES:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_10">
+        <item>
+         <widget class="PyDMSpinbox" name="PyDMSpinbox_3">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="maximum">
+           <double>18.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.500000000000000</double>
+          </property>
+          <property name="showUnits" stdset="0">
+           <bool>true</bool>
+          </property>
+          <property name="showStepExponent" stdset="0">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="PyDMLabel" name="PyDMLabel_8">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="text">
+           <string>s</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>GroupBox</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>SSA Power:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <item>
+         <property name="text">
+          <string>On</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Off</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="PyDMLabel" name="PyDMLabel_9">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>RF Mode:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_2">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <item>
+         <property name="text">
+          <string>Chirp</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Pulsed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>SEL</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>SELA</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>SELAP</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="PyDMLabel" name="PyDMLabel_10">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>RF Power:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_3">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <item>
+         <property name="text">
+          <string>On</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Off</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="PyDMLabel" name="PyDMLabel_11">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="6" column="2">
+    <widget class="QPushButton" name="pushButton">
+     <property name="text">
+      <string>Start 1h run</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" rowspan="3" colspan="2">
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>feedback drive limits</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="1" column="1">
+       <widget class="PyDMLabel" name="PyDMLabel_2">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="PyDMLabel" name="PyDMLabel_3">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="PyDMByteIndicator" name="indicator_amp_low">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="channel" stdset="0">
+         <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
+        </property>
+        <property name="onColor" stdset="0">
+         <color>
+          <red>255</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="offColor" stdset="0">
+         <color>
+          <red>0</red>
+          <green>255</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="labels" stdset="0">
+         <stringlist>
+          <string>Amp Low</string>
+         </stringlist>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="PyDMByteIndicator" name="indicator_phas_high">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="channel" stdset="0">
+         <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
+        </property>
+        <property name="onColor" stdset="0">
+         <color>
+          <red>255</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="offColor" stdset="0">
+         <color>
+          <red>0</red>
+          <green>255</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="labels" stdset="0">
+         <stringlist>
+          <string>Phase High</string>
+         </stringlist>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="PyDMByteIndicator" name="indicator_amp_high">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="channel" stdset="0">
+         <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
+        </property>
+        <property name="onColor" stdset="0">
+         <color>
+          <red>255</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="offColor" stdset="0">
+         <color>
+          <red>0</red>
+          <green>255</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="labels" stdset="0">
+         <stringlist>
+          <string>Amp High</string>
+         </stringlist>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="PyDMByteIndicator" name="indicator_phas_low">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="channel" stdset="0">
+         <string>ALRM:SYS0:SC_CAV_FAULT:ALHBERR</string>
+        </property>
+        <property name="onColor" stdset="0">
+         <color>
+          <red>255</red>
+          <green>0</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="offColor" stdset="0">
+         <color>
+          <red>0</red>
+          <green>255</green>
+          <blue>0</blue>
+         </color>
+        </property>
+        <property name="showLabels" stdset="0">
+         <bool>true</bool>
+        </property>
+        <property name="labels" stdset="0">
+         <stringlist>
+          <string>Phase Low</string>
+         </stringlist>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="PyDMLabel" name="PyDMLabel_4">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="PyDMLabel" name="PyDMLabel_6">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0" colspan="2">
+       <layout class="QFormLayout" name="formLayout_6">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>Reactive Power Fraction:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
+          <item>
+           <widget class="PyDMSpinbox" name="PyDMSpinbox_2">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="decimals">
+             <number>2</number>
+            </property>
+            <property name="maximum">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.050000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.200000000000000</double>
+            </property>
+            <property name="showUnits" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="showStepExponent" stdset="0">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="PyDMLabel" name="PyDMLabel_7">
+            <property name="toolTip">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="3">
     <widget class="PyDMWaveformPlot" name="waveform_rfsignals">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="toolTip">
       <string/>
      </property>
@@ -416,53 +622,27 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
+   <item row="3" column="0" colspan="3">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string>Straightening the cheeto</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="4" column="1">
-       <widget class="PyDMSlider" name="slider_selphaseoffset">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="userDefinedLimits" stdset="0">
-         <bool>true</bool>
-        </property>
-        <property name="userMinimum" stdset="0">
-         <double>-180.000000000000000</double>
-        </property>
-        <property name="userMaximum" stdset="0">
-         <double>180.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="PyDMLabel" name="label_selphaseoffset_rdbk">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="channel" stdset="0">
-         <string>${sel_phase_offset_PV}</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="PyDMLineEdit" name="lineedit_selphaseoffset">
-        <property name="toolTip">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <widget class="QLabel" name="label_2">
         <property name="text">
          <string>SEL phase offset</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="2" rowspan="4">
+      <item row="0" column="2">
+       <widget class="PyDMSpinbox" name="PyDMSpinbox">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1" colspan="4">
        <widget class="PyDMWaveformPlot" name="waveform_cheeto">
         <property name="toolTip">
          <string/>
@@ -472,6 +652,16 @@
         </property>
         <property name="curves">
          <stringlist/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3" colspan="2">
+       <widget class="PyDMLabel" name="label_selphaseoffset_rdbk">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="channel" stdset="0">
+         <string>${sel_phase_offset_PV}</string>
         </property>
        </widget>
       </item>
@@ -497,6 +687,11 @@
    <header>pydm.widgets.byte</header>
   </customwidget>
   <customwidget>
+   <class>PyDMEnumComboBox</class>
+   <extends>QComboBox</extends>
+   <header>pydm.widgets.enum_combo_box</header>
+  </customwidget>
+  <customwidget>
    <class>PyDMLineEdit</class>
    <extends>QLineEdit</extends>
    <header>pydm.widgets.line_edit</header>
@@ -507,9 +702,9 @@
    <header>pydm.widgets.related_display_button</header>
   </customwidget>
   <customwidget>
-   <class>PyDMSlider</class>
-   <extends>QFrame</extends>
-   <header>pydm.widgets.slider</header>
+   <class>PyDMSpinbox</class>
+   <extends>QDoubleSpinBox</extends>
+   <header>pydm.widgets.spinbox</header>
   </customwidget>
  </customwidgets>
  <resources/>

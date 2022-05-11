@@ -5,6 +5,8 @@ from epics import PV
 from numpy import nanmean
 
 import commissioningUtilities as utils
+from lcls_tools.common.pyepics_tools import pyepicsUtils
+from lcls_tools.superconducting import scLinacUtils
 from lcls_tools.superconducting.scLinac import Cavity, Cryomodule, Rack, SSA, make_lcls_cryomodules
 
 
@@ -137,6 +139,21 @@ class CommissioningCavity(Cavity):
                                       self.stepper_temp_PV.pvname]
 
         self.current_steps = 0
+
+    def tune(self):
+        self.turnOff()
+        self.piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
+        self.piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
+        # set piezo DC voltage offset to 0V
+        self.piezo.dc_setpoint_PV.put(0)
+        self.drivelevelPV.put(scLinacUtils.SAFE_PULSED_DRIVE_LEVEL)
+        self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_CHIRP)
+        self.turnOn()
+
+        if self.detune_best_PV.severity == pyepicsUtils.EPICS_INVALID_VAL:
+            raise utils.DetuneError("Detune PV invalid. Either expand the chirp"
+                                    " range or use the rack large frequency scan"
+                                    " to find the detune.")
 
     def connect_to_decarad(self):
         for decaradhead in self.cryomodule.decarad.heads.values():

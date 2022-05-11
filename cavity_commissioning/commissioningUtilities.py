@@ -122,6 +122,7 @@ class CommissioningCavityResults:
     is_tuned: bool = False
     cold_landing_frequency: Optional[float] = None
     steps_to_tuned: Optional[int] = None
+    final_frequency: Optional[float] = None
     eightpiovernine_frequency_measured: bool = False
     cavity_calibration_run: bool = False
     fpc_qext: Optional[float] = None
