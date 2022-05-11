@@ -145,14 +145,14 @@
       <item row="0" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <widget class="PyDMLineEdit" name="PyDMLineEdit_2">
+         <widget class="PyDMLineEdit" name="lineedit_srfmax">
           <property name="toolTip">
            <string/>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="PyDMLabel" name="PyDMLabel_5">
+         <widget class="PyDMLabel" name="label_srfmax_rdbk">
           <property name="toolTip">
            <string/>
           </property>
@@ -168,7 +168,7 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="PyDMLabel" name="PyDMLabel">
+       <widget class="PyDMLabel" name="label_amax_rdbk">
         <property name="toolTip">
          <string/>
         </property>
@@ -197,7 +197,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="lineEdit_2">
+       <widget class="QLineEdit" name="lineedit_ades_stepsize">
         <property name="text">
          <string>0.5</string>
         </property>
@@ -213,7 +213,7 @@
       <item row="1" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_10">
         <item>
-         <widget class="PyDMSpinbox" name="PyDMSpinbox_3">
+         <widget class="PyDMSpinbox" name="spinbox_ades">
           <property name="toolTip">
            <string/>
           </property>
@@ -232,7 +232,7 @@
          </widget>
         </item>
         <item>
-         <widget class="PyDMLabel" name="PyDMLabel_8">
+         <widget class="PyDMLabel" name="label_ades_rdbk">
           <property name="toolTip">
            <string/>
           </property>
@@ -252,32 +252,8 @@
       <string>GroupBox</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>SSA Power:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <item>
-         <property name="text">
-          <string>On</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Off</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="PyDMLabel" name="PyDMLabel_9">
+      <item row="2" column="3">
+       <widget class="PyDMLabel" name="label_rfstatus_rdbk">
         <property name="toolTip">
          <string/>
         </property>
@@ -290,8 +266,62 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>SSA Power:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="PyDMLabel" name="label_rfmode_rdbk">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>RF Power:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="PyDMPushButton" name="button_ssa_on">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>On</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="PyDMLabel" name="label_ssa_status_rdbk">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="PyDMPushButton" name="button_ssa_off">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>Off</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="PyDMEnumComboBox" name="combobox_rfmode">
         <property name="toolTip">
          <string/>
         </property>
@@ -322,41 +352,29 @@
         </item>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="PyDMLabel" name="PyDMLabel_10">
-        <property name="toolTip">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_14">
-        <property name="text">
-         <string>RF Power:</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="1">
-       <widget class="PyDMEnumComboBox" name="PyDMEnumComboBox_3">
+       <widget class="PyDMPushButton" name="button_rf_on">
         <property name="toolTip">
          <string/>
         </property>
-        <item>
-         <property name="text">
-          <string>On</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Off</string>
-         </property>
-        </item>
+        <property name="text">
+         <string>On</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
        </widget>
       </item>
       <item row="2" column="2">
-       <widget class="PyDMLabel" name="PyDMLabel_11">
+       <widget class="PyDMPushButton" name="button_rf_off">
         <property name="toolTip">
          <string/>
+        </property>
+        <property name="text">
+         <string>Off</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>0</string>
         </property>
        </widget>
       </item>
@@ -562,7 +580,7 @@
         <item row="0" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_9">
           <item>
-           <widget class="PyDMSpinbox" name="PyDMSpinbox_2">
+           <widget class="PyDMSpinbox" name="spinbox_reactive_power">
             <property name="toolTip">
              <string/>
             </property>
@@ -587,7 +605,7 @@
            </widget>
           </item>
           <item>
-           <widget class="PyDMLabel" name="PyDMLabel_7">
+           <widget class="PyDMLabel" name="label_reactive_power_rdbk">
             <property name="toolTip">
              <string/>
             </property>
@@ -636,7 +654,7 @@
        </widget>
       </item>
       <item row="0" column="2">
-       <widget class="PyDMSpinbox" name="PyDMSpinbox">
+       <widget class="PyDMSpinbox" name="spinbox_selphaseoffset">
         <property name="toolTip">
          <string/>
         </property>
@@ -695,6 +713,11 @@
    <class>PyDMLineEdit</class>
    <extends>QLineEdit</extends>
    <header>pydm.widgets.line_edit</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMPushButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.pushbutton</header>
   </customwidget>
   <customwidget>
    <class>PyDMRelatedDisplayButton</class>

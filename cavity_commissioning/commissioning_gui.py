@@ -56,13 +56,15 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
         self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
-        # TODO add radio buttons for sanity check, have options for 'positive step = freq decrease' etc.
+        # TODO add radio buttons for sanity check,
         self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
 
         self.tuner_window.ui.step_des_line_edit.returnPressed.connect(self.des_step_changed)
         self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
         self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
         self.tuner_window.ui.button_mark_tuned.clicked.connect(self.tuned_button_clicked)
+
+        self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
 
     def setup_plots(self):
         time_plot_updater = {
@@ -241,39 +243,48 @@ class GuidedCommissioningScreens(Display):
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)
         ui = self.rf_controls_window.ui
-        ui.button_ssa_on.clicked.connect(self.current_cavity.ssa.turnOn)
-        ui.button_ssa_off.clicked.connect(self.current_cavity.ssa.turnOff)
-        ui.label_ssa_status.channel = self.current_cavity.ssa.ssaStatusPV.pvname
+        ui.button_ssa_on.channel = self.current_cavity.ssa.ssaTurnOnPV.pvname
+        ui.button_ssa_off.channel = self.current_cavity.ssa.ssaTurnOffPV.pvname
+        ui.label_ssa_status_rdbk.channel = self.current_cavity.ssa.ssaStatusPV.pvname
 
-        ui.button_rfmode_chirp.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
-                                                       scLinacUtils.RF_MODE_CHIRP))
-        ui.button_rfmode_pulsed.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
-                                                        scLinacUtils.RF_MODE_PULSE))
-        ui.button_rfmode_sel.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
-                                                     scLinacUtils.RF_MODE_SEL))
-        ui.button_rfmode_sela.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
-                                                      scLinacUtils.RF_MODE_SELA))
-        ui.button_rfmode_selap.clicked.connect(partial(self.current_cavity.rfModeCtrlPV.put,
-                                                       scLinacUtils.RF_MODE_SELAP))
+        ui.combobox_rfmode.channel = self.current_cavity.rfModeCtrlPV.pvname
         ui.label_rfmode_rdbk.channel = self.current_cavity.rfModePV.pvname
 
-        ui.button_rf_on.clicked.connect(self.current_cavity.turnOn)
-        ui.button_rf_off.clicked.connect(self.current_cavity.turnOff)
+        ui.button_rf_on.channel = self.current_cavity.rfControlPV.pvname
+        ui.button_rf_off.channel = self.current_cavity.rfControlPV.pvname
         ui.label_rfstatus_rdbk.channel = self.current_cavity.rfStatePV.pvname
 
-        ui.lineedit_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PV.pvname
+        ui.spinbox_ades.channel = self.current_cavity.selAmplitudeDesPV.pvname
+        ui.label_ades_rdbk.channel = self.current_cavity.selAmplitudeDesPV.pvname
+
+        ui.lineedit_srfmax.channel = self.current_cavity.ades_max_srf_PV.pvname
+        ui.label_srfmax_rdbk.channel = self.current_cavity.ades_max_srf_PV.pvname
+        ui.label_amax_rdbk.channel = self.current_cavity.ades_max_PV.pvname
+
+        ui.spinbox_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PV.pvname
         ui.label_selphaseoffset_rdbk.channel = self.current_cavity.sel_phaseoffset_rdbk_PV.pvname
-        ui.slider_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PV.pvname
 
         ui.indicator_phas_high.channel = self.current_cavity.feedback_phase_high_PV.pvname
         ui.indicator_phas_low.channel = self.current_cavity.feedback_phase_low_PV.pvname
         ui.indicator_amp_high.channel = self.current_cavity.feedback_amplitude_high_PV.pvname
         ui.indicator_amp_low.channel = self.current_cavity.feedback_amplitude_low_PV.pvname
 
+        ui.label_phas_high.channel = self.current_cavity.feedback_phase_high_PV.pvname
+        ui.label_phas_low.channel = self.current_cavity.feedback_phase_low_PV.pvname
+        ui.label_amp_high.channel = self.current_cavity.feedback_amplitude_high_PV.pvname
+        ui.label_amp_low.channel = self.current_cavity.feedback_amplitude_low_PV.pvname
+
+        ui.spinbox_reactive_power.channel = self.current_cavity.ssa_reactive_power_fraction_PV.pvname
+        ui.label_reactive_power_rdbk.channel = self.current_cavity.ssa_reactive_power_fraction_PV.pvname
+
         ui.label_max_amplitude.channel = self.current_cavity.acceptancetest_max_amplitude_PV.pvname
         ui.label_useable_amplitude.channel = self.current_cavity.acceptancetest_useable_amplitude_PV.pvname
         ui.label_fe_onset.channel = self.current_cavity.acceptancetest_fe_onset_PV.pvname
         ui.label_cavity_limitation.channel = self.current_cavity.acceptancetest_cavity_limitation_PV.pvname
+
+    def update_stepsize(self):
+        stepsize = float(self.rf_controls_window.ui.lineedit_ades_stepsize.text())
+        self.rf_controls_window.ui.spinbox_ades.setSingleStep(stepsize)
 
     @property
     def macro_string(self):

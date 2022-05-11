@@ -107,6 +107,7 @@ class CommissioningCavity(Cavity):
         self.detune_rfs_PV: PV = PV(self.pvPrefix + "DF")
 
         self.ssa_maxdrive_PV: PV = PV(self.pvPrefix + "SSA:DRV_MAX_REQ")
+        self.ssa_reactive_power_fraction_PV: PV = PV(self.pvPrefix + "SSA:REACTIVE")
 
         self.measured_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE_CALC2")
         self.inuse_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE")
@@ -135,6 +136,7 @@ class CommissioningCavity(Cavity):
         self.freq_search_push_PV: PV = PV(self.pvPrefix + "FSCAN:PUSH_8PI9.PROC")
 
         self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
+        self.ades_max_PV: PV = PV(self.pvPrefix + "ADES_MAX")
         self.tuning_pvs: List[str] = [self.detune_best_PV.pvname,
                                       self.stepper_temp_PV.pvname]
 
