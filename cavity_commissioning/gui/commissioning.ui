@@ -265,6 +265,20 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>HV:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="PyDMLabel" name="label_decarad_voltage">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

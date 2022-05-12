@@ -1,12 +1,18 @@
 from datetime import datetime, timedelta
-from epics import PV
-from numpy import nanmean
 from typing import Dict, List, Optional, Tuple
+
+from epics import PV as epicsPV
+from numpy import nanmean
 
 import commissioningUtilities as utils
 from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.superconducting import scLinacUtils
 from lcls_tools.superconducting.scLinac import Cavity, Cryomodule, Rack, SSA, StepperTuner, make_lcls_cryomodules
+
+
+class PV(epicsPV):
+    def __init__(self, pvname):
+        super().__init__(pvname, connection_timeout=0.01)
 
 
 class DecaradHead:
@@ -105,10 +111,10 @@ class CommissioningCavity(Cavity):
         self.piezo = Piezo(self)
 
         self.interlock_PV: PV = PV(self.pvPrefix + "RFPERMIT")
-        self.coupler_top_PV: PV = PV(self.pvPrefix + "CPLRTEMP1")
-        self.coupler_bot_PV: PV = PV(self.pvPrefix + "CPLRTEMP2")
-        self.hom_us_PV: PV = PV("CTE:CM{cm}:1{cavity}18:UH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
-        self.hom_ds_PV: PV = PV("CTE:CM{cm}:1{cavity}20:DH:TEMP".format(cm=self.cryomodule.name, cavity=self.number))
+        self.coupler_top_PVName = self.pvPrefix + "CPLRTEMP1"
+        self.coupler_bot_PVName = self.pvPrefix + "CPLRTEMP2"
+        self.hom_us_PVName = "CTE:CM{cm}:1{cavity}18:UH:TEMP".format(cm=self.cryomodule.name, cavity=self.number)
+        self.hom_ds_PVName = "CTE:CM{cm}:1{cavity}20:DH:TEMP".format(cm=self.cryomodule.name, cavity=self.number)
         self.detune_best_PV: PV = PV(self.pvPrefix + "DFBEST")
         self.detune_rfs_PV: PV = PV(self.pvPrefix + "DF")
 
@@ -124,13 +130,13 @@ class CommissioningCavity(Cavity):
                                                                            (None, self.fwdWaveformPV.pvname),
                                                                            (None, self.cavWaveformPV.pvname)]
 
-        self.iwaveform_PV: PV = PV(self.pvPrefix + "CTRL:IWF")
-        self.qwaveform_PV: PV = PV(self.pvPrefix + "CTRL:QWF")
+        self.iwaveform_PVName = self.pvPrefix + "CTRL:IWF"
+        self.qwaveform_PVName = self.pvPrefix + "CTRL:QWF"
         self.controller_limit_a_PV: PV = PV(self.pvPrefix + "CTRL:LIMS.VALA")
         self.controller_limit_b_PV: PV = PV(self.pvPrefix + "CTRL:LIMS.VALB")
 
-        self.cheetoplot_channelpairs: List[Tuple[Optional[str], str]] = [(self.iwaveform_PV.pvname,
-                                                                          self.qwaveform_PV.pvname),
+        self.cheetoplot_channelpairs: List[Tuple[Optional[str], str]] = [(self.iwaveform_PVName,
+                                                                          self.qwaveform_PVName),
                                                                          (self.controller_limit_a_PV.pvname,
                                                                           self.controller_limit_b_PV.pvname)]
 
@@ -199,10 +205,10 @@ class CommissioningCavity(Cavity):
         elif self.cryomodule.decarad.max_avg_dose >= utils.RADIATION_LIMIT:
             self.ades_max_srf_PV.put(self.selAmplitudeDesPV.value)
             raise utils.RadLimitError(
-                    'Radiation exceeds {limit}mR/hr. Please stop.'.format(limit=utils.RADIATION_LIMIT))
+                'Radiation exceeds {limit}mR/hr. Please stop.'.format(limit=utils.RADIATION_LIMIT))
         else:
             raise utils.RadLimitError(
-                    'Negative radiation values detected. Verify that the decarads are reading correctly')
+                'Negative radiation values detected. Verify that the decarads are reading correctly')
 
     @property
     def interlocks_cleared(self) -> bool:
@@ -265,10 +271,10 @@ class CommissioningCryomodule(Cryomodule):
 
         for cavity in self.cavities.values():
             self.stepper_temp_PVs.append(cavity.stepper_temp_PV.pvname)
-            self.coupler_top_PVs.append(cavity.coupler_top_PV.pvname)
-            self.coupler_bot_PVs.append(cavity.coupler_bot_PV.pvname)
-            self.hom_us_PVs.append(cavity.hom_us_PV.pvname)
-            self.hom_ds_PVs.append(cavity.hom_ds_PV.pvname)
+            self.coupler_top_PVs.append(cavity.coupler_top_PVName)
+            self.coupler_bot_PVs.append(cavity.coupler_bot_PVName)
+            self.hom_us_PVs.append(cavity.hom_us_PVName)
+            self.hom_ds_PVs.append(cavity.hom_ds_PVName)
             self.detune_PVs.append(cavity.detune_best_PV.pvname)
 
         self.cryo_signal_PVs = [self.dsLevelPV.pvname, self.usLevelPV.pvname,
@@ -298,5 +304,5 @@ class CommissioningStepper(StepperTuner):
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-        cryomoduleClass=CommissioningCryomodule,
-        rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
+    cryomoduleClass=CommissioningCryomodule,
+    rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
