@@ -180,7 +180,7 @@ class CommissioningCavity(Cavity):
             decaradhead.doseRatePV.clear_callbacks()
             decaradhead.doseRatePV.add_callback(self.check_radiation)
 
-    def check_radiation(self):
+    def check_radiation(self, **kwargs):
         # TODO link ADESMAX puts to GUI
         if utils.RADIATION_LIMIT > self.cryomodule.decarad.max_avg_dose > 0:
             threshold = utils.GRADIENT_THRESHOLD_RADLIMIT * self.length
