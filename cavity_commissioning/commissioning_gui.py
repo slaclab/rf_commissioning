@@ -39,12 +39,13 @@ class GuidedCommissioningScreens(Display):
 
         self.setup_combo_boxes()
 
-        self.rf_controls_window = Display(ui_filename=self.getPath("gui/rf_controls.ui"))
+        self.rf_controls_window = None
 
         self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
         self.ui.button_livesignals.clicked.connect(partial(showDisplay, self.live_signals_window))
 
-        self.tuner_window = Display(ui_filename=self.getPath("gui/tuning.ui"))
+        self.tuner_window = None
+        self.waveform_plot_updater = None
 
         self.setup_plots()
 
@@ -55,17 +56,18 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
-        self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
+
         # TODO add radio buttons for sanity check,
         self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
 
+        self.ui.button_selap_rampup.clicked.connect(self.selap_button_pressed)
+
+    def connect_tuner_window(self):
+        self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
         self.tuner_window.ui.step_des_line_edit.returnPressed.connect(self.des_step_changed)
         self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
         self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
         self.tuner_window.ui.button_mark_tuned.clicked.connect(self.tuned_button_clicked)
-
-        self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
-        self.ui.button_selap_rampup.clicked.connect(self.selap_button_pressed)
 
     def setup_plots(self):
         time_plot_updater = {
@@ -81,15 +83,9 @@ class GuidedCommissioningScreens(Display):
             util.SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
                 plot=self.live_signals_window.ui.plot_single_cavity_overview),
             util.FREQUENCY_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
-            util.DECARAD_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_decarad),
-            util.DETUNE_PLOT_KEY: TimePlotParams(plot=self.tuner_window.ui.tuning_plot,
-                                                 formLayout=self.tuner_window.ui.plot_layout)
+            util.DECARAD_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_decarad)
         }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
-        self.waveform_plot_updater = WaveformPlotUpdater(
-            {util.RFWAVEFORM_PLOT_KEY:
-                 WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
-             util.CHEETO_PLOT_KEY: WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_cheeto)})
 
     def ui_filename(self):
         return 'gui/commissioning.ui'
@@ -99,6 +95,12 @@ class GuidedCommissioningScreens(Display):
 
     def tune_cavity(self):
         try:
+            if not self.tuner_window:
+                self.tuner_window = Display(ui_filename=self.getPath("gui/tuning.ui"))
+                self.time_plot_updater.plotParams[util.DETUNE_PLOT_KEY] = TimePlotParams(
+                    plot=self.tuner_window.ui.tuning_plot, formLayout=self.tuner_window.ui.plot_layout)
+                self.connect_tuner_window()
+                self.update_tuner_window()
             self.current_cavity.tune()
         except util.DetuneError as e:
             tuner_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_tuner_embed.edl')
@@ -175,7 +177,7 @@ class GuidedCommissioningScreens(Display):
 
         self.update_rf_controls()
 
-        # self.update_plots()
+        self.update_plots()
 
         self.update_tuner_window()
 
@@ -204,14 +206,19 @@ class GuidedCommissioningScreens(Display):
                                util.FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
                                util.DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
                                util.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
-                               util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs,
-                               util.DETUNE_PLOT_KEY: self.current_cavity.tuning_pvs}
+                               util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs}
+        if self.tuner_window:
+            timeplot_update_map[util.DETUNE_PLOT_KEY] = self.current_cavity.tuning_pvs
+
         self.time_plot_updater.updatePlots(timeplot_update_map)
-        waveformplot_update_map = {util.RFWAVEFORM_PLOT_KEY: self.current_cavity.waveformplot_channelpairs,
-                                   util.CHEETO_PLOT_KEY: self.current_cavity.cheetoplot_channelpairs}
-        self.waveform_plot_updater.updatePlots(waveformplot_update_map)
+        if self.waveform_plot_updater:
+            waveformplot_update_map = {util.RFWAVEFORM_PLOT_KEY: self.current_cavity.waveformplot_channelpairs,
+                                       util.CHEETO_PLOT_KEY: self.current_cavity.cheetoplot_channelpairs}
+            self.waveform_plot_updater.updatePlots(waveformplot_update_map)
 
     def update_tuner_window(self):
+        if not self.tuner_window:
+            return
         self.current_cavity.detune_best_PV.clear_callbacks()
         self.current_cavity.detune_best_PV.add_callback(self.detune_callback)
         ui = self.tuner_window.ui
@@ -251,6 +258,8 @@ class GuidedCommissioningScreens(Display):
 
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)
+        if not self.rf_controls_window:
+            return
         ui = self.rf_controls_window.ui
         ui.button_ssa_on.channel = self.current_cavity.ssa.ssaTurnOnPV.pvname
         ui.button_ssa_off.channel = self.current_cavity.ssa.ssaTurnOffPV.pvname
@@ -526,6 +535,16 @@ class GuidedCommissioningScreens(Display):
 
     def selap_button_pressed(self):
         try:
+            if not self.rf_controls_window:
+                self.rf_controls_window = Display(ui_filename=self.getPath("gui/rf_controls.ui"))
+
+                self.waveform_plot_updater = WaveformPlotUpdater(
+                    {util.RFWAVEFORM_PLOT_KEY:
+                         WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
+                     util.CHEETO_PLOT_KEY: WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_cheeto)})
+                self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
+                self.update_rf_controls()
+
             self.current_cavity.selap_setup()
             make_info_popup('Walk amplitude up to {amax}MV in SELA'.format(amax=self.current_cavity.ades_max_PV.value))
             showDisplay(self.rf_controls_window)
