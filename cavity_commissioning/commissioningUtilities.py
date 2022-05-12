@@ -27,6 +27,7 @@ DECARAD_OFF_VALUE = 1
 PIEZO_ENABLE_VALUE = 1
 PIEZO_DISABLE_VALUE = 0
 PIEZO_MANUAL_VALUE = 0
+PIEZO_FEEDBACK_VALUE = 1
 PIEZO_SCRIPT_RUNNING_VALUE = 2
 PIEZO_SCRIPT_COMPLETE_VALUE = 1
 PIEZO_PRERF_CHECKOUT_STATUS_VALUE = 1
@@ -51,6 +52,7 @@ FREQUENCY_PLOT_KEY = 'frequency'
 RFWAVEFORM_PLOT_KEY = 'rfwaveform'
 DECARAD_PLOT_KEY = 'decarad'
 DETUNE_PLOT_KEY = "detune"
+CHEETO_PLOT_KEY = 'cheeto'
 
 STEPPER_MAX_STEPS = 5000000
 
@@ -91,9 +93,19 @@ class FreqSearchError(Exception):
         super().__init__(self.message)
 
 
-class RadError(Exception):
+class RadOnsetError(Exception):
     """
-    Exception thrown during SELAP ramp up
+    Exception thrown when radiation above background is detected
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+class RadLimitError(Exception):
+    """
+    Exception thrown when radiation exceeds limit
     """
 
     def __init__(self, message):

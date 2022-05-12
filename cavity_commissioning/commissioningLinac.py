@@ -71,6 +71,7 @@ class Piezo:
         self.enable_PV: PV = PV(self.pvPrefix + "ENABLE")
         self.feedback_mode_PV: PV = PV(self.pvPrefix + "MODECTRL")
         self.dc_setpoint_PV: PV = PV(self.pvPrefix + "DAC_SP")
+        self.bias_voltage_PV: PV = PV(self.pvPrefix + "BIAS")
         self.prerf_run_check_PV: PV = PV(self.pvPrefix + "TESTSTRT")
         self.prerf_cha_status_PV: PV = PV(self.pvPrefix + "CHA_TESTSTAT")
         self.prerf_chb_status_PV: PV = PV(self.pvPrefix + "CHB_TESTSTAT")
@@ -88,6 +89,12 @@ class Piezo:
         self.withrf_push_dfgain_PV: PV = PV(self.pvPrefix + "PUSH_DFGAIN.PROC")
         self.withrf_save_dfgain_PV: PV = PV(self.pvPrefix + "SAVE_DFGAIN.PROC")
         self.detunegain_new_PV: PV = PV(self.pvPrefix + "DFGAIN_NEW")
+
+    def enable_feedback(self):
+        self.enable_PV.put(utils.PIEZO_DISABLE_VALUE)
+        self.dc_setpoint_PV.put(25)
+        self.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
+        self.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
 
 
 class CommissioningCavity(Cavity):
@@ -117,6 +124,16 @@ class CommissioningCavity(Cavity):
         self.waveformplot_channelpairs: List[Tuple[Optional[str], str]] = [(None, self.revWaveformPV.pvname),
                                                                            (None, self.fwdWaveformPV.pvname),
                                                                            (None, self.cavWaveformPV.pvname)]
+
+        self.iwaveform_PV: PV = PV(self.pvPrefix + "CTRL:IWF")
+        self.qwaveform_PV: PV = PV(self.pvPrefix + "CTRL:QWF")
+        self.controller_limit_a_PV: PV = PV(self.pvPrefix + "CTRL:LIMS.VALA")
+        self.controller_limit_b_PV: PV = PV(self.pvPrefix + "CTRL:LIMS.VALB")
+
+        self.cheetoplot_channelpairs: List[Tuple[Optional[str], str]] = [(self.iwaveform_PV.pvname,
+                                                                          self.qwaveform_PV.pvname),
+                                                                         (self.controller_limit_a_PV.pvname,
+                                                                          self.controller_limit_b_PV.pvname)]
 
         self.acceptancetest_max_amplitude_PV: PV = PV(self.pvPrefix + "AT:AMAX")
         self.acceptancetest_useable_amplitude_PV: PV = PV(self.pvPrefix + "AT:AUSE")
@@ -148,6 +165,7 @@ class CommissioningCavity(Cavity):
         self.piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
         # set piezo DC voltage offset to 0V
         self.piezo.dc_setpoint_PV.put(0)
+        self.piezo.bias_voltage_PV.put(25)
         self.drivelevelPV.put(scLinacUtils.SAFE_PULSED_DRIVE_LEVEL)
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_CHIRP)
         self.turnOn()
@@ -170,19 +188,21 @@ class CommissioningCavity(Cavity):
 
             if self.selAmplitudeActPV.value <= threshold:
                 self.results.max_amplitude = threshold
-                raise utils.RadError('Field emission detected. Proceed with caution without exceeding {thresh} MV.'
-                                     .format(thresh=threshold))
+                raise utils.RadOnsetError('Field emission detected. Proceed with caution without exceeding {thresh} MV.'
+                                          .format(thresh=threshold))
 
             else:
                 self.results.max_amplitude = self.selAmplitudeDesPV.value
-                raise utils.RadError('Field emission detected above {thresh} MV. Please stop.'
-                                     .format(thresh=threshold))
+                raise utils.RadOnsetError('Field emission detected above {thresh} MV. Please stop.'
+                                          .format(thresh=threshold))
 
         elif self.cryomodule.decarad.max_avg_dose >= utils.RADIATION_LIMIT:
             self.ades_max_srf_PV.put(self.selAmplitudeDesPV.value)
-            raise utils.RadError('Radiation exceeds {limit}mR/hr'.format(limit=utils.RADIATION_LIMIT))
+            raise utils.RadLimitError(
+                'Radiation exceeds {limit}mR/hr. Please stop.'.format(limit=utils.RADIATION_LIMIT))
         else:
-            raise utils.RadError('Negative radiation values detected. Verify that the decarads are reading correctly')
+            raise utils.RadLimitError(
+                'Negative radiation values detected. Verify that the decarads are reading correctly')
 
     @property
     def interlocks_cleared(self) -> bool:
@@ -197,6 +217,20 @@ class CommissioningCavity(Cavity):
             self.results.probe_qext_measured = True
         else:
             raise utils.ProbeQError('Measured probe Q value out of tolerance')
+
+    def selap_setup(self):
+        self.turnOff()
+        self.ssa.turnOn()
+        self.selAmplitudeDesPV.put(5)
+        self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SEL)
+        self.turnOn()
+        if (self.detune_rfs_PV.severity == 3
+                or abs(self.detune_rfs_PV.value) > 50):
+            raise utils.DetuneError('Detune is larger than 50Hz')
+        if not self.results.piezo_withrf_checked:
+            raise utils.PiezoError('Piezo checks have not been completed')
+        self.piezo.feedback_mode_PV.put(utils.PIEZO_FEEDBACK_VALUE)
+        self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SELA)
 
 
 class CommissioningRack(Rack):

@@ -15,7 +15,7 @@ from pydm import Display
 import commissioningUtilities as util
 import lcls_tools.superconducting.scLinacUtils as scLinacUtils
 from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad
-from lcls_tools.common.pydm_tools.displayUtils import make_error_popup, showDisplay
+from lcls_tools.common.pydm_tools.displayUtils import make_error_popup, make_info_popup, showDisplay
 from lcls_tools.common.pydm_tools.pydmPlotUtil import (TimePlotParams,
                                                        TimePlotUpdater,
                                                        WaveformPlotParams,
@@ -65,6 +65,7 @@ class GuidedCommissioningScreens(Display):
         self.tuner_window.ui.button_mark_tuned.clicked.connect(self.tuned_button_clicked)
 
         self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
+        self.ui.button_selap_rampup.clicked.connect(self.selap_button_pressed)
 
     def setup_plots(self):
         time_plot_updater = {
@@ -87,7 +88,8 @@ class GuidedCommissioningScreens(Display):
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
         self.waveform_plot_updater = WaveformPlotUpdater(
             {util.RFWAVEFORM_PLOT_KEY:
-                 WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals)})
+                 WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
+             util.CHEETO_PLOT_KEY: WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_cheeto)})
 
     def ui_filename(self):
         return 'gui/commissioning.ui'
@@ -188,19 +190,20 @@ class GuidedCommissioningScreens(Display):
         self.ui.label_interlock.channel = self.current_cavity.interlock_PV.pvname
 
     def update_plots(self):
-        plot_update_map = {util.STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
-                           util.HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
-                           util.HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
-                           util.CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
-                           util.CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
-                           util.FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
-                           util.DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
-                           util.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
-                           util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs,
-                           util.DETUNE_PLOT_KEY: self.current_cavity.tuning_pvs}
-        self.time_plot_updater.updatePlots(plot_update_map)
-        self.waveform_plot_updater.updatePlot(util.RFWAVEFORM_PLOT_KEY,
-                                              self.current_cavity.waveformplot_channelpairs)
+        timeplot_update_map = {util.STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
+                               util.HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
+                               util.HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
+                               util.CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
+                               util.CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
+                               util.FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
+                               util.DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
+                               util.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
+                               util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs,
+                               util.DETUNE_PLOT_KEY: self.current_cavity.tuning_pvs}
+        self.time_plot_updater.updatePlots(timeplot_update_map)
+        waveformplot_update_map = {util.RFWAVEFORM_PLOT_KEY: self.current_cavity.waveformplot_channelpairs,
+                                   util.CHEETO_PLOT_KEY: self.current_cavity.cheetoplot_channelpairs}
+        self.waveform_plot_updater.updatePlots(waveformplot_update_map)
 
     def update_tuner_window(self):
         self.current_cavity.detune_best_PV.clear_callbacks()
@@ -514,6 +517,14 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.results.cold_landing_frequency = float(self.tuner_window.ui.label_current_freq.text())
         self.tuner_window.ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_landing_frequency))
         self.save_results()
+
+    def selap_button_pressed(self):
+        try:
+            self.current_cavity.selap_setup()
+            make_info_popup('Walk amplitude up to {amax}MV in SELA'.format(amax=self.current_cavity.ades_max_PV.value))
+            showDisplay(self.rf_controls_window)
+        except (util.PiezoError, util.DetuneError, scLinacUtils.SSAPowerError) as e:
+            showDisplay(self.rf_controls_window)
 
     def load_results(self):
         with open('results/cryomodule_results.json', 'r+') as f:
