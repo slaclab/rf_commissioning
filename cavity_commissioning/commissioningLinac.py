@@ -132,32 +132,32 @@ class CommissioningCavity(Cavity):
 
         self.iwaveform_PVName = self.pvPrefix + "CTRL:IWF"
         self.qwaveform_PVName = self.pvPrefix + "CTRL:QWF"
-        self.controller_limit_a_PV: PV = PV(self.pvPrefix + "CTRL:LIMS.VALA")
-        self.controller_limit_b_PV: PV = PV(self.pvPrefix + "CTRL:LIMS.VALB")
+        self.controller_limit_a_PVName = self.pvPrefix + "CTRL:LIMS.VALA"
+        self.controller_limit_b_PVName = self.pvPrefix + "CTRL:LIMS.VALB"
 
         self.cheetoplot_channelpairs: List[Tuple[Optional[str], str]] = [(self.iwaveform_PVName,
                                                                           self.qwaveform_PVName),
-                                                                         (self.controller_limit_a_PV.pvname,
-                                                                          self.controller_limit_b_PV.pvname)]
+                                                                         (self.controller_limit_a_PVName,
+                                                                          self.controller_limit_b_PVName)]
 
-        self.acceptancetest_max_amplitude_PV: PV = PV(self.pvPrefix + "AT:AMAX")
-        self.acceptancetest_useable_amplitude_PV: PV = PV(self.pvPrefix + "AT:AUSE")
-        self.acceptancetest_fe_onset_PV: PV = PV(self.pvPrefix + "AT:FEON_AACT")
-        self.acceptancetest_cavity_limitation_PV: PV = PV(self.pvPrefix + "AT:LIMIT")
+        self.acceptancetest_max_amplitude_PVName = self.pvPrefix + "AT:AMAX"
+        self.acceptancetest_useable_amplitude_PVName = self.pvPrefix + "AT:AUSE"
+        self.acceptancetest_fe_onset_PVName = self.pvPrefix + "AT:FEON_AACT"
+        self.acceptancetest_cavity_limitation_PVName = self.pvPrefix + "AT:LIMIT"
 
-        self.sel_phaseoffset_PV: PV = PV(self.pvPrefix + "SEL_POFF")
-        self.sel_phaseoffset_rdbk_PV: PV = PV(self.pvPrefix + "SEL_POFF_RBV")
+        self.sel_phaseoffset_PVName = self.pvPrefix + "SEL_POFF"
+        self.sel_phaseoffset_rdbk_PVName = self.pvPrefix + "SEL_POFF_RBV"
 
-        self.feedback_phase_high_PV: PV = PV(self.pvPrefix + "PHAFB_HSUM")
-        self.feedback_phase_low_PV: PV = PV(self.pvPrefix + "PHAFB_LSUM")
-        self.feedback_amplitude_high_PV: PV = PV(self.pvPrefix + "AMPFB_HSUM")
-        self.feedback_amplitude_low_PV: PV = PV(self.pvPrefix + "AMPFB_LSUM")
+        self.feedback_phase_high_PVName = self.pvPrefix + "PHAFB_HSUM"
+        self.feedback_phase_low_PVName = self.pvPrefix + "PHAFB_LSUM"
+        self.feedback_amplitude_high_PVName = self.pvPrefix + "AMPFB_HSUM"
+        self.feedback_amplitude_low_PVName = self.pvPrefix + "AMPFB_LSUM"
 
         self.freq_search_select_PV: PV = PV(self.pvPrefix + "FSCAN:SEL")
         self.freq_search_8pi9_PV: PV = PV(self.pvPrefix + "FSCAN:8PI9MODE")
         self.freq_search_push_PV: PV = PV(self.pvPrefix + "FSCAN:PUSH_8PI9.PROC")
 
-        self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
+        self.ades_max_srf_PVName = self.pvPrefix + "ADES_MAX_SRF"
         self.ades_max_PV: PV = PV(self.pvPrefix + "ADES_MAX")
         self.tuning_pvs: List[str] = [self.detune_best_PV.pvname,
                                       self.stepper_temp_PV.pvname]
@@ -190,7 +190,7 @@ class CommissioningCavity(Cavity):
         # TODO link ADESMAX puts to GUI
         if utils.RADIATION_LIMIT > self.cryomodule.decarad.max_avg_dose > 0:
             threshold = utils.GRADIENT_THRESHOLD_RADLIMIT * self.length
-            self.ades_max_srf_PV.put(min(threshold, self.ades_max_srf_PV.value))
+            self.ades_max_srf_PVName.put(min(threshold, self.ades_max_srf_PVName.value))
 
             if self.selAmplitudeActPV.value <= threshold:
                 self.results.max_amplitude = threshold
@@ -203,7 +203,7 @@ class CommissioningCavity(Cavity):
                                           .format(thresh=threshold))
 
         elif self.cryomodule.decarad.max_avg_dose >= utils.RADIATION_LIMIT:
-            self.ades_max_srf_PV.put(self.selAmplitudeDesPV.value)
+            self.ades_max_srf_PVName.put(self.selAmplitudeDesPV.value)
             raise utils.RadLimitError(
                 'Radiation exceeds {limit}mR/hr. Please stop.'.format(limit=utils.RADIATION_LIMIT))
         else:

@@ -263,30 +263,30 @@ class GuidedCommissioningScreens(Display):
         ui.spinbox_ades.channel = self.current_cavity.selAmplitudeDesPV.pvname
         ui.label_ades_rdbk.channel = self.current_cavity.selAmplitudeDesPV.pvname
 
-        ui.lineedit_srfmax.channel = self.current_cavity.ades_max_srf_PV.pvname
-        ui.label_srfmax_rdbk.channel = self.current_cavity.ades_max_srf_PV.pvname
+        ui.lineedit_srfmax.channel = self.current_cavity.ades_max_srf_PVName
+        ui.label_srfmax_rdbk.channel = self.current_cavity.ades_max_srf_PVName
         ui.label_amax_rdbk.channel = self.current_cavity.ades_max_PV.pvname
 
-        ui.spinbox_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PV.pvname
-        ui.label_selphaseoffset_rdbk.channel = self.current_cavity.sel_phaseoffset_rdbk_PV.pvname
+        ui.spinbox_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PVName
+        ui.label_selphaseoffset_rdbk.channel = self.current_cavity.sel_phaseoffset_rdbk_PVName
 
-        ui.indicator_phas_high.channel = self.current_cavity.feedback_phase_high_PV.pvname
-        ui.indicator_phas_low.channel = self.current_cavity.feedback_phase_low_PV.pvname
-        ui.indicator_amp_high.channel = self.current_cavity.feedback_amplitude_high_PV.pvname
-        ui.indicator_amp_low.channel = self.current_cavity.feedback_amplitude_low_PV.pvname
+        ui.indicator_phas_high.channel = self.current_cavity.feedback_phase_high_PVName
+        ui.indicator_phas_low.channel = self.current_cavity.feedback_phase_low_PVName
+        ui.indicator_amp_high.channel = self.current_cavity.feedback_amplitude_high_PVName
+        ui.indicator_amp_low.channel = self.current_cavity.feedback_amplitude_low_PVName
 
-        ui.label_phas_high.channel = self.current_cavity.feedback_phase_high_PV.pvname
-        ui.label_phas_low.channel = self.current_cavity.feedback_phase_low_PV.pvname
-        ui.label_amp_high.channel = self.current_cavity.feedback_amplitude_high_PV.pvname
-        ui.label_amp_low.channel = self.current_cavity.feedback_amplitude_low_PV.pvname
+        ui.label_phas_high.channel = self.current_cavity.feedback_phase_high_PVName
+        ui.label_phas_low.channel = self.current_cavity.feedback_phase_low_PVName
+        ui.label_amp_high.channel = self.current_cavity.feedback_amplitude_high_PVName
+        ui.label_amp_low.channel = self.current_cavity.feedback_amplitude_low_PVName
 
         ui.spinbox_reactive_power.channel = self.current_cavity.ssa_reactive_power_fraction_PV.pvname
         ui.label_reactive_power_rdbk.channel = self.current_cavity.ssa_reactive_power_fraction_PV.pvname
 
-        ui.label_max_amplitude.channel = self.current_cavity.acceptancetest_max_amplitude_PV.pvname
-        ui.label_useable_amplitude.channel = self.current_cavity.acceptancetest_useable_amplitude_PV.pvname
-        ui.label_fe_onset.channel = self.current_cavity.acceptancetest_fe_onset_PV.pvname
-        ui.label_cavity_limitation.channel = self.current_cavity.acceptancetest_cavity_limitation_PV.pvname
+        ui.label_max_amplitude.channel = self.current_cavity.acceptancetest_max_amplitude_PVName
+        ui.label_useable_amplitude.channel = self.current_cavity.acceptancetest_useable_amplitude_PVName
+        ui.label_fe_onset.channel = self.current_cavity.acceptancetest_fe_onset_PVName
+        ui.label_cavity_limitation.channel = self.current_cavity.acceptancetest_cavity_limitation_PVName
 
     def update_stepsize(self):
         stepsize = float(self.rf_controls_window.ui.lineedit_ades_stepsize.text())
