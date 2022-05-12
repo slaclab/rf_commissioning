@@ -1,7 +1,6 @@
 import dataclasses
 import json
 import sys
-from functools import partial
 from os import path
 from threading import Lock
 from time import sleep
@@ -41,13 +40,12 @@ class GuidedCommissioningScreens(Display):
 
         self.rf_controls_window = None
 
-        self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
-        self.ui.button_livesignals.clicked.connect(partial(showDisplay, self.live_signals_window))
+        self.live_signals_window = None
+        self.ui.button_livesignals.clicked.connect(self.live_signal_button_clicked)
 
         self.tuner_window = None
         self.waveform_plot_updater = None
-
-        self.setup_plots()
+        self.time_plot_updater = None
 
         self.update_selection()
 
@@ -68,6 +66,13 @@ class GuidedCommissioningScreens(Display):
         self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
         self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
         self.tuner_window.ui.button_mark_tuned.clicked.connect(self.tuned_button_clicked)
+
+    def live_signal_button_clicked(self):
+        if not self.live_signals_window:
+            self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
+            self.setup_plots()
+            self.update_plots()
+        showDisplay(self.live_signals_window)
 
     def setup_plots(self):
         time_plot_updater = {
@@ -198,15 +203,19 @@ class GuidedCommissioningScreens(Display):
         self.ui.label_interlock.channel = self.current_cavity.interlock_PV.pvname
 
     def update_plots(self):
-        timeplot_update_map = {util.STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
-                               util.HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
-                               util.HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
-                               util.CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
-                               util.CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
-                               util.FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
-                               util.DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
-                               util.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
-                               util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs}
+        if not self.time_plot_updater:
+            return
+        timeplot_update_map = {}
+        if self.live_signals_window:
+            timeplot_update_map = {util.STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
+                                   util.HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
+                                   util.HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
+                                   util.CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
+                                   util.CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
+                                   util.FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
+                                   util.DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
+                                   util.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
+                                   util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs}
         if self.tuner_window:
             timeplot_update_map[util.DETUNE_PLOT_KEY] = self.current_cavity.tuning_pvs
 
