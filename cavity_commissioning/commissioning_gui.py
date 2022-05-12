@@ -163,8 +163,11 @@ class GuidedCommissioningScreens(Display):
         self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
             self.ui.pick_cm.currentText()]
         self.update_decarad()
+        if self.current_cavity:
+            self.current_cavity.steppertuner.step_tot_pv.clear_callbacks()
         self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
         self.current_cavity.connect_to_decarad()
+        self.current_cavity.steppertuner.connect_callback()
 
         self.load_results()
 

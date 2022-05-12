@@ -7,7 +7,7 @@ from numpy import nanmean
 import commissioningUtilities as utils
 from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.superconducting import scLinacUtils
-from lcls_tools.superconducting.scLinac import Cavity, Cryomodule, Rack, SSA, make_lcls_cryomodules
+from lcls_tools.superconducting.scLinac import Cavity, Cryomodule, Rack, SSA, StepperTuner, make_lcls_cryomodules
 
 
 class DecaradHead:
@@ -98,8 +98,8 @@ class Piezo:
 
 
 class CommissioningCavity(Cavity):
-    def __init__(self, cavityNum, rackObject, ssaClass=SSA):
-        super().__init__(cavityNum, rackObject)
+    def __init__(self, cavityNum, rackObject, ssaClass=SSA, stepperClass=StepperTuner):
+        super().__init__(cavityNum, rackObject, stepperClass=CommissioningStepper)
 
         self.results = utils.CommissioningCavityResults()
 
@@ -234,8 +234,9 @@ class CommissioningCavity(Cavity):
 
 
 class CommissioningRack(Rack):
-    def __init__(self, rackName, cryoObject, cavityClass, ssaClass=SSA):
-        super().__init__(rackName=rackName, cryoObject=cryoObject, cavityClass=CommissioningCavity)
+    def __init__(self, rackName, cryoObject, cavityClass, ssaClass=SSA, stepperClass=StepperTuner):
+        super().__init__(rackName=rackName, cryoObject=cryoObject, cavityClass=CommissioningCavity,
+                         stepperClass=CommissioningStepper)
 
         self.freq_search_low_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_START")
         self.freq_search_high_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_STOP")
@@ -246,10 +247,11 @@ class CommissioningRack(Rack):
 
 
 class CommissioningCryomodule(Cryomodule):
-    def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass, isHarmonicLinearizer, ssaClass=SSA):
+    def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass, isHarmonicLinearizer, ssaClass=SSA,
+                 stepperClass=StepperTuner):
         super().__init__(cryoName=cryoName, linacObject=linacObject, cavityClass=CommissioningCavity,
                          rackClass=CommissioningRack,
-                         isHarmonicLinearizer=isHarmonicLinearizer)
+                         isHarmonicLinearizer=isHarmonicLinearizer, stepperClass=CommissioningStepper)
 
         self.results = utils.CommissioningCryomoduleResults()
         self.cavity_results = {cavity.number: cavity.results for cavity in self.cavities.values()}
@@ -283,6 +285,18 @@ class CommissioningCryomodule(Cryomodule):
         return decarad_PVs
 
 
+class CommissioningStepper(StepperTuner):
+    def __init__(self, cavity):
+        super().__init__(cavity)
+
+    def checkTemp(self, **kwargs):
+        if self.cavity.stepper_temp_PV.value >= scLinacUtils.STEPPER_TEMP_LIMIT:
+            self.abort_pv.put(1)
+
+    def connect_callback(self):
+        self.step_tot_pv.add_callback(self.checkTemp)
+
+
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
     cryomoduleClass=CommissioningCryomodule,
-    rackClass=CommissioningRack, cavityClass=CommissioningCavity)
+    rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
