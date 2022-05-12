@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
-
 from epics import PV
 from numpy import nanmean
+from typing import Dict, List, Optional, Tuple
 
 import commissioningUtilities as utils
 from lcls_tools.common.pyepics_tools import pyepicsUtils
@@ -50,9 +49,9 @@ class Decarad:
             raise AttributeError("Decarad needs to be 1 or 2")
         self.number = number
         self.pvPrefix = "RADM:SYS0:{num}00:".format(num=self.number)
-        self.powerControlPV = PV(self.pvPrefix + "HVCTRL")
-        self.powerStatusPV = PV(self.pvPrefix + "HVSTATUS")
-        self.voltageReadbackPV = PV(self.pvPrefix + "HVMON")
+        self.powerControlPVName = self.pvPrefix + "HVCTRL"
+        self.powerStatusPVName = self.pvPrefix + "HVSTATUS"
+        self.voltageReadbackPVName = self.pvPrefix + "HVMON"
 
         self.heads = {head: DecaradHead(number=head, decarad=self)
                       for head in range(1, 11)}
@@ -177,7 +176,7 @@ class CommissioningCavity(Cavity):
 
     def connect_to_decarad(self):
         for decaradhead in self.cryomodule.decarad.heads.values():
-            if not decaradhead.doseRatePV.severity == pyepicsUtils.EPICS_INVALID_VAL:
+            if decaradhead.doseRatePV.severity != pyepicsUtils.EPICS_INVALID_VAL:
                 decaradhead.doseRatePV.clear_callbacks()
                 decaradhead.doseRatePV.add_callback(self.check_radiation)
 
@@ -200,10 +199,10 @@ class CommissioningCavity(Cavity):
         elif self.cryomodule.decarad.max_avg_dose >= utils.RADIATION_LIMIT:
             self.ades_max_srf_PV.put(self.selAmplitudeDesPV.value)
             raise utils.RadLimitError(
-                'Radiation exceeds {limit}mR/hr. Please stop.'.format(limit=utils.RADIATION_LIMIT))
+                    'Radiation exceeds {limit}mR/hr. Please stop.'.format(limit=utils.RADIATION_LIMIT))
         else:
             raise utils.RadLimitError(
-                'Negative radiation values detected. Verify that the decarads are reading correctly')
+                    'Negative radiation values detected. Verify that the decarads are reading correctly')
 
     @property
     def interlocks_cleared(self) -> bool:
@@ -299,5 +298,5 @@ class CommissioningStepper(StepperTuner):
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-    cryomoduleClass=CommissioningCryomodule,
-    rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
+        cryomoduleClass=CommissioningCryomodule,
+        rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)

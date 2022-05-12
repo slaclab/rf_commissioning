@@ -1,16 +1,16 @@
 import dataclasses
+from os import path
+
 import json
 import sys
-from functools import partial
-from os import path
-from threading import Lock
-from time import sleep
-from typing import Optional
-
 from PyQt5.QtWidgets import QMessageBox
 from edmbutton import PyDMEDMDisplayButton
 from epics.ca import CASeverityException
+from functools import partial
 from pydm import Display
+from threading import Lock
+from time import sleep
+from typing import Optional
 
 import commissioningUtilities as util
 import lcls_tools.superconducting.scLinacUtils as scLinacUtils
@@ -69,27 +69,27 @@ class GuidedCommissioningScreens(Display):
 
     def setup_plots(self):
         time_plot_updater = {
-            util.STEPPERTEMP_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
-            util.HOMUS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
-            util.HOMDS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
-            util.CPLRTOP_PLOT_KEY: TimePlotParams(
-                plot=self.live_signals_window.ui.plot_couplertop_temp),
-            util.CPLRBOT_PLOT_KEY: TimePlotParams(
-                plot=self.live_signals_window.ui.plot_couplerbot_temp),
-            util.CMVACUUM_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
-            util.CRYOSIGNALS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
+            util.STEPPERTEMP_PLOT_KEY  : TimePlotParams(plot=self.live_signals_window.ui.plot_steppertemps),
+            util.HOMUS_PLOT_KEY        : TimePlotParams(plot=self.live_signals_window.ui.plot_homus_temp),
+            util.HOMDS_PLOT_KEY        : TimePlotParams(plot=self.live_signals_window.ui.plot_homds_temp),
+            util.CPLRTOP_PLOT_KEY      : TimePlotParams(
+                    plot=self.live_signals_window.ui.plot_couplertop_temp),
+            util.CPLRBOT_PLOT_KEY      : TimePlotParams(
+                    plot=self.live_signals_window.ui.plot_couplerbot_temp),
+            util.CMVACUUM_PLOT_KEY     : TimePlotParams(plot=self.live_signals_window.ui.plot_cmvacuum),
+            util.CRYOSIGNALS_PLOT_KEY  : TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
             util.SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
-                plot=self.live_signals_window.ui.plot_single_cavity_overview),
-            util.FREQUENCY_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
-            util.DECARAD_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_decarad),
-            util.DETUNE_PLOT_KEY: TimePlotParams(plot=self.tuner_window.ui.tuning_plot,
-                                                 formLayout=self.tuner_window.ui.plot_layout)
+                    plot=self.live_signals_window.ui.plot_single_cavity_overview),
+            util.FREQUENCY_PLOT_KEY    : TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
+            util.DECARAD_PLOT_KEY      : TimePlotParams(plot=self.live_signals_window.ui.plot_decarad),
+            util.DETUNE_PLOT_KEY       : TimePlotParams(plot=self.tuner_window.ui.tuning_plot,
+                                                        formLayout=self.tuner_window.ui.plot_layout)
         }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
         self.waveform_plot_updater = WaveformPlotUpdater(
-            {util.RFWAVEFORM_PLOT_KEY:
-                 WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
-             util.CHEETO_PLOT_KEY: WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_cheeto)})
+                {util.RFWAVEFORM_PLOT_KEY:
+                     WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
+                 util.CHEETO_PLOT_KEY    : WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_cheeto)})
 
     def ui_filename(self):
         return 'gui/commissioning.ui'
@@ -127,7 +127,7 @@ class GuidedCommissioningScreens(Display):
             def stylesheet(self):
                 return 'color: {color};'.format(color=self.color)
 
-        status_map = {True: StatusMap('Complete', 'green'),
+        status_map = {True : StatusMap('Complete', 'green'),
                       False: StatusMap('Incomplete', 'red')}
 
         cm_results = self.current_cm.results
@@ -181,10 +181,10 @@ class GuidedCommissioningScreens(Display):
 
     def update_decarad(self):
         self.current_cm.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
-        self.ui.indicator_decarad.channel = self.current_cm.decarad.powerStatusPV.pvname
-        self.ui.label_decarad_onoff.channel = self.current_cm.decarad.powerStatusPV.pvname
-        self.ui.button_decarad_on.channel = self.current_cm.decarad.powerControlPV.pvname
-        self.ui.button_decarad_off.channel = self.current_cm.decarad.powerControlPV.pvname
+        self.ui.indicator_decarad.channel = self.current_cm.decarad.powerStatusPVName
+        self.ui.label_decarad_onoff.channel = self.current_cm.decarad.powerStatusPVName
+        self.ui.button_decarad_on.channel = self.current_cm.decarad.powerControlPVName
+        self.ui.button_decarad_off.channel = self.current_cm.decarad.powerControlPVName
 
     def update_interlock(self):
         # button_interlockoverview is an PyDMEDMDisplaybutton
@@ -194,18 +194,18 @@ class GuidedCommissioningScreens(Display):
 
     def update_plots(self):
         timeplot_update_map = {util.STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
-                               util.HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
-                               util.HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
-                               util.CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
-                               util.CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
-                               util.FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
-                               util.DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
-                               util.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
+                               util.HOMDS_PLOT_KEY      : self.current_cm.hom_ds_PVs,
+                               util.HOMUS_PLOT_KEY      : self.current_cm.hom_us_PVs,
+                               util.CPLRTOP_PLOT_KEY    : self.current_cm.coupler_top_PVs,
+                               util.CPLRBOT_PLOT_KEY    : self.current_cm.coupler_bot_PVs,
+                               util.FREQUENCY_PLOT_KEY  : self.current_cm.detune_PVs,
+                               util.DECARAD_PLOT_KEY    : self.current_cm.decarad_PVs,
+                               util.CMVACUUM_PLOT_KEY   : self.current_cm.vacuumPVs,
                                util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs,
-                               util.DETUNE_PLOT_KEY: self.current_cavity.tuning_pvs}
+                               util.DETUNE_PLOT_KEY     : self.current_cavity.tuning_pvs}
         self.time_plot_updater.updatePlots(timeplot_update_map)
         waveformplot_update_map = {util.RFWAVEFORM_PLOT_KEY: self.current_cavity.waveformplot_channelpairs,
-                                   util.CHEETO_PLOT_KEY: self.current_cavity.cheetoplot_channelpairs}
+                                   util.CHEETO_PLOT_KEY    : self.current_cavity.cheetoplot_channelpairs}
         self.waveform_plot_updater.updatePlots(waveformplot_update_map)
 
     def update_tuner_window(self):
@@ -321,8 +321,8 @@ class GuidedCommissioningScreens(Display):
             ch = 1
 
         macro_string = ",".join(
-            ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
-             "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
+                ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
+                 "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
         return macro_string
 
     def run_piezo_prerf_check(self):
