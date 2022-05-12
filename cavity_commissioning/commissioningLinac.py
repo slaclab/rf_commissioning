@@ -177,8 +177,9 @@ class CommissioningCavity(Cavity):
 
     def connect_to_decarad(self):
         for decaradhead in self.cryomodule.decarad.heads.values():
-            decaradhead.doseRatePV.clear_callbacks()
-            decaradhead.doseRatePV.add_callback(self.check_radiation)
+            if not decaradhead.doseRatePV.severity == pyepicsUtils.EPICS_INVALID_VAL:
+                decaradhead.doseRatePV.clear_callbacks()
+                decaradhead.doseRatePV.add_callback(self.check_radiation)
 
     def check_radiation(self, **kwargs):
         # TODO link ADESMAX puts to GUI
