@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 from epics import PV as epicsPV
 from numpy import nanmean
@@ -180,36 +180,11 @@ class CommissioningCavity(Cavity):
                                     " range or use the rack large frequency scan"
                                     " to find the detune.")
 
-    def connect_to_decarad(self):
+    def connect_to_decarad(self, callbackfunc: Callable):
         for decaradhead in self.cryomodule.decarad.heads.values():
             if decaradhead.doseRatePV.severity != pyepicsUtils.EPICS_INVALID_VAL:
                 decaradhead.doseRatePV.clear_callbacks()
-                decaradhead.doseRatePV.add_callback(self.check_radiation)
-
-    def check_radiation(self, severity, **kwargs):
-        if severity == pyepicsUtils.EPICS_INVALID_VAL:
-            return
-        if utils.RADIATION_LIMIT > self.cryomodule.decarad.max_avg_dose > 0:
-            threshold = utils.GRADIENT_THRESHOLD_RADLIMIT * self.length
-            self.ades_max_srf_PVName.put(min(threshold, self.ades_max_srf_PVName.value))
-
-            if self.selAmplitudeActPV.value <= threshold:
-                self.results.max_amplitude = threshold
-                raise utils.RadOnsetError('Field emission detected. Proceed with caution without exceeding {thresh} MV.'
-                                          .format(thresh=threshold))
-
-            else:
-                self.results.max_amplitude = self.selAmplitudeDesPV.value
-                raise utils.RadOnsetError('Field emission detected above {thresh} MV. Please stop.'
-                                          .format(thresh=threshold))
-
-        elif self.cryomodule.decarad.max_avg_dose >= utils.RADIATION_LIMIT:
-            self.ades_max_srf_PVName.put(self.selAmplitudeDesPV.value)
-            raise utils.RadLimitError(
-                'Radiation exceeds {limit}mR/hr. Please stop.'.format(limit=utils.RADIATION_LIMIT))
-        else:
-            raise utils.RadLimitError(
-                'Negative radiation values detected. Verify that the decarads are reading correctly')
+                decaradhead.doseRatePV.add_callback(callbackfunc)
 
     @property
     def interlocks_cleared(self) -> bool:
