@@ -164,7 +164,7 @@ class CommissioningCavity(Cavity):
 
         self.current_steps = 0
 
-    def tune(self):
+    def setup_tuning(self):
         self.turnOff()
         self.piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
         self.piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)

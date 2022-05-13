@@ -140,7 +140,8 @@ class GuidedCommissioningScreens(Display):
                     plot=self.tuner_window.ui.tuning_plot, formLayout=self.tuner_window.ui.plot_layout)
                 self.connect_tuner_window()
                 self.update_tuner_window()
-            self.current_cavity.tune()
+            self.current_cavity.setup_tuning()
+            self.current_cavity.steppertuner.connect_callback()
         except utils.DetuneError as e:
             tuner_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_tuner_embed.edl')
             make_error_popup('Detune PV invalid', tuner_expert_button, e, None)
@@ -206,8 +207,6 @@ class GuidedCommissioningScreens(Display):
         if self.current_cavity:
             self.current_cavity.steppertuner.step_tot_pv.clear_callbacks()
         self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
-
-        self.current_cavity.steppertuner.connect_callback()
 
         self.load_results()
 
