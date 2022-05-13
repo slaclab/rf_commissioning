@@ -69,7 +69,7 @@ class GuidedCommissioningScreens(Display):
         make_info_popup(value)
 
     def check_radiation(self, severity, **kwargs):
-        if severity == pyepicsUtils.EPICS_INVALID_VAL:
+        if severity == pyepicsUtils.EPICS_INVALID_VAL or self.current_cavity.cryomodule.decarad.max_avg_dose == 0:
             return
         if utils.RADIATION_LIMIT > self.current_cavity.cryomodule.decarad.max_avg_dose > 0:
             threshold = utils.GRADIENT_THRESHOLD_RADLIMIT * self.current_cavity.length
@@ -122,7 +122,6 @@ class GuidedCommissioningScreens(Display):
             utils.CRYOSIGNALS_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_cryosignals),
             utils.SINGLE_CAVITY_PLOT_KEY: TimePlotParams(
                 plot=self.live_signals_window.ui.plot_single_cavity_overview),
-            utils.FREQUENCY_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_frequency),
             utils.DECARAD_PLOT_KEY: TimePlotParams(plot=self.live_signals_window.ui.plot_decarad)
         }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
@@ -255,7 +254,6 @@ class GuidedCommissioningScreens(Display):
                                    utils.HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
                                    utils.CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
                                    utils.CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
-                                   utils.FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
                                    utils.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
                                    utils.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs}
         if self.tuner_window:
