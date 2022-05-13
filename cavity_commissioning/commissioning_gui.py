@@ -25,7 +25,6 @@ from lcls_tools.superconducting.scLinac import CRYOMODULE_OBJECTS
 class GuidedCommissioningScreens(Display):
 
     def __init__(self, parent=None, args=None):
-        # TODO add functionality to disable ui buttons that depend on completion of previous steps
         super(GuidedCommissioningScreens, self).__init__(parent=parent, args=args)
 
         self.pathHere = path.dirname(sys.modules[self.__module__].__file__)
@@ -45,7 +44,7 @@ class GuidedCommissioningScreens(Display):
 
         self.tuner_window = None
         self.waveform_plot_updater = None
-        self.time_plot_updater = None
+        self.time_plot_updater = TimePlotUpdater({})
 
         self.update_selection()
 
@@ -55,7 +54,6 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
 
-        # TODO add radio buttons for sanity check,
         self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
 
         self.ui.button_selap_rampup.clicked.connect(self.selap_button_pressed)
@@ -265,8 +263,14 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.current_steps += des_steps
         self.tuner_window.ui.label_session_steps.setText(self.current_cavity.current_steps)
 
+    def one_hour_run(self):
+        # TODO implement 1h run button
+        # TODO show live signals window with single cavity tab and populate
+        pass
+
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)
+        # TODO add button to go to EDM screens
         if not self.rf_controls_window:
             return
         ui = self.rf_controls_window.ui
@@ -573,6 +577,7 @@ class GuidedCommissioningScreens(Display):
                 if str(self.current_cavity.number) in cav_data:
                     self.current_cavity.results.__dict__.update(cav_data[str(self.current_cavity.number)])
 
+    # TODO add people handling
     def save_results(self):
         if not self.current_cm:
             return
