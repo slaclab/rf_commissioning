@@ -116,7 +116,7 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.pick_cavity.currentIndexChanged.connect(self.update_selection)
 
-        self.ui.pick_decarad.currentIndexChanged.connect(self.update_selection)
+        self.ui.pick_decarad.currentIndexChanged.connect(self.update_decarad)
 
         self.ui.pick_cm.addItems(CRYOMODULE_OBJECTS.keys())
 
@@ -167,11 +167,10 @@ class GuidedCommissioningScreens(Display):
 
         self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
             self.ui.pick_cm.currentText()]
-        self.update_decarad()
         if self.current_cavity:
             self.current_cavity.steppertuner.step_tot_pv.clear_callbacks()
         self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
-        self.current_cavity.connect_to_decarad()
+
         self.current_cavity.steppertuner.connect_callback()
 
         self.load_results()
@@ -193,6 +192,15 @@ class GuidedCommissioningScreens(Display):
         self.ui.label_decarad_voltage.channel = self.current_cm.decarad.voltageReadbackPVName
         self.ui.button_decarad_on.channel = self.current_cm.decarad.powerControlPVName
         self.ui.button_decarad_off.channel = self.current_cm.decarad.powerControlPVName
+        self.current_cavity.connect_to_decarad()
+
+        if not self.time_plot_updater:
+            return
+        timeplot_update_map = {}
+        if self.live_signals_window:
+            timeplot_update_map = {util.DECARAD_PLOT_KEY: self.current_cm.decarad_PVs}
+
+        self.time_plot_updater.updatePlots(timeplot_update_map)
 
     def update_interlock(self):
         # button_interlockoverview is an PyDMEDMDisplaybutton
@@ -211,7 +219,6 @@ class GuidedCommissioningScreens(Display):
                                    util.CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
                                    util.CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
                                    util.FREQUENCY_PLOT_KEY: self.current_cm.detune_PVs,
-                                   util.DECARAD_PLOT_KEY: self.current_cm.decarad_PVs,
                                    util.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPVs,
                                    util.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs}
         if self.tuner_window:
