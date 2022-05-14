@@ -17,7 +17,7 @@
    <item row="5" column="0" colspan="3">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
-      <string>Straightening the cheeto</string>
+      <string>Phase controls</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="1">
@@ -41,6 +41,23 @@
         </property>
         <property name="channel" stdset="0">
          <string>${sel_phase_offset_PV}</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="PyDMLabel" name="label_forward_pwr">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_17">
+        <property name="text">
+         <string>Forward power:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -567,7 +584,10 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>1) Ramp up to AMAX in SELA</string>
+         <string>1) Ramp up to AMAX in SELA, while minimizing forward power adjusting SEL phase offset</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

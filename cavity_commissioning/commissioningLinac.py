@@ -118,6 +118,7 @@ class CommissioningCavity(Cavity):
         self.hom_ds_PVName = "CTE:CM{cm}:1{cavity}20:DH:TEMP".format(cm=self.cryomodule.name, cavity=self.number)
         self.detune_best_PV: PV = PV(self.pvPrefix + "DFBEST")
         self.detune_rfs_PV: PV = PV(self.pvPrefix + "DF")
+        self.forward_pwr_PVName = self.pvPrefix + "FWD:PWRMEAN"
 
         self.ssa_maxdrive_PV: PV = PV(self.pvPrefix + "SSA:DRV_MAX_REQ")
         self.ssa_reactive_power_fraction_PV: PV = PV(self.pvPrefix + "SSA:REACTIVE")
@@ -334,5 +335,5 @@ class CommissioningStepper(StepperTuner):
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-        cryomoduleClass=CommissioningCryomodule,
-        rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
+    cryomoduleClass=CommissioningCryomodule,
+    rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)

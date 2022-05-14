@@ -341,6 +341,7 @@ class GuidedCommissioningScreens(Display):
 
         ui.spinbox_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PVName
         ui.label_selphaseoffset_rdbk.channel = self.current_cavity.sel_phaseoffset_rdbk_PVName
+        ui.label_forward_pwr.channel = self.current_cavity.forward_pwr_PVName
 
         ui.indicator_phas_high.channel = self.current_cavity.feedback_phase_high_PVName
         ui.indicator_phas_low.channel = self.current_cavity.feedback_phase_low_PVName
@@ -470,7 +471,7 @@ class GuidedCommissioningScreens(Display):
         else:
             self.current_cavity.ssa_maxdrive_PV.put(drivemax)
         try:
-            self.current_cavity.ssa.runCalibration()
+            self.current_cavity.ssa.runCalibfration()
             self.current_cavity.results.ssa_maxdrive = drivemax
             self.current_cavity.results.ssa_characterized = True
         except scLinacUtils.SSACalibrationError:
