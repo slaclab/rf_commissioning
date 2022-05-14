@@ -307,9 +307,11 @@ class GuidedCommissioningScreens(Display):
 
     def des_step_changed(self):
         des_steps = int(self.tuner_window.ui.step_des_line_edit.text())
+        print("Issuing stepper move command")
         self.current_cavity.steppertuner.move(des_steps,
                                               maxSteps=utils.STEPPER_MAX_STEPS,
                                               speed=scLinacUtils.MAX_STEPPER_SPEED)
+        print("stepper done moving")
         self.current_cavity.current_steps += des_steps
         self.tuner_window.ui.label_session_steps.setText(str(self.current_cavity.current_steps))
 
