@@ -14,6 +14,10 @@ class PV(epicsPV):
     def __init__(self, pvname):
         super().__init__(pvname, connection_timeout=0.01)
 
+    def put(self, value, wait=False, timeout=30.0, use_complete=False,
+            callback=None, callback_data=None):
+        super(PV, self).put(value, wait=True)
+
 
 class DecaradHead:
     def __init__(self, number, decarad):
@@ -280,5 +284,5 @@ class CommissioningStepper(StepperTuner):
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-    cryomoduleClass=CommissioningCryomodule,
-    rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
+        cryomoduleClass=CommissioningCryomodule,
+        rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
