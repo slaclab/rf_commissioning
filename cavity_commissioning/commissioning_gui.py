@@ -1,11 +1,13 @@
 import dataclasses
 import json
 import sys
+from functools import partial
 from os import path
 from threading import Lock
 from time import sleep
 from typing import Optional
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMessageBox
 from edmbutton import PyDMEDMDisplayButton
 from epics.ca import CASeverityException
@@ -53,7 +55,7 @@ class GuidedCommissioningScreens(Display):
         self.update_decarad()
 
         self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
-        self.ui.button_cavity_calibration.clicked.connect(self.cavity_calibration_button_pushed)
+        self.ui.button_cavity_calibration.clicked.connect(partial(self.cavity_calibration_button_pushed, 3e7, 5e7))
         self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
         self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
         self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
@@ -70,7 +72,6 @@ class GuidedCommissioningScreens(Display):
         make_info_popup(value)
 
     def check_radiation(self, severity, **kwargs):
-        print('I am alive!!!!!!!!')
         if severity == pyepicsUtils.EPICS_INVALID_VAL or self.current_cavity.cryomodule.decarad.max_avg_dose == 0:
             return
         if utils.RADIATION_LIMIT > self.current_cavity.cryomodule.decarad.max_avg_dose > 0:
@@ -152,6 +153,7 @@ class GuidedCommissioningScreens(Display):
 
     def setup_combo_boxes(self):
         self.ui.testlead.addItems(utils.TESTLEAD_LIST)
+        self.ui.testlead.currentIndexChanged.connect(self.testlead_selected)
 
         self.ui.pick_cavity.currentIndexChanged.connect(self.update_selection)
 
@@ -305,11 +307,6 @@ class GuidedCommissioningScreens(Display):
                                               speed=scLinacUtils.MAX_STEPPER_SPEED)
         self.current_cavity.current_steps += des_steps
         self.tuner_window.ui.label_session_steps.setText(self.current_cavity.current_steps)
-
-    def one_hour_run(self):
-        # TODO implement 1h run button
-        # TODO show live signals window with single cavity tab and populate
-        pass
 
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)
@@ -504,10 +501,10 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.results.piezo_withrf_checked = True
         self.populate_status_labels()
 
-    def cavity_calibration_button_pushed(self):
+    def cavity_calibration_button_pushed(self, loadedQLowerlimit, loadedQUpperlimit):
         try:
             self.rf_controls_window.show()
-            self.current_cavity.runCalibration(loadedQLowerlimit=3e7, loadedQUpperlimit=5e7)
+            self.current_cavity.runCalibration(loadedQLowerlimit, loadedQUpperlimit)
             self.current_cavity.results.fpc_qext = self.current_cavity.measuredQLoadedPV.value
             self.current_cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
             self.current_cavity.results.cavity_calibration_run = True
@@ -560,6 +557,10 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.freq_search_push_PV.put(1)
         self.current_cavity.results.eightpiovernine_frequency_measured = True
 
+    def testlead_selected(self):
+        self.current_cavity.results.test_lead = self.ui.testlead.currentText()
+        self.save_results()
+
     def freq_scan_button_pressed(self):
         try:
             self.measure_8pi9mode()
@@ -589,6 +590,23 @@ class GuidedCommissioningScreens(Display):
         self.tuner_window.ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_landing_frequency))
         self.save_results()
 
+    # TODO show live signals window with single cavity tab and populate
+    def one_hour_button_pressed(self):
+        QTimer.singleShot(3600000, self.end_selap)
+
+    def end_selap(self):
+        try:
+            self.current_cavity.runCalibration(loadedQLowerlimit=scLinacUtils.LOADED_Q_LOWER_LIMIT,
+                                               loadedQUpperlimit=scLinacUtils.LOADED_Q_UPPER_LIMIT)
+            self.current_cavity.selAmplitudeDesPV.put(5)
+            self.current_cavity.turnOff()
+            self.current_cavity.ssa.turnOff()
+            make_info_popup('1h run complete')
+        except scLinacUtils.CavityQLoadedCalibrationError as e:
+            cavity_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl')
+            make_error_popup('Cavity calibration failed', cavity_expert_button, e,
+                             self.cavity_actionbutton_clicked)
+
     def selap_button_pressed(self):
         try:
             if not self.rf_controls_window:
@@ -599,6 +617,7 @@ class GuidedCommissioningScreens(Display):
                          WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
                      utils.CHEETO_PLOT_KEY: WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_cheeto)})
                 self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
+                self.rf_controls_window.ui.button_onehour_run.clicked.connect(self.one_hour_button_pressed)
                 self.update_rf_controls()
 
             self.current_cavity.selap_setup()
@@ -607,6 +626,7 @@ class GuidedCommissioningScreens(Display):
         except (utils.PiezoError, utils.DetuneError, scLinacUtils.SSAPowerError) as e:
             showDisplay(self.rf_controls_window)
 
+    # TODO add people handling
     def load_results(self):
         with open('results/cryomodule_results.json', 'r+') as f:
             data = json.load(f)
@@ -620,7 +640,6 @@ class GuidedCommissioningScreens(Display):
                 if str(self.current_cavity.number) in cav_data:
                     self.current_cavity.results.__dict__.update(cav_data[str(self.current_cavity.number)])
 
-    # TODO add people handling
     def save_results(self):
         if not self.current_cm:
             return

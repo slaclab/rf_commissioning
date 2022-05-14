@@ -5,6 +5,7 @@ from typing import Optional
 from lcls_tools.common.data_analysis.archiver import Archiver
 
 TESTLEAD_LIST = [
+    '',
     'Aderhold, Sebastian',
     'Gonnella, Dan',
     'Maniscalco, James',
@@ -148,6 +149,7 @@ class CommissioningCavityResults:
     final_phase_offset: Optional[float] = None
     onehourrun_complete: bool = False
     max_amplitude: Optional[float] = None
+    test_lead: Optional[str] = None
 
 
 @dataclasses.dataclass
