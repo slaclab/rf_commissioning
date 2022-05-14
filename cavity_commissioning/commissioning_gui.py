@@ -227,7 +227,7 @@ class GuidedCommissioningScreens(Display):
         self.update_interlock()
 
     def update_decarad(self):
-        self.current_cm.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
+        self.current_cavity.cryomodule.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
         self.ui.indicator_decarad.channel = self.current_cm.decarad.powerStatusPVName
         self.ui.label_decarad_onoff.channel = self.current_cm.decarad.powerStatusPVName
         self.ui.label_decarad_voltage.channel = self.current_cm.decarad.voltageReadbackPVName
