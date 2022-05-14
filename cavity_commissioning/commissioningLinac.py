@@ -15,10 +15,6 @@ class PV(epicsPV):
     def __init__(self, pvname):
         super().__init__(pvname, connection_timeout=0.01)
 
-    def put(self, value, wait=False, timeout=30.0, use_complete=False,
-            callback=None, callback_data=None):
-        super(PV, self).put(value, wait=True)
-
 
 class DecaradHead:
     def __init__(self, number, decarad):
@@ -182,7 +178,7 @@ class CommissioningCavity(Cavity):
 
         print("setting piezo bias voltage to 25V")
         self.piezo.bias_voltage_PV.put(25)
-        
+
         print("setting drive level to {lev}".format(lev=scLinacUtils.SAFE_PULSED_DRIVE_LEVEL))
         self.drivelevelPV.put(scLinacUtils.SAFE_PULSED_DRIVE_LEVEL)
 
