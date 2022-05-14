@@ -133,8 +133,9 @@ class CommissioningCavityResults:
     ssa_maxdrive: Optional[float] = None
     ssa_characterized: bool = False
     is_tuned: bool = False
-    cold_landing_frequency: Optional[float] = None
-    steps_to_tuned: Optional[int] = None
+    cold_landing_frequency_2K: Optional[float] = None
+    steps_to_tuned_2K: Optional[int] = None
+    steps_to_tuned_4K: Optional[int] = None
     final_frequency: Optional[float] = None
     eightpiovernine_frequency_measured: bool = False
     cavity_calibration_run: bool = False

@@ -276,7 +276,7 @@ class GuidedCommissioningScreens(Display):
         ui = self.tuner_window.ui
         ui.detune_label.channel = self.current_cavity.detune_best_PV.pvname
         ui.label_cold_steps.channel = self.current_cavity.steppertuner.steps_cold_landing_pv.pvname
-        ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_landing_frequency))
+        ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_landing_frequency_2K))
         ui.label_session_steps.setText(str(self.current_cavity.current_steps))
 
     def replace_button_clicked(self):
@@ -586,8 +586,8 @@ class GuidedCommissioningScreens(Display):
                              exception=e, action_func=self.piezo_withrf_actionbutton_clicked)
 
     def cold_freq_button_pressed(self):
-        self.current_cavity.results.cold_landing_frequency = float(self.tuner_window.ui.label_current_freq.text())
-        self.tuner_window.ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_landing_frequency))
+        self.current_cavity.results.cold_landing_frequency_2K = float(self.tuner_window.ui.label_current_freq.text())
+        self.tuner_window.ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_landing_frequency_2K))
         self.save_results()
 
     # TODO show live signals window with single cavity tab and populate
