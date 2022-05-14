@@ -509,6 +509,8 @@ class GuidedCommissioningScreens(Display):
 
     def cavity_calibration_button_pushed(self, loadedQLowerlimit, loadedQUpperlimit):
         try:
+            if not self.rf_controls_window:
+                self.setup_rf_window()
             self.rf_controls_window.show()
             self.current_cavity.runCalibration(loadedQLowerlimit, loadedQUpperlimit)
             self.current_cavity.results.fpc_qext = self.current_cavity.measuredQLoadedPV.value
@@ -623,16 +625,7 @@ class GuidedCommissioningScreens(Display):
     def selap_button_pressed(self):
         try:
             if not self.rf_controls_window:
-                self.rf_controls_window = Display(ui_filename=self.getPath("gui/rf_controls.ui"))
-
-                self.waveform_plot_updater = WaveformPlotUpdater(
-                        {utils.RFWAVEFORM_PLOT_KEY:
-                             WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
-                         utils.CHEETO_PLOT_KEY    : WaveformPlotParams(
-                                 plot=self.rf_controls_window.ui.waveform_cheeto)})
-                self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
-                self.rf_controls_window.ui.button_onehour_run.clicked.connect(self.one_hour_button_pressed)
-                self.update_rf_controls()
+                self.setup_rf_window()
 
             self.current_cavity.selap_setup()
             make_info_popup('Walk amplitude up to {amax}MV in SELA'.format(amax=self.current_cavity.ades_max_PV.value))
@@ -641,6 +634,17 @@ class GuidedCommissioningScreens(Display):
             showDisplay(self.rf_controls_window)
         self.populate_status_labels()
         self.save_results()
+
+    def setup_rf_window(self):
+        self.rf_controls_window = Display(ui_filename=self.getPath("gui/rf_controls.ui"))
+        self.waveform_plot_updater = WaveformPlotUpdater(
+                {utils.RFWAVEFORM_PLOT_KEY:
+                     WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
+                 utils.CHEETO_PLOT_KEY    : WaveformPlotParams(
+                         plot=self.rf_controls_window.ui.waveform_cheeto)})
+        self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
+        self.rf_controls_window.ui.button_onehour_run.clicked.connect(self.one_hour_button_pressed)
+        self.update_rf_controls()
 
     # TODO add people handling
     def load_results(self):
