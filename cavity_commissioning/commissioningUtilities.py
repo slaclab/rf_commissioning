@@ -149,7 +149,7 @@ class CommissioningCavityResults:
     microphonics_captured: bool = False
     final_phase_offset: Optional[float] = None
     onehourrun_complete: bool = False
-    max_amplitude: Optional[float] = None
+    commissioned_amplitude: Optional[float] = None
     test_lead: Optional[str] = None
 
 
