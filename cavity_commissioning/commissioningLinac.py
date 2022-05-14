@@ -247,6 +247,9 @@ class CommissioningCavity(Cavity):
             print("turning RF on")
             sleep(1)
 
+        print("waiting for detune to catch up")
+        sleep(5)
+
         print("checking detune")
         if (self.detune_best_PV.severity == 3
                 or abs(self.detune_best_PV.value) > 50):
