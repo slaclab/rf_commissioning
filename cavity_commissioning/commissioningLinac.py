@@ -215,17 +215,31 @@ class CommissioningCavity(Cavity):
             raise utils.ProbeQError('Measured probe Q value out of tolerance')
 
     def selap_setup(self):
+        print("turning RF off")
         self.turnOff()
+
+        print("turning SSA on")
         self.ssa.turnOn()
+
+        print("setting amplitude to 5MV")
         self.selAmplitudeDesPV.put(5)
+
+        print("Setting cavity to SEL")
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SEL)
+
+        print("turning cavity on")
         self.turnOn()
+
         if (self.detune_rfs_PV.severity == 3
                 or abs(self.detune_rfs_PV.value) > 50):
             raise utils.DetuneError('Detune is larger than 50Hz')
         if not self.results.piezo_withrf_checked:
             raise utils.PiezoError('Piezo checks have not been completed')
+
+        print("setting piezo to feedback")
         self.piezo.feedback_mode_PV.put(utils.PIEZO_FEEDBACK_VALUE)
+
+        print("setting cavity to SELA")
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SELA)
 
 
