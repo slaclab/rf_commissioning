@@ -222,10 +222,10 @@ class CommissioningCavity(Cavity):
         self.ssa.turnOn()
 
         print("setting amplitude to 5MV")
-        self.selAmplitudeDesPV.put(5)
+        self.selAmplitudeDesPV.put(5, wait=True, timeout=5)
 
         print("Setting cavity to SEL")
-        self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SEL)
+        self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SEL, wait=True, timeout=5)
 
         print("turning cavity on")
         self.turnOn()
@@ -240,10 +240,11 @@ class CommissioningCavity(Cavity):
             raise utils.PiezoError('Piezo checks have not been completed')
 
         print("setting piezo to feedback")
-        self.piezo.feedback_mode_PV.put(utils.PIEZO_FEEDBACK_VALUE)
+        self.piezo.feedback_mode_PV.put(utils.PIEZO_FEEDBACK_VALUE,
+                                        wait=True, timeout=5)
 
         print("setting cavity to SELA")
-        self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SELA)
+        self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SELA, wait=True, timeout=5)
 
 
 class CommissioningRack(Rack):
