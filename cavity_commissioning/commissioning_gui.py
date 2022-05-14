@@ -219,6 +219,8 @@ class GuidedCommissioningScreens(Display):
         self.update_rf_controls()
 
         self.update_plots()
+        self.update_rf_plots()
+        self.update_tuner_plot()
 
         self.update_tuner_window()
 
@@ -247,10 +249,18 @@ class GuidedCommissioningScreens(Display):
         self.ui.indicator_interlock.channel = self.current_cavity.interlock_PV.pvname
         self.ui.label_interlock.channel = self.current_cavity.interlock_PV.pvname
 
+    def update_tuner_plot(self):
+        if self.tuner_window:
+            self.time_plot_updater.updatePlots({utils.DETUNE_PLOT_KEY:
+                                                    self.current_cavity.tuning_pvs})
+
+    def update_rf_plots(self):
+        if self.waveform_plot_updater:
+            waveformplot_update_map = {utils.RFWAVEFORM_PLOT_KEY: self.current_cavity.waveformplot_channelpairs,
+                                       utils.CHEETO_PLOT_KEY    : self.current_cavity.cheetoplot_channelpairs}
+            self.waveform_plot_updater.updatePlots(waveformplot_update_map)
+
     def update_plots(self):
-        if not self.time_plot_updater:
-            return
-        timeplot_update_map = {}
         if self.live_signals_window:
             timeplot_update_map = {utils.STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
                                    utils.HOMDS_PLOT_KEY      : self.current_cm.hom_ds_PVs,
@@ -259,14 +269,8 @@ class GuidedCommissioningScreens(Display):
                                    utils.CPLRBOT_PLOT_KEY    : self.current_cm.coupler_bot_PVs,
                                    utils.CMVACUUM_PLOT_KEY   : self.current_cm.vacuumPVs,
                                    utils.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs}
-        if self.tuner_window:
-            timeplot_update_map[utils.DETUNE_PLOT_KEY] = self.current_cavity.tuning_pvs
 
-        self.time_plot_updater.updatePlots(timeplot_update_map)
-        if self.waveform_plot_updater:
-            waveformplot_update_map = {utils.RFWAVEFORM_PLOT_KEY: self.current_cavity.waveformplot_channelpairs,
-                                       utils.CHEETO_PLOT_KEY    : self.current_cavity.cheetoplot_channelpairs}
-            self.waveform_plot_updater.updatePlots(waveformplot_update_map)
+            self.time_plot_updater.updatePlots(timeplot_update_map)
 
     def update_tuner_window(self):
         if not self.tuner_window:
@@ -278,6 +282,7 @@ class GuidedCommissioningScreens(Display):
         ui.label_cold_steps.channel = self.current_cavity.steppertuner.steps_cold_landing_pv.pvname
         ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_landing_frequency_2K))
         ui.label_session_steps.setText(str(self.current_cavity.current_steps))
+        self.update_tuner_plot()
 
     def replace_button_clicked(self):
         self.current_cavity.steppertuner.steps_cold_landing_pv.put(self.current_cavity.current_steps)
