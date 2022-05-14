@@ -651,6 +651,7 @@ class GuidedCommissioningScreens(Display):
             showDisplay(self.rf_controls_window)
         except (utils.PiezoError, utils.DetuneError, scLinacUtils.SSAPowerError) as e:
             showDisplay(self.rf_controls_window)
+            print(e)
         self.populate_status_labels()
         self.save_results()
 
