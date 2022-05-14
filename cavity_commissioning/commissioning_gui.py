@@ -419,21 +419,34 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.results.piezo_prerf_checked = True
 
     def run_piezo_withrf_check(self):
-        # make sure the RF is off
+        print("turning RF off")
         self.current_cavity.turnOff()
+
+        print("turning SSA on")
         self.current_cavity.ssa.turnOn()
-        # set desired amplitude to 5MV
+
+        print("setting ADES to 5MV")
         self.current_cavity.selAmplitudeDesPV.put(5)
+
+        print("setting cavity to SEL")
         self.current_cavity.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SEL)
+
+        print("turning RF on")
         self.current_cavity.turnOn()
         piezo = self.current_cavity.piezo
+
+        print("enabling piezo")
         piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
+
+        print("setting piezo to manual")
         piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
-        # verify that RFS detune is <100Hz
+
+        print("verifying that RFS detune is <100Hz")
         if (self.current_cavity.detune_rfs_PV.severity == 3
                 or abs(self.current_cavity.detune_rfs_PV.value) > 100):
             raise utils.PiezoError('Detuning is invalid or larger than 100Hz')
-        # run the test script
+
+        print("running piezo test script")
         piezo.withrf_run_check_PV.put(1)
 
         while piezo.withrf_check_status_PV.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
@@ -443,8 +456,11 @@ class GuidedCommissioningScreens(Display):
 
         self.current_cavity.results.piezo_amplifiergain_a = piezo.amplifiergain_a_PV.value
         self.current_cavity.results.piezo_amplifiergain_b = piezo.amplifiergain_b_PV.value
+
+        print("pushing and saving gain")
         piezo.withrf_push_dfgain_PV.put(1)
         piezo.withrf_save_dfgain_PV.put(1)
+        
         self.current_cavity.results.piezo_detune_gain = piezo.detunegain_new_PV.value
         self.current_cavity.results.piezo_withrf_checked = True
 
