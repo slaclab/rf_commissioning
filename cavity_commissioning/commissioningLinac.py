@@ -230,9 +230,12 @@ class CommissioningCavity(Cavity):
         print("turning cavity on")
         self.turnOn()
 
+        print("checking detune")
         if (self.detune_rfs_PV.severity == 3
                 or abs(self.detune_rfs_PV.value) > 50):
             raise utils.DetuneError('Detune is larger than 50Hz')
+
+        print("checking piezo with rf calibration")
         if not self.results.piezo_withrf_checked:
             raise utils.PiezoError('Piezo checks have not been completed')
 
