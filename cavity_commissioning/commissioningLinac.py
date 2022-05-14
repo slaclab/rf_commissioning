@@ -1,3 +1,4 @@
+from asyncio import sleep
 from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -178,6 +179,7 @@ class CommissioningCavity(Cavity):
         self.drivelevelPV.put(scLinacUtils.SAFE_PULSED_DRIVE_LEVEL)
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_CHIRP)
         self.turnOn()
+        sleep(1)
 
         if self.detune_best_PV.severity == pyepicsUtils.EPICS_INVALID_VAL:
             raise utils.DetuneError("Detune PV invalid. Either expand the chirp"

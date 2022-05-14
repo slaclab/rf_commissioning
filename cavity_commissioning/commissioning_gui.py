@@ -311,7 +311,7 @@ class GuidedCommissioningScreens(Display):
                                               maxSteps=utils.STEPPER_MAX_STEPS,
                                               speed=scLinacUtils.MAX_STEPPER_SPEED)
         self.current_cavity.current_steps += des_steps
-        self.tuner_window.ui.label_session_steps.setText(self.current_cavity.current_steps)
+        self.tuner_window.ui.label_session_steps.setText(str(self.current_cavity.current_steps))
 
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)
