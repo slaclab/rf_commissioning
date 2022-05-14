@@ -1,5 +1,5 @@
-from asyncio import sleep
 from datetime import datetime, timedelta
+from time import sleep
 from typing import Callable, Dict, List, Optional, Tuple
 
 from epics import PV as epicsPV
