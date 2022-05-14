@@ -170,14 +170,26 @@ class CommissioningCavity(Cavity):
         self.current_steps = 0
 
     def setup_tuning(self):
-        self.turnOff()
+        # self.turnOff()
+        print("enabling piezo")
         self.piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
+
+        print("setting piezo to manual")
         self.piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
-        # set piezo DC voltage offset to 0V
+
+        print("setting piezo DC voltage offset to 0V")
         self.piezo.dc_setpoint_PV.put(0)
+
+        print("setting piezo bias voltage to 25V")
         self.piezo.bias_voltage_PV.put(25)
+        
+        print("setting drive level to {lev}".format(lev=scLinacUtils.SAFE_PULSED_DRIVE_LEVEL))
         self.drivelevelPV.put(scLinacUtils.SAFE_PULSED_DRIVE_LEVEL)
+
+        print("setting RF to chirp")
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_CHIRP)
+
+        print("turning RF on")
         self.turnOn()
         sleep(1)
 
