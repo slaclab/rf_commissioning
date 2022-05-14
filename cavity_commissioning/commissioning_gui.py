@@ -50,6 +50,7 @@ class GuidedCommissioningScreens(Display):
         self.time_plot_updater = TimePlotUpdater({})
 
         self.update_selection()
+        self.update_decarad()
 
         self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
         self.ui.button_cavity_calibration.clicked.connect(self.cavity_calibration_button_pushed)
@@ -69,6 +70,7 @@ class GuidedCommissioningScreens(Display):
         make_info_popup(value)
 
     def check_radiation(self, severity, **kwargs):
+        print('I am alive!!!!!!!!')
         if severity == pyepicsUtils.EPICS_INVALID_VAL or self.current_cavity.cryomodule.decarad.max_avg_dose == 0:
             return
         if utils.RADIATION_LIMIT > self.current_cavity.cryomodule.decarad.max_avg_dose > 0:

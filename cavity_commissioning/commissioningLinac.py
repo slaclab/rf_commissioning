@@ -184,7 +184,7 @@ class CommissioningCavity(Cavity):
         for decaradhead in self.cryomodule.decarad.heads.values():
             if decaradhead.doseRatePV.severity != pyepicsUtils.EPICS_INVALID_VAL:
                 decaradhead.doseRatePV.clear_callbacks()
-                decaradhead.doseRatePV.add_callback(callbackfunc)
+                decaradhead.doseRatePV.add_callback(callbackfunc, with_ctrlvars=False)
 
     @property
     def interlocks_cleared(self) -> bool:
