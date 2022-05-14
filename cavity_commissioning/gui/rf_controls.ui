@@ -526,41 +526,48 @@
       <string>Workflow</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_6">
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_18">
-        <property name="text">
-         <string>3) Adjust reactive power fraction if necessary</string>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="0">
        <widget class="QLabel" name="label_15">
         <property name="text">
-         <string>2) Switch to SELAP and straighten cheeto</string>
+         <string>2) If ADES&gt;16.6MV, lower to 16.6MV</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label">
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_16">
         <property name="text">
-         <string>1) Ramp up to AMAX in SELA</string>
+         <string>3) Switch to SELAP and straighten cheeto</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="4" column="1">
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>6) Start 1h run</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
        <widget class="PyDMRelatedDisplayButton" name="button_open_microphonics_gui">
         <property name="toolTip">
          <string/>
         </property>
         <property name="text">
-         <string>4) Measure microphonics</string>
+         <string>5) Measure microphonics</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QPushButton" name="button_onehour_run">
+      <item row="2" column="1">
+       <widget class="QLabel" name="label_18">
         <property name="text">
-         <string>5) Start 1h run</string>
+         <string>4) Adjust reactive power fraction if necessary</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>1) Ramp up to AMAX in SELA</string>
         </property>
        </widget>
       </item>
