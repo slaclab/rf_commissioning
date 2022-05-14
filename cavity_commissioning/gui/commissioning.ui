@@ -343,11 +343,11 @@
          <string/>
         </property>
         <property name="text">
-         <string>Open interlock overview</string>
+         <string>Open cavity overview</string>
         </property>
         <property name="filenames" stdset="0">
          <stringlist>
-          <string>$TOOLS/edm/display/llrf/rf_srf_intlk_nocryo_embed.edl</string>
+          <string>$TOOLS/edm/display/llrf/rf_srf_cavity_main.edl</string>
          </stringlist>
         </property>
         <property name="macros" stdset="0">
