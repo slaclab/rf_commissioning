@@ -426,6 +426,9 @@ class GuidedCommissioningScreens(Display):
             print("waiting for piezo tuner test to finish running", datetime.now())
             sleep(1)
 
+        print("waiting 5s for piezo test status to update")
+        sleep(5)
+
         if piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE:
             raise utils.PiezoError('Piezo pre-rf test script was not successful')
 
@@ -485,7 +488,7 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.results.piezo_withrf_checked = True
 
     def run_ssa_calibration(self, drivemax=0.8, attemptnumber=1):
-        if self.current_cavity.results.ssa_maxdrive != 0.8:
+        if self.current_cavity.results.ssa_maxdrive and (self.current_cavity.results.ssa_maxdrive != 0.8):
             self.current_cavity.ssa_maxdrive_PV.put(self.current_cavity.results.ssa_maxdrive)
         else:
             self.current_cavity.ssa_maxdrive_PV.put(drivemax)
