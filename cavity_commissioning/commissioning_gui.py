@@ -26,7 +26,6 @@ from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.superconducting.scLinac import CRYOMODULE_OBJECTS
 
 
-# TODO add sanity sleep to every (yes, every) put
 class GuidedCommissioningScreens(Display):
     rad_error = signal(str)
 
@@ -459,7 +458,7 @@ class GuidedCommissioningScreens(Display):
             raise utils.PiezoError('Detuning is invalid or larger than 100Hz')
 
         print("running piezo test script")
-        piezo.withrf_run_check_PV.put(1)
+        piezo.withrf_run_check_PV.put(1, waitForPut=False)
 
         while piezo.withrf_check_status_PV.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
             sleep(1)
@@ -585,7 +584,7 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.rack.freq_search_modeoverlap_PV.put(utils.FREQ_SEARCH_MODEOVERLAP)
 
         # TODO sanity sleep definitely needed here
-        self.current_cavity.rack.freq_search_start_PV.put(1)
+        self.current_cavity.rack.freq_search_start_PV.put(1, waitForPut=False)
         while self.current_cavity.rack.freq_search_status_PV.value == 3:
             sleep(1)
         if self.current_cavity.rack.freq_search_status_PV.value != 5:
