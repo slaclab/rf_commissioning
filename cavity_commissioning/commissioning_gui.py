@@ -433,7 +433,7 @@ class GuidedCommissioningScreens(Display):
             raise utils.PiezoError('Piezo pre-rf test script was not successful')
 
         if (piezo.prerf_cha_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE
-                and piezo.prerf_chb_status_PV == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE):
+                and piezo.prerf_chb_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE):
             self.current_cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
             self.current_cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
             self.current_cavity.results.piezo_prerf_checked = True
