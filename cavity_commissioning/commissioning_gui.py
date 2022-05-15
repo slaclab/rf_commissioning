@@ -65,6 +65,8 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_selap_rampup.clicked.connect(self.selap_button_pressed)
 
         self.rad_error.connect(self.handle_radiation)
+        self.selap_timer = QTimer()
+        self.selap_timer.timeout.connect(self.show_time)
 
     @staticmethod
     @slot(str)
@@ -76,7 +78,7 @@ class GuidedCommissioningScreens(Display):
             return
         if utils.RADIATION_LIMIT > self.current_cavity.cryomodule.decarad.max_avg_dose > 0:
             threshold = utils.GRADIENT_THRESHOLD_RADLIMIT * self.current_cavity.length
-            self.current_cavity.ades_max_srf_PVName.put(min(threshold, self.current_cavity.ades_max_srf_PVName.value))
+            self.current_cavity.ades_max_srf_PV.put(min(threshold, self.current_cavity.ades_max_srf_PV.value))
 
             if self.current_cavity.selAmplitudeActPV.value <= threshold:
                 self.current_cavity.results.commissioned_amplitude = threshold
@@ -90,7 +92,7 @@ class GuidedCommissioningScreens(Display):
                                     .format(thresh=threshold))
 
         elif self.current_cavity.cryomodule.decarad.max_avg_dose >= utils.RADIATION_LIMIT:
-            self.current_cavity.ades_max_srf_PVName.put(self.current_cavity.selAmplitudeDesPV.value)
+            self.current_cavity.ades_max_srf_PV.put(self.current_cavity.selAmplitudeDesPV.value)
             self.rad_error.emit(
                 'Radiation exceeds {limit}mR/hr. Please stop.'.format(limit=utils.RADIATION_LIMIT))
 
@@ -315,7 +317,6 @@ class GuidedCommissioningScreens(Display):
 
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)
-        # TODO add button to go to EDM screens
         if not self.rf_controls_window:
             return
         ui = self.rf_controls_window.ui
@@ -333,8 +334,8 @@ class GuidedCommissioningScreens(Display):
         ui.spinbox_ades.channel = self.current_cavity.selAmplitudeDesPV.pvname
         ui.label_ades_rdbk.channel = self.current_cavity.selAmplitudeDesPV.pvname
 
-        ui.lineedit_srfmax.channel = self.current_cavity.ades_max_srf_PVName
-        ui.label_srfmax_rdbk.channel = self.current_cavity.ades_max_srf_PVName
+        ui.lineedit_srfmax.channel = self.current_cavity.ades_max_srf_PV
+        ui.label_srfmax_rdbk.channel = self.current_cavity.ades_max_srf_PV
         ui.label_amax_rdbk.channel = self.current_cavity.ades_max_PV.pvname
 
         ui.spinbox_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PVName
@@ -358,6 +359,15 @@ class GuidedCommissioningScreens(Display):
         ui.label_useable_amplitude.channel = self.current_cavity.acceptancetest_useable_amplitude_PVName
         ui.label_fe_onset.channel = self.current_cavity.acceptancetest_fe_onset_PVName
         ui.label_cavity_limitation.channel = self.current_cavity.acceptancetest_cavity_limitation_PVName
+
+        ui.button_onehour_done.clicked.connect(self.onehour_done_button_pressed)
+        ui.button_open_edm_rfcontrols.macros = [self.macro_string]
+
+    def onehour_done_button_pressed(self):
+        self.current_cavity.results.onehourrun_complete = True
+        self.current_cavity.results.commissioned_amplitude = self.current_cavity.ades_max_srf_PV.value
+        self.save_results()
+        self.current_cavity.turnOff()
 
     def update_stepsize(self):
         stepsize = float(self.rf_controls_window.ui.lineedit_ades_stepsize.text())
@@ -514,7 +524,7 @@ class GuidedCommissioningScreens(Display):
                 self.setup_rf_window()
             self.rf_controls_window.show()
             self.current_cavity.runCalibration(loadedQLowerlimit, loadedQUpperlimit)
-            self.current_cavity.results.fpc_qext = self.current_cavity.measuredQLoadedPV.value
+            self.current_cavity.results.fpc_qext_cold = self.current_cavity.measuredQLoadedPV.value
             self.current_cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
             self.current_cavity.results.cavity_calibration_run = True
         except (
@@ -538,7 +548,7 @@ class GuidedCommissioningScreens(Display):
         clickedbutton = qmessagebox.clickedButton()
         if qmessagebox.buttonRole(clickedbutton) == QMessageBox.AcceptRole:
             self.current_cavity.results.cavity_calibration_run = True
-            self.current_cavity.results.fpc_qext = self.current_cavity.measuredQLoadedPV.value
+            self.current_cavity.results.fpc_qext_cold = self.current_cavity.measuredQLoadedPV.value
             self.current_cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
         self.populate_status_labels()
 
@@ -606,15 +616,12 @@ class GuidedCommissioningScreens(Display):
         self.populate_status_labels()
         self.save_results()
 
-    # TODO show live signals window with single cavity tab and populate
-    def one_hour_button_pressed(self):
-        QTimer.singleShot(3600000, self.end_selap)
-
     def end_selap(self):
         try:
+            self.current_cavity.selAmplitudeDesPV.put(5)
+            self.current_cavity.turnOff()
             self.current_cavity.runCalibration(loadedQLowerlimit=scLinacUtils.LOADED_Q_LOWER_LIMIT,
                                                loadedQUpperlimit=scLinacUtils.LOADED_Q_UPPER_LIMIT)
-            self.current_cavity.selAmplitudeDesPV.put(5)
             self.current_cavity.turnOff()
             self.current_cavity.ssa.turnOff()
             make_info_popup('1h run complete')
@@ -644,8 +651,19 @@ class GuidedCommissioningScreens(Display):
              utils.CHEETO_PLOT_KEY: WaveformPlotParams(
                  plot=self.rf_controls_window.ui.waveform_cheeto)})
         self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
-        self.rf_controls_window.ui.button_onehour_run.clicked.connect(self.one_hour_button_pressed)
+        self.rf_controls_window.ui.button_start_timer.clicked.connect(partial(self.selap_timer.start, 3600000))
+        self.rf_controls_window.ui.button_reset_timer.clicked.connect(self.restart_timer)
+        self.rf_controls_window.ui.button_stop_timer.clicked.connect(self.selap_timer.stop)
         self.update_rf_controls()
+
+    def show_time(self):
+        self.rf_controls_window.ui.label_timer.setText(self.selap_timer.remainingTime)
+        if self.selap_timer.remainingTime() == 0:
+            self.end_selap()
+
+    def restart_timer(self):
+        self.selap_timer.stop()
+        self.selap_timer.start(3600000)
 
     # TODO add people handling
     def load_results(self):

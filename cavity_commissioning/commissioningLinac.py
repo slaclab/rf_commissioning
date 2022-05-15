@@ -159,7 +159,7 @@ class CommissioningCavity(Cavity):
         self.freq_search_8pi9_PV: PV = PV(self.pvPrefix + "FSCAN:8PI9MODE")
         self.freq_search_push_PV: PV = PV(self.pvPrefix + "FSCAN:PUSH_8PI9.PROC")
 
-        self.ades_max_srf_PVName = self.pvPrefix + "ADES_MAX_SRF"
+        self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
         self.ades_max_PV: PV = PV(self.pvPrefix + "ADES_MAX")
         self.tuning_pvs: List[str] = [self.detune_best_PV.pvname,
                                       self.stepper_temp_PV.pvname]

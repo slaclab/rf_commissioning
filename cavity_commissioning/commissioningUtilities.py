@@ -139,7 +139,8 @@ class CommissioningCavityResults:
     final_frequency: Optional[float] = None
     eightpiovernine_frequency_measured: bool = False
     cavity_calibration_run: bool = False
-    fpc_qext: Optional[float] = None
+    fpc_qext_cold: Optional[float] = None
+    fpc_qext_warm: Optional[float] = None
     probe_qext_measured: bool = False
     probe_qext_value: Optional[float] = None
     piezo_withrf_checked: bool = False
