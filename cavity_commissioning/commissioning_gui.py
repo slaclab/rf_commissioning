@@ -458,6 +458,9 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.turnOn()
         piezo = self.current_cavity.piezo
 
+        print("waiting 5s for the detune to catch up")
+        sleep(5)
+
         print("enabling piezo")
         piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
 
@@ -472,7 +475,11 @@ class GuidedCommissioningScreens(Display):
         print("running piezo test script")
         piezo.withrf_run_check_PV.put(1, waitForPut=False)
 
+        sleep("waiting 5s for piezo test script to run")
+        sleep(5)
+
         while piezo.withrf_check_status_PV.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
+            print("waiting for piezo test script to finish running", datetime.now())
             sleep(1)
         if piezo.withrf_check_status_PV.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE:
             raise utils.PiezoError('Piezo with-rf test script has exited with status \'crash\' ')
@@ -481,8 +488,8 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.results.piezo_amplifiergain_b = piezo.amplifiergain_b_PV.value
 
         print("pushing and saving gain")
-        piezo.withrf_push_dfgain_PV.put(1)
-        piezo.withrf_save_dfgain_PV.put(1)
+        piezo.withrf_push_dfgain_PV.put(1, waitForPut=False)
+        piezo.withrf_save_dfgain_PV.put(1, waitForPut=False)
 
         self.current_cavity.results.piezo_detune_gain = piezo.detunegain_new_PV.value
         self.current_cavity.results.piezo_withrf_checked = True
@@ -672,8 +679,8 @@ class GuidedCommissioningScreens(Display):
                 self.update_rf_plots()
 
             self.current_cavity.selap_setup()
-            make_info_popup('Walk amplitude up to {amax}MV in SELA'.format(amax=self.current_cavity.ades_max_PV.value))
             showDisplay(self.rf_controls_window)
+            make_info_popup('Walk amplitude up to {amax}MV in SELA'.format(amax=self.current_cavity.ades_max_PV.value))
         except (utils.PiezoError, utils.DetuneError, scLinacUtils.SSAPowerError) as e:
             showDisplay(self.rf_controls_window)
             print(e)
