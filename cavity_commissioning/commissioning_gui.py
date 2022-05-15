@@ -488,15 +488,15 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.results.piezo_withrf_checked = True
 
     def run_ssa_calibration(self, drivemax=0.8, attemptnumber=1):
-        if self.current_cavity.results.ssa_maxdrive and (self.current_cavity.results.ssa_maxdrive != 0.8):
-            self.current_cavity.ssa_maxdrive_PV.put(self.current_cavity.results.ssa_maxdrive)
-        else:
-            self.current_cavity.ssa_maxdrive_PV.put(drivemax)
+        print("trying calibration at {drive}; attempt #{attempt}".format(drive=drivemax,
+                                                                         attempt=attemptnumber))
+        self.current_cavity.ssa_maxdrive_PV.put(drivemax)
         try:
             self.current_cavity.ssa.runCalibration()
             self.current_cavity.results.ssa_maxdrive = drivemax
             self.current_cavity.results.ssa_characterized = True
         except scLinacUtils.SSACalibrationError:
+            print("calibration failed, lowering drive")
             if attemptnumber <= 3:
                 self.run_ssa_calibration(drivemax - 0.05, attemptnumber + 1)
             else:
