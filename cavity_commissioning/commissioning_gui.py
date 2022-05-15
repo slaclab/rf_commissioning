@@ -597,6 +597,9 @@ class GuidedCommissioningScreens(Display):
 
         # TODO sanity sleep definitely needed here
         self.current_cavity.rack.freq_search_start_PV.put(1, waitForPut=False)
+        print("Waiting 5s for the rack frequency scan to start")
+        sleep(5)
+
         while self.current_cavity.rack.freq_search_status_PV.value == 3:
             sleep(1)
         if self.current_cavity.rack.freq_search_status_PV.value != 5:
@@ -604,7 +607,7 @@ class GuidedCommissioningScreens(Display):
         if (self.current_cavity.freq_search_8pi9_PV.value > -750000
                 or self.current_cavity.freq_search_8pi9_PV.value < -850000):
             raise utils.FreqSearchError('8pi/9 frequency outside tolerance')
-        self.current_cavity.freq_search_push_PV.put(1)
+        self.current_cavity.freq_search_push_PV.put(1, waitForPut=False)
         self.current_cavity.results.eightpiovernine_frequency_measured = True
 
     def testlead_selected(self):
