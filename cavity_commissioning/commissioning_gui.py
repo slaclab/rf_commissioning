@@ -482,7 +482,7 @@ class GuidedCommissioningScreens(Display):
         else:
             self.current_cavity.ssa_maxdrive_PV.put(drivemax)
         try:
-            self.current_cavity.ssa.runCalibfration()
+            self.current_cavity.ssa.runCalibration()
             self.current_cavity.results.ssa_maxdrive = drivemax
             self.current_cavity.results.ssa_characterized = True
         except scLinacUtils.SSACalibrationError:
