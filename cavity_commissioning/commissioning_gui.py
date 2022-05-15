@@ -486,7 +486,7 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.results.piezo_withrf_checked = True
 
     def run_ssa_calibration(self, drivemax=0.8, attemptnumber=1):
-        if self.current_cavity.results.ssa_maxdrive != 0.8:
+        if self.current_cavity.results.ssa_maxdrive and (self.current_cavity.results.ssa_maxdrive != 0.8):
             self.current_cavity.ssa_maxdrive_PV.put(self.current_cavity.results.ssa_maxdrive)
         else:
             self.current_cavity.ssa_maxdrive_PV.put(drivemax)
