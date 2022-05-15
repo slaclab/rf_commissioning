@@ -2,18 +2,13 @@ from datetime import datetime, timedelta
 from time import sleep
 from typing import Callable, Dict, List, Optional, Tuple
 
-from epics import PV as epicsPV
 from numpy import nanmean
 
 import commissioningUtilities as utils
 from lcls_tools.common.pyepics_tools import pyepicsUtils
+from lcls_tools.common.pyepics_tools.pyepicsUtils import PV
 from lcls_tools.superconducting import scLinacUtils
 from lcls_tools.superconducting.scLinac import Cavity, Cryomodule, Rack, SSA, StepperTuner, make_lcls_cryomodules
-
-
-class PV(epicsPV):
-    def __init__(self, pvname):
-        super().__init__(pvname, connection_timeout=0.01)
 
 
 class DecaradHead:
@@ -186,9 +181,9 @@ class CommissioningCavity(Cavity):
         print("setting RF to chirp")
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_CHIRP)
 
-        print("turning RF on")
+        print("turning RF on and waiting 5s for detune to catch up")
         self.turnOn()
-        sleep(1)
+        sleep(5)
 
         if self.detune_best_PV.severity == pyepicsUtils.EPICS_INVALID_VAL:
             raise utils.DetuneError("Detune PV invalid. Either expand the chirp"
@@ -206,10 +201,11 @@ class CommissioningCavity(Cavity):
         return self.interlock_PV.value == 1
 
     def calculate_probe_q(self):
-        # TODO check if '1' is actually the right thing to put
-        self.calculate_probe_qext_PV.put(1)
+        self.calculate_probe_qext_PV.put(1, waitForPut=False)
+        print("waiting 5s for probe q process to run")
+        sleep(5)
         if utils.PROBE_QEXT_LOWER_LIMIT <= self.measured_probe_qext_PV.value <= utils.PROBE_QEXT_UPPER_LIMIT:
-            self.push_probe_qext_PV.put(1)
+            self.push_probe_qext_PV.put(1, waitForPut=False)
             self.results.probe_qext_value = self.measured_probe_qext_PV.value
             self.results.probe_qext_measured = True
         else:
@@ -219,36 +215,15 @@ class CommissioningCavity(Cavity):
 
         self.turnOff()
 
-        while self.rfStatePV.value != 0:
-            print("turning RF off")
-            sleep(1)
-
         self.ssa.turnOn()
-
-        while self.ssa.statusPV.value != 3:
-            print("turning SSA on")
-            sleep(1)
 
         self.selAmplitudeDesPV.put(5)
 
-        while self.selAmplitudeDesPV.value != 5:
-            print("setting amplitude to 5MV")
-            sleep(1)
-
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SEL)
 
-        while self.rfModePV.value != scLinacUtils.RF_MODE_SEL:
-            print("Setting cavity to SEL")
-            sleep(1)
-
-        print("turning cavity on")
         self.turnOn()
 
-        while self.rfStatePV.value != 1:
-            print("turning RF on")
-            sleep(1)
-
-        print("waiting for detune to catch up")
+        print("waiting 5s for detune to catch up")
         sleep(5)
 
         print("checking detune")
@@ -264,10 +239,6 @@ class CommissioningCavity(Cavity):
         self.piezo.feedback_mode_PV.put(utils.PIEZO_FEEDBACK_VALUE)
 
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SELA)
-
-        while self.rfModePV.value != scLinacUtils.RF_MODE_SELA:
-            print("Setting cavity to SELA")
-            sleep(1)
 
 
 class CommissioningRack(Rack):
@@ -328,12 +299,12 @@ class CommissioningStepper(StepperTuner):
 
     def checkTemp(self, **kwargs):
         if self.cavity.stepper_temp_PV.value >= scLinacUtils.STEPPER_TEMP_LIMIT:
-            self.abort_pv.put(1)
+            self.abort_pv.put(1, waitForPut=False)
 
     def connect_callback(self):
         self.step_tot_pv.add_callback(self.checkTemp)
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-    cryomoduleClass=CommissioningCryomodule,
-    rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
+        cryomoduleClass=CommissioningCryomodule,
+        rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
