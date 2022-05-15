@@ -427,6 +427,9 @@ class GuidedCommissioningScreens(Display):
             print("waiting for piezo tuner test to finish running", datetime.now())
             sleep(1)
 
+        print("waiting 5s for piezo test status to update")
+        sleep(5)
+
         if piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE:
             raise utils.PiezoError('Piezo pre-rf test script was not successful')
 
