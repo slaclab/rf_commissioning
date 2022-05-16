@@ -161,8 +161,7 @@ class CommissioningCavity(Cavity):
 
         self.current_steps = 0
 
-        # TODO set the chirp parameters to default before starting
-
+    # TODO set the chirp parameters to default before starting
     def setup_tuning(self):
         # self.turnOff()
         print("enabling piezo")
@@ -308,5 +307,5 @@ class CommissioningStepper(StepperTuner):
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-    cryomoduleClass=CommissioningCryomodule,
-    rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
+        cryomoduleClass=CommissioningCryomodule,
+        rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
