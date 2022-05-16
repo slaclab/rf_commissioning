@@ -1,9 +1,11 @@
 import dataclasses
+import fcntl
 from typing import Optional
 
 from lcls_tools.common.data_analysis.archiver import Archiver
 
 TESTLEAD_LIST = [
+    '',
     'Aderhold, Sebastian',
     'Gonnella, Dan',
     'Maniscalco, James',
@@ -11,9 +13,6 @@ TESTLEAD_LIST = [
     'Porter, Ryan',
     'Zacarias, Lisa',
 ]
-
-# TODO convert to IDES of 20A
-NOMINAL_BDES = 8.5
 
 RADIATION_LIMIT = 50
 GRADIENT_THRESHOLD_RADLIMIT = 16
@@ -29,16 +28,55 @@ DECARAD_OFF_VALUE = 1
 PIEZO_ENABLE_VALUE = 1
 PIEZO_DISABLE_VALUE = 0
 PIEZO_MANUAL_VALUE = 0
+PIEZO_FEEDBACK_VALUE = 1
 PIEZO_SCRIPT_RUNNING_VALUE = 2
 PIEZO_SCRIPT_COMPLETE_VALUE = 1
-PIEZO_PRERF_CHECKOUT_STATUS_VALUE = 1
+PIEZO_PRERF_CHECKOUT_PASS_VALUE = 0
 
 ARCHIVER = Archiver("lcls")
+
+FREQ_SEARCH_MODEOVERLAP = 1000
+FREQ_SEARCH_RMS_THRESH = 10
+FREQ_SEARCH_HIGH = 50000
+FREQ_SEARCH_LOW = -900000
+
+STEPPERTEMP_PLOT_KEY = 'steppertemp'
+CMVACUUM_PLOT_KEY = 'cmvacuum'
+CRYOSIGNALS_PLOT_KEY = 'cryosignals'
+MAGNET_PLOT_KEY = 'magnet'
+HOMUS_PLOT_KEY = 'homus'
+HOMDS_PLOT_KEY = 'homds'
+CPLRTOP_PLOT_KEY = 'cplrtop'
+CPLRBOT_PLOT_KEY = 'cplrbot'
+SINGLE_CAVITY_PLOT_KEY = 'singlecavity'
+FREQUENCY_PLOT_KEY = 'frequency'
+RFWAVEFORM_PLOT_KEY = 'rfwaveform'
+DECARAD_PLOT_KEY = 'decarad'
+DETUNE_PLOT_KEY = "detune"
+CHEETO_PLOT_KEY = 'cheeto'
+
+STEPPER_MAX_STEPS = 5000000
+
+MICROSTEPS_PER_STEP = 256
+
+# These are very rough values obtained empirically
+ESTIMATED_STEPS_PER_HZ = MICROSTEPS_PER_STEP / 1.4
+ESTIMATED_STEPS_PER_HZ_HL = MICROSTEPS_PER_STEP / 18.3
 
 
 class ProbeQError(Exception):
     """
     Exception thrown during cavity probe Q calculation
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+class DetuneError(Exception):
+    """
+    Exception thrown during cavity tuning
     """
 
     def __init__(self, message):
@@ -56,9 +94,19 @@ class FreqSearchError(Exception):
         super().__init__(self.message)
 
 
-class RadError(Exception):
+class RadOnsetError(Exception):
     """
-    Exception thrown during SELAP ramp up
+    Exception thrown when radiation above background is detected
+    """
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+class RadLimitError(Exception):
+    """
+    Exception thrown when radiation exceeds limit
     """
 
     def __init__(self, message):
@@ -76,6 +124,7 @@ class PiezoError(Exception):
         super().__init__(self.message)
 
 
+# TODO add handling of multiple GUI instances
 @dataclasses.dataclass
 class CommissioningCavityResults:
     piezo_prerf_checked: bool = False
@@ -84,11 +133,14 @@ class CommissioningCavityResults:
     ssa_maxdrive: Optional[float] = None
     ssa_characterized: bool = False
     is_tuned: bool = False
-    cold_landing_frequency: Optional[float] = None
-    steps_to_tuned: Optional[int] = None
+    cold_landing_frequency_2K: Optional[float] = None
+    steps_to_tuned_2K: Optional[int] = None
+    steps_to_tuned_4K: Optional[int] = None
+    final_frequency: Optional[float] = None
     eightpiovernine_frequency_measured: bool = False
     cavity_calibration_run: bool = False
-    fpc_qext: Optional[float] = None
+    fpc_qext_cold: Optional[float] = None
+    fpc_qext_warm: Optional[float] = None
     probe_qext_measured: bool = False
     probe_qext_value: Optional[float] = None
     piezo_withrf_checked: bool = False
@@ -98,10 +150,24 @@ class CommissioningCavityResults:
     microphonics_captured: bool = False
     final_phase_offset: Optional[float] = None
     onehourrun_complete: bool = False
-    max_amplitude: Optional[float] = None
+    commissioned_amplitude: Optional[float] = None
+    test_lead: Optional[str] = None
 
 
 @dataclasses.dataclass
 class CommissioningCryomoduleResults:
     magnet_checked: bool = False
     unit_test_complete: bool = False
+
+
+# got this from stackoverflow: https://stackoverflow.com/questions/4843359/python-lock-a-file
+def acquireLock():
+    ''' acquire exclusive lock file access '''
+    locked_file_descriptor = open('lockfile.LOCK', 'w+')
+    fcntl.lockf(locked_file_descriptor, fcntl.LOCK_EX)
+    return locked_file_descriptor
+
+
+def releaseLock(locked_file_descriptor):
+    ''' release exclusive lock file access '''
+    locked_file_descriptor.close()
