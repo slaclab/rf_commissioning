@@ -161,6 +161,7 @@ class CommissioningCavity(Cavity):
 
         self.current_steps = 0
 
+    # TODO set the chirp parameters to default before starting
     def setup_tuning(self):
         # self.turnOff()
         print("enabling piezo")
