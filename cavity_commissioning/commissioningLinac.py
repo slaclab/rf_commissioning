@@ -198,6 +198,7 @@ class CommissioningCavity(Cavity):
                                     " range or use the rack large frequency scan"
                                     " to find the detune.")
 
+    # TODO add callback to decarad on status to remove/add dose rate callbacks and (dis)able buttons
     def connect_to_decarad(self, callbackfunc: Callable):
         for decaradhead in self.cryomodule.decarad.heads.values():
             if decaradhead.doseRatePV.severity != pyepicsUtils.EPICS_INVALID_VAL:
