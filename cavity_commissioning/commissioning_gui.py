@@ -437,6 +437,7 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
             self.current_cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
             self.current_cavity.results.piezo_prerf_checked = True
+            print("Piezo pre-rf check complete and successful")
 
         else:
             raise utils.PiezoError("Piezo test unsuccessful")
@@ -602,12 +603,12 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.rack.freq_search_rms_thresh_PV.put(utils.FREQ_SEARCH_RMS_THRESH)
         self.current_cavity.rack.freq_search_modeoverlap_PV.put(utils.FREQ_SEARCH_MODEOVERLAP)
 
-        # TODO sanity sleep definitely needed here
         self.current_cavity.rack.freq_search_start_PV.put(1, waitForPut=False)
         print("Waiting 5s for the rack frequency scan to start")
         sleep(5)
 
         while self.current_cavity.rack.freq_search_status_PV.value == 3:
+            print("waiting for scan to finish running")
             sleep(1)
         if self.current_cavity.rack.freq_search_status_PV.value != 5:
             raise utils.FreqSearchError('Frequency search did not exit successfully')
@@ -616,6 +617,7 @@ class GuidedCommissioningScreens(Display):
             raise utils.FreqSearchError('8pi/9 frequency outside tolerance')
         self.current_cavity.freq_search_push_PV.put(1, waitForPut=False)
         self.current_cavity.results.eightpiovernine_frequency_measured = True
+        print("8pi/9 scan completed successfully")
 
     def testlead_selected(self):
         self.current_cavity.results.test_lead = self.ui.testlead.currentText()

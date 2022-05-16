@@ -30,10 +30,9 @@ class DecaradHead:
     def avgDose(self) -> float:
         # try to do averaging of the last 60 points to account for signal noise
         try:
-            archiverData = utils.ARCHIVER.getDataWithTimeInterval(pvList=[self.doseRatePV.pvname],
-                                                                  startTime=(datetime.now() - timedelta(minutes=1)),
-                                                                  endTime=datetime.now(),
-                                                                  timeDelta=timedelta(seconds=1))
+            archiverData = utils.ARCHIVER.getValuesOverTimeRange(pvList=[self.doseRatePV.pvname],
+                                                                 startTime=(datetime.now() - timedelta(minutes=1)),
+                                                                 endTime=datetime.now())
 
             averageDose = nanmean(archiverData.values[self.doseRatePV.pvname])
 
@@ -41,7 +40,11 @@ class DecaradHead:
 
         # return the most recent value if we can't average for whatever reason
         except AttributeError:
-            return self.doseRatePV.value
+            return self.normalized_dose
+
+    @property
+    def normalized_dose(self) -> float:
+        return max(self.doseRatePV.value - utils.DECARAD_BACKGROUND_READING, 0)
 
 
 class Decarad:
@@ -61,6 +64,10 @@ class Decarad:
     @property
     def max_avg_dose(self):
         return max([head.avgDose for head in self.heads.values()])
+
+    @property
+    def max_dose(self):
+        return max([head.doseRatePV.value for head in self.heads.values()])
 
 
 class Piezo:
@@ -191,6 +198,7 @@ class CommissioningCavity(Cavity):
                                     " range or use the rack large frequency scan"
                                     " to find the detune.")
 
+    # TODO add callback to decarad on status to remove/add dose rate callbacks and (dis)able buttons
     def connect_to_decarad(self, callbackfunc: Callable):
         for decaradhead in self.cryomodule.decarad.heads.values():
             if decaradhead.doseRatePV.severity != pyepicsUtils.EPICS_INVALID_VAL:
