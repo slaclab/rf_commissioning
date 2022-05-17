@@ -175,6 +175,8 @@ class CommissioningCavity(Cavity):
                                     self.coupler_bot_PVName, self.hom_ds_PVName,
                                     self.hom_us_PVName, self.vessel_top_PVName,
                                     self.vessel_bot_PVName]
+        self.non_zero_rad_flagged = False
+        self.rad_exceeded_flagged = False
 
     # TODO set the chirp parameters to default before starting
     def setup_tuning(self):

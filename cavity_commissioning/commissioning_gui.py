@@ -30,7 +30,8 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 class GuidedCommissioningScreens(Display):
-    rad_error = signal(str)
+    non_zero_rad_signal = signal(str)
+    rad_exceeded_signal = signal(str)
     success_signal = signal(str)
 
     def __init__(self, parent=None, args=None):
@@ -68,22 +69,25 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.button_selap_rampup.clicked.connect(self.selap_button_pressed)
 
-        self.rad_error.connect(self.handle_radiation)
+        self.non_zero_rad_signal.connect(self.handle_non_zero_rad)
         self.success_signal.connect(self.handle_success)
 
         self.selap_timer = QTimer()
         self.selap_timer.timeout.connect(self.end_selap)
 
-        self.rad_detected_popup: Optional[QMessageBox] = None
         self.success_popup: Optional[QMessageBox] = None
 
     @slot(str)
-    def handle_radiation(self, message):
-        if not self.rad_detected_popup:
-            self.rad_detected_popup = make_info_popup(message)
-        else:
-            self.rad_detected_popup.setText(message)
-            self.rad_detected_popup.show()
+    def handle_non_zero_rad(self, message):
+        if not self.current_cavity.non_zero_rad_flagged:
+            make_info_popup(message)
+            self.current_cavity.non_zero_rad_flagged = True
+
+    @slot(str)
+    def handle_rad_exceeded(self, message):
+        if not self.current_cavity.rad_exceeded_flagged:
+            make_info_popup(message)
+            self.current_cavity.rad_exceeded_flagged = True
 
     @slot(str)
     def handle_success(self, message):
@@ -108,24 +112,24 @@ class GuidedCommissioningScreens(Display):
 
             if self.current_cavity.selAmplitudeActPV.value <= threshold:
                 self.current_cavity.results.commissioned_amplitude = threshold
-                self.rad_error.emit('Field emission detected. Proceed with'
-                                    ' caution without exceeding {thresh} MV.'
-                                    .format(thresh=threshold))
+                self.non_zero_rad_signal.emit('Field emission detected. Proceed with'
+                                              ' caution without exceeding {thresh} MV.'
+                                              .format(thresh=threshold))
 
             else:
                 self.current_cavity.results.commissioned_amplitude = self.current_cavity.selAmplitudeDesPV.value
-                self.rad_error.emit('Field emission detected above {thresh} MV.'
-                                    ' Please stop.'.format(thresh=threshold))
+                self.non_zero_rad_signal.emit('Field emission detected above {thresh} MV.'
+                                              ' Please stop.'.format(thresh=threshold))
 
         elif (self.current_cm.decarad.max_avg_dose
               >= utils.RADIATION_LIMIT):
             self.current_cavity.ades_max_srf_PV.put(self.current_cavity.selAmplitudeDesPV.value)
-            self.rad_error.emit('Radiation exceeds {limit}mR/hr. Please stop.'
-                                .format(limit=utils.RADIATION_LIMIT))
+            self.rad_exceeded_signal.emit('Radiation exceeds {limit}mR/hr. Please stop.'
+                                          .format(limit=utils.RADIATION_LIMIT))
 
         else:
-            self.rad_error.emit('Negative radiation values detected. Verify that'
-                                ' the decarads are reading correctly')
+            self.rad_exceeded_signal.emit('Negative radiation values detected. Verify that'
+                                          ' the decarads are reading correctly')
 
     def connect_tuner_window(self):
         self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
