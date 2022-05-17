@@ -84,6 +84,8 @@ class GuidedCommissioningScreens(Display):
 
         self.success_popup: Optional[QMessageBox] = None
 
+        self.ui.piezo_prerf_abort_button.clicked.connect(self.abort_piezo_pre_rf)
+
     @slot(str)
     def handle_non_zero_rad(self, message):
         if not self.current_cavity.non_zero_rad_flagged:
@@ -529,8 +531,17 @@ class GuidedCommissioningScreens(Display):
     def run_piezo_prerf_check(self):
         self.current_cavity.turnOff()
         self.current_cavity.piezo.enable_PV.add_callback(self.trigger_manual)
-        self.ui.status_label.setText("enabling piezo")
+        self.ui.status_label.setText("enabling piezo and triggering callback chain")
         self.current_cavity.piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
+
+    @slot()
+    def abort_piezo_pre_rf(self):
+        self.ui.status_label.setText("Clearing piezo callback chain")
+        piezo = self.current_cavity.piezo
+        piezo.enable_PV.clear_callbacks()
+        piezo.feedback_mode_PV.clear_callbacks()
+        piezo.dc_setpoint_PV.clear_callbacks()
+        piezo.prerf_test_status_pv.clear_callbacks()
 
     def run_piezo_prerf_check1(self):
         self.current_cavity.turnOff()
@@ -597,7 +608,7 @@ class GuidedCommissioningScreens(Display):
             raise utils.PiezoError('Detuning is invalid or larger than 100Hz')
 
         self.ui.status_label.setText("running piezo test script")
-        piezo.withrf_run_check_PV.put(1, waitForPut=False)
+        piezo.withrf_run_check_PV.put(1)
 
         self.ui.status_label.setText("waiting 5s for piezo test script to run")
         sleep(5)
@@ -612,8 +623,8 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.results.piezo_amplifiergain_b = piezo.amplifiergain_b_PV.value
 
         self.ui.status_label.setText("pushing and saving gain")
-        piezo.withrf_push_dfgain_PV.put(1, waitForPut=False)
-        piezo.withrf_save_dfgain_PV.put(1, waitForPut=False)
+        piezo.withrf_push_dfgain_PV.put(1)
+        piezo.withrf_save_dfgain_PV.put(1)
 
         self.current_cavity.results.piezo_detune_gain = piezo.detunegain_new_PV.value
         self.current_cavity.results.piezo_withrf_checked = True
@@ -732,7 +743,7 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.rack.freq_search_rms_thresh_PV.put(utils.FREQ_SEARCH_RMS_THRESH)
         self.current_cavity.rack.freq_search_modeoverlap_PV.put(utils.FREQ_SEARCH_MODEOVERLAP)
 
-        self.current_cavity.rack.freq_search_start_PV.put(1, waitForPut=False)
+        self.current_cavity.rack.freq_search_start_PV.put(1)
         self.ui.status_label.setText("Waiting 5s for the rack frequency scan to start")
         sleep(5)
 
@@ -744,7 +755,7 @@ class GuidedCommissioningScreens(Display):
         if (self.current_cavity.freq_search_8pi9_PV.value > -750000
                 or self.current_cavity.freq_search_8pi9_PV.value < -850000):
             raise utils.FreqSearchError('8pi/9 frequency outside tolerance')
-        self.current_cavity.freq_search_push_PV.put(1, waitForPut=False)
+        self.current_cavity.freq_search_push_PV.put(1)
         self.current_cavity.results.eight_pi_nine_freq_measured = True
 
         self.success_signal.emit("8pi/9 scan successful")
