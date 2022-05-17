@@ -36,7 +36,10 @@
           <bool>true</bool>
          </property>
          <property name="yAxes">
-          <stringlist/>
+          <stringlist>
+           <string>{&quot;name&quot;: &quot;!96&quot;, &quot;orientation&quot;: &quot;left&quot;, &quot;label&quot;: null, &quot;minRange&quot;: -1.0, &quot;maxRange&quot;: 1.0, &quot;autoRange&quot;: true}</string>
+           <string>{&quot;name&quot;: &quot;x96&quot;, &quot;orientation&quot;: &quot;right&quot;, &quot;label&quot;: null, &quot;minRange&quot;: -1.0, &quot;maxRange&quot;: 1.0, &quot;autoRange&quot;: true}</string>
+          </stringlist>
          </property>
          <property name="title" stdset="0">
           <string>Vacuum signals</string>
@@ -249,6 +252,9 @@
          <property name="showYGrid">
           <bool>true</bool>
          </property>
+         <property name="yAxes">
+          <stringlist/>
+         </property>
          <property name="title" stdset="0">
           <string>Decarad</string>
          </property>
@@ -258,6 +264,9 @@
          <property name="maxRedrawRate" stdset="0">
           <number>1</number>
          </property>
+         <property name="curves">
+          <stringlist/>
+         </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
@@ -265,7 +274,7 @@
           <double>300.000000000000000</double>
          </property>
          <property name="autoRangeY">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="maxYRange">
           <double>75.000000000000000</double>
@@ -283,7 +292,7 @@
             <x>0</x>
             <y>0</y>
             <width>803</width>
-            <height>117</height>
+            <height>184</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
@@ -435,7 +444,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>72</width>
+            <width>298</width>
             <height>575</height>
            </rect>
           </property>

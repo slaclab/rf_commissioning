@@ -167,17 +167,22 @@ class CommissioningCavity(Cavity):
 
         self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
         self.ades_max_PV: PV = PV(self.pvPrefix + "ADES_MAX")
-        self.tuning_pvs: List[str] = [self.detune_best_PV.pvname,
-                                      self.stepper_temp_PV.pvname,
-                                      self.steppertuner.step_signed_pv.pvname]
+        self.tuning_plot_pairs: List[Tuple[str]] = [(self.detune_best_PV.pvname,
+                                                     "dfbest"),
+                                                    (self.stepper_temp_PV.pvname,
+                                                     "steptemp"),
+                                                    (self.steppertuner.step_signed_pv.pvname,
+                                                     "signedsteps")]
 
         self.current_steps = 0
-        self.plot_pvs: List[str] = [self.stepper_temp_PV.pvname,
-                                    self.coupler_top_PVName,
-                                    self.coupler_bot_PVName, self.hom_ds_PVName,
-                                    self.hom_us_PVName, self.vessel_top_PVName,
-                                    self.vessel_bot_PVName,
-                                    self.selAmplitudeActPV.pvname]
+        self.plot_pvs: List[str] = [(self.stepper_temp_PV.pvname, None),
+                                    (self.coupler_top_PVName, None),
+                                    (self.coupler_bot_PVName, None),
+                                    (self.hom_ds_PVName, None),
+                                    (self.hom_us_PVName, None),
+                                    (self.vessel_top_PVName, None),
+                                    (self.vessel_bot_PVName, None),
+                                    (self.selAmplitudeActPV.pvname, None)]
         self.non_zero_rad_flagged = False
         self.rad_exceeded_flagged = False
 
@@ -294,24 +299,31 @@ class CommissioningCryomodule(Cryomodule):
         self.detune_PVs = []
 
         for cavity in self.cavities.values():
-            self.stepper_temp_PVs.append(cavity.stepper_temp_PV.pvname)
-            self.coupler_top_PVs.append(cavity.coupler_top_PVName)
-            self.coupler_bot_PVs.append(cavity.coupler_bot_PVName)
-            self.hom_us_PVs.append(cavity.hom_us_PVName)
-            self.hom_ds_PVs.append(cavity.hom_ds_PVName)
-            self.detune_PVs.append(cavity.detune_best_PV.pvname)
+            self.stepper_temp_PVs.append((cavity.stepper_temp_PV.pvname, None))
+            self.coupler_top_PVs.append((cavity.coupler_top_PVName, None))
+            self.coupler_bot_PVs.append((cavity.coupler_bot_PVName, None))
+            self.hom_us_PVs.append((cavity.hom_us_PVName, None))
+            self.hom_ds_PVs.append((cavity.hom_ds_PVName, None))
+            self.detune_PVs.append((cavity.detune_best_PV.pvname, None))
 
-        self.cryo_signal_PVs = [self.dsLevelPV.pvname, self.usLevelPV.pvname,
-                                self.dsPressurePV.pvname, self.jtValveRdbkPV.pvname]
+        self.cryo_signal_PVs = [(self.dsLevelPV.pvname, None),
+                                (self.usLevelPV.pvname, None),
+                                (self.dsPressurePV.pvname, None),
+                                (self.jtValveRdbkPV.pvname, None)]
 
         # To be populated from the GUI
         self.decarad: Optional[Decarad] = None
+
+        self.vacuumPlotPairs = [(pv.pvname, "x96")
+                                for pv in self.linac.insulatingVacuumPVs]
+        self.vacuumPlotPairs += [(pv.pvname, "!96") for pv in self.linac.beamlineVacuumPVs]
+        self.vacuumPlotPairs += [(pv.pvname, "!96") for pv in self.couplerVacuumPVs]
 
     @property
     def decarad_PVs(self):
         decarad_PVs = []
         for decaradhead in self.decarad.heads.values():
-            decarad_PVs.append(decaradhead.doseRatePV.pvname)
+            decarad_PVs.append((decaradhead.doseRatePV.pvname, None))
         return decarad_PVs
 
 
