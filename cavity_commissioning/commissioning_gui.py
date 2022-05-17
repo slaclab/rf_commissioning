@@ -516,7 +516,7 @@ class GuidedCommissioningScreens(Display):
         print("running piezo test script")
         piezo.withrf_run_check_PV.put(1, waitForPut=False)
 
-        sleep("waiting 5s for piezo test script to run")
+        print("waiting 5s for piezo test script to run")
         sleep(5)
 
         while piezo.withrf_check_status_PV.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:

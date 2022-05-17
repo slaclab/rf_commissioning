@@ -166,7 +166,8 @@ class CommissioningCavity(Cavity):
         self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
         self.ades_max_PV: PV = PV(self.pvPrefix + "ADES_MAX")
         self.tuning_pvs: List[str] = [self.detune_best_PV.pvname,
-                                      self.stepper_temp_PV.pvname]
+                                      self.stepper_temp_PV.pvname,
+                                      self.steppertuner.step_signed_pv.pvname]
 
         self.current_steps = 0
         self.plot_pvs: List[str] = [self.stepper_temp_PV.pvname,
