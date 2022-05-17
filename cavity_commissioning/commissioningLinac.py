@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from time import sleep
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from numpy import nanmean
 
@@ -8,10 +8,10 @@ import commissioningUtilities as utils
 from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.common.pyepics_tools.pyepicsUtils import PV
 from lcls_tools.superconducting import scLinacUtils
-from lcls_tools.superconducting.scLinac import (Cavity, Cryomodule, Rack, SSA, StepperTuner,
-                                               Magnet, Linac, BEAMLINEVACUUM_INFIXES,
-                                               INSULATINGVACUUM_CRYOMODULES,
-                                               L0B, L1B, L1BHL, L2B, L3B)
+from lcls_tools.superconducting.scLinac import (BEAMLINEVACUUM_INFIXES, Cavity, Cryomodule,
+                                                INSULATINGVACUUM_CRYOMODULES, L0B, L1B, L1BHL, L2B, L3B, Linac, Magnet,
+                                                Rack, SSA, StepperTuner)
+
 
 class DecaradHead:
     def __init__(self, number, decarad):
@@ -167,16 +167,22 @@ class CommissioningCavity(Cavity):
 
         self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
         self.ades_max_PV: PV = PV(self.pvPrefix + "ADES_MAX")
-        self.tuning_pvs: List[str] = [self.detune_best_PV.pvname,
-                                      self.stepper_temp_PV.pvname,
-                                      self.steppertuner.step_signed_pv.pvname]
+        self.tuning_plot_pairs: List[Tuple[str]] = [(self.detune_best_PV.pvname,
+                                                     "dfbest"),
+                                                    (self.stepper_temp_PV.pvname,
+                                                     "steptemp"),
+                                                    (self.steppertuner.step_signed_pv.pvname,
+                                                     "signedsteps")]
 
         self.current_steps = 0
-        self.plot_pvs: List[str] = [self.stepper_temp_PV.pvname,
-                                    self.coupler_top_PVName,
-                                    self.coupler_bot_PVName, self.hom_ds_PVName,
-                                    self.hom_us_PVName, self.vessel_top_PVName,
-                                    self.vessel_bot_PVName]
+        self.plot_pvs: List[str] = [(self.stepper_temp_PV.pvname, None),
+                                    (self.coupler_top_PVName, None),
+                                    (self.coupler_bot_PVName, None),
+                                    (self.hom_ds_PVName, None),
+                                    (self.hom_us_PVName, None),
+                                    (self.vessel_top_PVName, None),
+                                    (self.vessel_bot_PVName, None),
+                                    (self.selAmplitudeActPV.pvname, None)]
         self.non_zero_rad_flagged = False
         self.rad_exceeded_flagged = False
 
@@ -293,24 +299,31 @@ class CommissioningCryomodule(Cryomodule):
         self.detune_PVs = []
 
         for cavity in self.cavities.values():
-            self.stepper_temp_PVs.append(cavity.stepper_temp_PV.pvname)
-            self.coupler_top_PVs.append(cavity.coupler_top_PVName)
-            self.coupler_bot_PVs.append(cavity.coupler_bot_PVName)
-            self.hom_us_PVs.append(cavity.hom_us_PVName)
-            self.hom_ds_PVs.append(cavity.hom_ds_PVName)
-            self.detune_PVs.append(cavity.detune_best_PV.pvname)
+            self.stepper_temp_PVs.append((cavity.stepper_temp_PV.pvname, None))
+            self.coupler_top_PVs.append((cavity.coupler_top_PVName, None))
+            self.coupler_bot_PVs.append((cavity.coupler_bot_PVName, None))
+            self.hom_us_PVs.append((cavity.hom_us_PVName, None))
+            self.hom_ds_PVs.append((cavity.hom_ds_PVName, None))
+            self.detune_PVs.append((cavity.detune_best_PV.pvname, None))
 
-        self.cryo_signal_PVs = [self.dsLevelPV.pvname, self.usLevelPV.pvname,
-                                self.dsPressurePV.pvname, self.jtValveRdbkPV.pvname]
+        self.cryo_signal_PVs = [(self.dsLevelPV.pvname, None),
+                                (self.usLevelPV.pvname, None),
+                                (self.dsPressurePV.pvname, None),
+                                (self.jtValveRdbkPV.pvname, None)]
 
         # To be populated from the GUI
         self.decarad: Optional[Decarad] = None
+
+        self.vacuumPlotPairs = [(pv.pvname, "x96")
+                                for pv in self.linac.insulatingVacuumPVs]
+        self.vacuumPlotPairs += [(pv.pvname, "!96") for pv in self.linac.beamlineVacuumPVs]
+        self.vacuumPlotPairs += [(pv.pvname, "!96") for pv in self.couplerVacuumPVs]
 
     @property
     def decarad_PVs(self):
         decarad_PVs = []
         for decaradhead in self.decarad.heads.values():
-            decarad_PVs.append(decaradhead.doseRatePV.pvname)
+            decarad_PVs.append((decaradhead.doseRatePV.pvname, None))
         return decarad_PVs
 
 
@@ -326,12 +339,17 @@ class CommissioningStepper(StepperTuner):
         self.step_tot_pv.add_callback(self.checkTemp)
 
 
-linacs = {"L0B": Linac("L0B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[0], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[0]),
-          "L1B": Linac("L1B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[1], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[1]),
-          "L2B": Linac("L2B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[2], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[2]),
-          "L3B": Linac("L3B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[3], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[3])}
+linacs = {"L0B": Linac("L0B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[0],
+                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[0]),
+          "L1B": Linac("L1B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[1],
+                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[1]),
+          "L2B": Linac("L2B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[2],
+                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[2]),
+          "L3B": Linac("L3B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[3],
+                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[3])}
 
 ALL_CRYOMODULES = L0B + L1B + L1BHL + L2B + L3B
+
 
 class CryoDict(dict):
     def __missing__(self, key):
@@ -348,11 +366,12 @@ class CryoDict(dict):
         else:
             raise ValueError("Cryomodule {} not found in any linac region.".format(key))
         return CommissioningCryomodule(cryoName=key,
-                        linacObject=linac,
-                        cavityClass=CommissioningCavity,
-                        magnetClass=Magnet,
-                        rackClass=CommissioningRack,
-                        stepperClass=CommissioningStepper,
-                        isHarmonicLinearizer=(key in L1BHL))
+                                       linacObject=linac,
+                                       cavityClass=CommissioningCavity,
+                                       magnetClass=Magnet,
+                                       rackClass=CommissioningRack,
+                                       stepperClass=CommissioningStepper,
+                                       isHarmonicLinearizer=(key in L1BHL))
+
 
 COMMISSIONING_CRYOMODULE_OBJECTS = CryoDict()

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>608</width>
-    <height>745</height>
+    <width>496</width>
+    <height>831</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,6 +20,72 @@
       <string>Test setup</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
+      <item row="6" column="1">
+       <widget class="QTableWidget" name="test_members">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QAbstractScrollArea::AdjustToContents</enum>
+        </property>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+        <row>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>2</string>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>3</string>
+         </property>
+        </row>
+        <column>
+         <property name="text">
+          <string>First Name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Last Name</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QComboBox" name="testlead"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Select cryomodule</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="pick_cm"/>
+      </item>
       <item row="1" column="1">
        <widget class="QComboBox" name="pick_cavity">
         <item>
@@ -71,56 +137,6 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
-       <widget class="QTableWidget" name="test_members">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAsNeeded</enum>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAsNeeded</enum>
-        </property>
-        <property name="sizeAdjustPolicy">
-         <enum>QAbstractScrollArea::AdjustToContents</enum>
-        </property>
-        <attribute name="horizontalHeaderStretchLastSection">
-         <bool>true</bool>
-        </attribute>
-        <attribute name="verticalHeaderStretchLastSection">
-         <bool>true</bool>
-        </attribute>
-        <row>
-         <property name="text">
-          <string>1</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>2</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>3</string>
-         </property>
-        </row>
-        <column>
-         <property name="text">
-          <string>First Name</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Last Name</string>
-         </property>
-        </column>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QComboBox" name="testlead"/>
-      </item>
       <item row="6" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
@@ -128,16 +144,6 @@
         </property>
         <property name="wordWrap">
          <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="pick_cm"/>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Select cryomodule</string>
         </property>
        </widget>
       </item>
@@ -153,6 +159,12 @@
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox_4">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title">
       <string>Decarad</string>
      </property>
@@ -287,6 +299,12 @@
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox_3">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title">
       <string/>
      </property>
@@ -364,7 +382,63 @@
       <string>Step selection and progress</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
-      <item row="0" column="0">
+      <item row="5" column="1">
+       <widget class="QPushButton" name="button_piezo_withrf">
+        <property name="text">
+         <string>Run piezo with-RF check</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <widget class="QLabel" name="label_piezo_withrf">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="button_ssa_char">
+        <property name="text">
+         <string>Run SSA characterization</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QPushButton" name="button_selap_rampup">
+        <property name="text">
+         <string>Ramp up cavity in SELAP</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="label_cavity_calibration">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLabel" name="label_tune_cavity">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3">
+       <widget class="QLabel" name="label_selap_rampup">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="button_piezo_prerf">
+        <property name="text">
+         <string>Run piezo pre-RF check</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" rowspan="8">
        <widget class="PyDMDrawingLine" name="PyDMDrawingLine">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
@@ -383,129 +457,84 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <layout class="QGridLayout" name="gridLayout_5">
-        <item row="2" column="0">
-         <widget class="QPushButton" name="button_tune_cavity">
-          <property name="text">
-           <string>Tune cavity</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QLabel" name="label_selap_rampup">
-          <property name="text">
-           <string>Status</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QLabel" name="label_cavity_calibration">
-          <property name="text">
-           <string>Status</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="label_piezo_prerf">
-          <property name="text">
-           <string>Status</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QPushButton" name="button_selap_rampup">
-          <property name="text">
-           <string>Ramp up cavity in SELAP</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QLabel" name="label_measure_8pi9">
-          <property name="text">
-           <string>Status</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QLabel" name="label_piezo_withrf">
-          <property name="text">
-           <string>Status</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QPushButton" name="button_piezo_withrf">
-          <property name="text">
-           <string>Run piezo with-RF check</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QPushButton" name="button_piezo_prerf">
-          <property name="text">
-           <string>Run piezo pre-RF check</string>
-          </property>
-         </widget>
-        </item>
+      <item row="1" column="3">
+       <widget class="QLabel" name="label_ssa_char">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0" colspan="4">
+       <layout class="QFormLayout" name="formLayout">
         <item row="1" column="0">
-         <widget class="QPushButton" name="button_ssa_char">
+         <widget class="QLabel" name="label_17">
           <property name="text">
-           <string>Run SSA characterization</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QPushButton" name="button_cavity_calibration">
-          <property name="text">
-           <string>Perform cavity calibration</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="label_tune_cavity">
-          <property name="text">
-           <string>Status</string>
+           <string>Completion status:</string>
           </property>
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLabel" name="label_ssa_char">
+         <widget class="QLabel" name="label_overall_completion">
           <property name="text">
-           <string>Status</string>
+           <string>Incomplete</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
-         <widget class="QPushButton" name="button_measure_8pi9">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_8">
           <property name="text">
-           <string>Measure 8pi/9 mode frequency</string>
+           <string>Status:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="status_label">
+          <property name="text">
+           <string/>
           </property>
          </widget>
         </item>
        </layout>
       </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="label_overall_completion">
-        <property name="font">
-         <font>
-          <pointsize>20</pointsize>
-         </font>
-        </property>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="button_cavity_calibration">
         <property name="text">
-         <string>Incomplete</string>
+         <string>Perform cavity calibration</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_17">
-        <property name="font">
-         <font>
-          <pointsize>20</pointsize>
-         </font>
-        </property>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="button_measure_8pi9">
         <property name="text">
-         <string>Completion status:</string>
+         <string>Measure 8pi/9 mode frequency</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="label_measure_8pi9">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="button_tune_cavity">
+        <property name="text">
+         <string>Tune cavity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLabel" name="label_piezo_prerf">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="piezo_prerf_abort_button">
+        <property name="text">
+         <string>Abort</string>
         </property>
        </widget>
       </item>
