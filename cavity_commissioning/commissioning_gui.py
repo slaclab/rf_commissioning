@@ -83,7 +83,8 @@ class GuidedCommissioningScreens(Display):
             self.rad_detected_popup = make_info_popup(message)
         else:
             self.rad_detected_popup.setText(message)
-            self.rad_detected_popup.exec()
+            self.rad_detected_popup.show()
+            self.rad_detected_popup.raise_()
 
     @slot(str)
     def handle_success(self, message):
