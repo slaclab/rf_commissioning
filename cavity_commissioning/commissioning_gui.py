@@ -460,7 +460,51 @@ class GuidedCommissioningScreens(Display):
                  "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
         return macro_string
 
+    def trigger_pass(self, value, **kwargs):
+        piezo = self.current_cavity.piezo
+        if value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
+            print("Test is running")
+        elif value == utils.PIEZO_SCRIPT_COMPLETE_VALUE:
+            print("Test finished running")
+            piezo.prerf_test_status_pv.clear_callbacks()
+            if (piezo.prerf_cha_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE
+                    and piezo.prerf_chb_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE):
+                self.current_cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
+                self.current_cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
+                self.current_cavity.results.piezo_prerf_checked = True
+                print("Piezo pre-rf check complete and successful")
+
+            else:
+                raise utils.PiezoError("Piezo pre-rf test failed")
+        else:
+            piezo.prerf_test_status_pv.clear_callbacks()
+            raise utils.PiezoError("Piezo pre-rf test failed")
+
+    def trigger_start_test(self, value, **kwargs):
+        if value == 0:
+            print("piezo dc offset at 0")
+            self.current_cavity.piezo.prerf_test_status_pv.add_callback(self.trigger_pass)
+            self.current_cavity.piezo.prerf_test_start_pv.put(1)
+
+    def trigger_dc_zero(self, value, **kwargs):
+        if value == utils.PIEZO_MANUAL_VALUE:
+            print("Piezo in manual")
+            self.current_cavity.piezo.dc_setpoint_PV.add_callback(self.trigger_start_test)
+            self.current_cavity.piezo.dc_setpoint_PV.put(0)
+            self.current_cavity.piezo.feedback_mode_PV.clear_callbacks()
+
+    def trigger_manual(self, value, **kwargs):
+        if value == utils.PIEZO_ENABLE_VALUE:
+            print("Piezo enabled")
+            self.current_cavity.piezo.feedback_mode_PV.add_callback(self.trigger_dc_zero)
+            self.current_cavity.piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
+            self.current_cavity.piezo.enable_PV.clear_callbacks()
+
     def run_piezo_prerf_check(self):
+        self.current_cavity.piezo.enable_PV.add_callback(self.trigger_manual)
+        self.current_cavity.piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
+
+    def run_piezo_prerf_check1(self):
         self.current_cavity.turnOff()
         piezo = self.current_cavity.piezo
         piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
@@ -564,6 +608,9 @@ class GuidedCommissioningScreens(Display):
     def ssa_calibration_button_pushed(self):
         try:
             self.run_ssa_calibration()
+            self.populate_status_labels()
+            self.save_results()
+            self.success_signal.emit("SSA calibration successful")
         except (scLinacUtils.SSACalibrationError, scLinacUtils.SSAPowerError,
                 pyepicsUtils.PVInvalidError) as e:
             print(e)
@@ -573,9 +620,6 @@ class GuidedCommissioningScreens(Display):
             ssa_expert_button.setText('Open SSA EDM expert screen')
             ssa_expert_button.setDefault(True)
             make_error_popup('SSA calibration failed', ssa_expert_button, e, self.ssa_actionbutton_clicked)
-        self.populate_status_labels()
-        self.save_results()
-        self.success_signal.emit("SSA calibration successful")
 
     def ssa_actionbutton_clicked(self, qmessagebox: QMessageBox):
         clickedbutton = qmessagebox.clickedButton()
@@ -618,15 +662,15 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.results.fpc_qext_cold = self.current_cavity.measuredQLoadedPV.value
             self.current_cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
             self.current_cavity.results.cavity_calibration_run = True
+            self.populate_status_labels()
+            self.save_results()
+            self.success_signal.emit("Cavity calibration successful")
         except (
                 scLinacUtils.CavityQLoadedCalibrationError, scLinacUtils.CavityScaleFactorCalibrationError,
                 TypeError, CASeverityException, pyepicsUtils.PVInvalidError) as e:
             cavity_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl')
             make_error_popup('Cavity calibration failed', cavity_expert_button, e,
                              self.cavity_actionbutton_clicked)
-        self.populate_status_labels()
-        self.save_results()
-        self.success_signal.emit("Cavity calibration successful")
 
     def make_edmbutton(self, filepath: str):
         edmbutton = PyDMEDMDisplayButton()
@@ -697,19 +741,22 @@ class GuidedCommissioningScreens(Display):
     def piezo_prerf_button_pressed(self):
         try:
             self.run_piezo_prerf_check()
+            self.populate_status_labels()
+            self.save_results()
+            self.success_signal.emit("Piezo pre rf check successful")
         except (utils.PiezoError, pyepicsUtils.PVInvalidError) as e:
             piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
             make_error_popup(title='Error during piezo pre-rf check',
                              expert_edmbutton=piezo_prerf_edmbutton,
                              exception=e,
                              action_func=self.piezo_prerf_actionbutton_clicked)
-        self.populate_status_labels()
-        self.save_results()
-        self.success_signal.emit("Piezo pre rf check successful")
 
     def piezo_withrf_button_pressed(self):
         try:
             self.run_piezo_withrf_check()
+            self.populate_status_labels()
+            self.save_results()
+            self.success_signal.emit("Piezo with rf check successful")
         except (utils.PiezoError, scLinacUtils.SSAPowerError,
                 pyepicsUtils.PVInvalidError) as e:
             piezo_withrf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt_rf.edl')
@@ -717,9 +764,6 @@ class GuidedCommissioningScreens(Display):
                              expert_edmbutton=piezo_withrf_edmbutton,
                              exception=e,
                              action_func=self.piezo_withrf_actionbutton_clicked)
-        self.populate_status_labels()
-        self.save_results()
-        self.success_signal.emit("Piezo with rf check successful")
 
     def cold_freq_button_pressed(self):
         self.current_cavity.results.cold_land_freq_2K = float(self.tuner_window.ui.label_current_freq.text())
