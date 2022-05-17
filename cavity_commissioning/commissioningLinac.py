@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from time import sleep
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from numpy import nanmean
 
@@ -8,10 +8,10 @@ import commissioningUtilities as utils
 from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.common.pyepics_tools.pyepicsUtils import PV
 from lcls_tools.superconducting import scLinacUtils
-from lcls_tools.superconducting.scLinac import (Cavity, Cryomodule, Rack, SSA, StepperTuner,
-                                               Magnet, Linac, BEAMLINEVACUUM_INFIXES,
-                                               INSULATINGVACUUM_CRYOMODULES,
-                                               L0B, L1B, L1BHL, L2B, L3B)
+from lcls_tools.superconducting.scLinac import (BEAMLINEVACUUM_INFIXES, Cavity, Cryomodule,
+                                                INSULATINGVACUUM_CRYOMODULES, L0B, L1B, L1BHL, L2B, L3B, Linac, Magnet,
+                                                Rack, SSA, StepperTuner)
+
 
 class DecaradHead:
     def __init__(self, number, decarad):
@@ -176,7 +176,8 @@ class CommissioningCavity(Cavity):
                                     self.coupler_top_PVName,
                                     self.coupler_bot_PVName, self.hom_ds_PVName,
                                     self.hom_us_PVName, self.vessel_top_PVName,
-                                    self.vessel_bot_PVName]
+                                    self.vessel_bot_PVName,
+                                    self.selAmplitudeActPV.pvname]
         self.non_zero_rad_flagged = False
         self.rad_exceeded_flagged = False
 
@@ -326,12 +327,17 @@ class CommissioningStepper(StepperTuner):
         self.step_tot_pv.add_callback(self.checkTemp)
 
 
-linacs = {"L0B": Linac("L0B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[0], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[0]),
-          "L1B": Linac("L1B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[1], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[1]),
-          "L2B": Linac("L2B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[2], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[2]),
-          "L3B": Linac("L3B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[3], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[3])}
+linacs = {"L0B": Linac("L0B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[0],
+                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[0]),
+          "L1B": Linac("L1B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[1],
+                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[1]),
+          "L2B": Linac("L2B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[2],
+                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[2]),
+          "L3B": Linac("L3B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[3],
+                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[3])}
 
 ALL_CRYOMODULES = L0B + L1B + L1BHL + L2B + L3B
+
 
 class CryoDict(dict):
     def __missing__(self, key):
@@ -348,11 +354,12 @@ class CryoDict(dict):
         else:
             raise ValueError("Cryomodule {} not found in any linac region.".format(key))
         return CommissioningCryomodule(cryoName=key,
-                        linacObject=linac,
-                        cavityClass=CommissioningCavity,
-                        magnetClass=Magnet,
-                        rackClass=CommissioningRack,
-                        stepperClass=CommissioningStepper,
-                        isHarmonicLinearizer=(key in L1BHL))
+                                       linacObject=linac,
+                                       cavityClass=CommissioningCavity,
+                                       magnetClass=Magnet,
+                                       rackClass=CommissioningRack,
+                                       stepperClass=CommissioningStepper,
+                                       isHarmonicLinearizer=(key in L1BHL))
+
 
 COMMISSIONING_CRYOMODULE_OBJECTS = CryoDict()
