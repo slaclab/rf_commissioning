@@ -82,12 +82,14 @@ class GuidedCommissioningScreens(Display):
         if not self.current_cavity.non_zero_rad_flagged:
             make_info_popup(message)
             self.current_cavity.non_zero_rad_flagged = True
+            sleep(1)
 
     @slot(str)
     def handle_rad_exceeded(self, message):
         if not self.current_cavity.rad_exceeded_flagged:
             make_info_popup(message)
             self.current_cavity.rad_exceeded_flagged = True
+            sleep(1)
 
     @slot(str)
     def handle_success(self, message):
