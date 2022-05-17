@@ -25,7 +25,6 @@ from lcls_tools.common.pydm_tools.pydmPlotUtil import (TimePlotParams,
                                                        WaveformPlotParams,
                                                        WaveformPlotUpdater)
 from lcls_tools.common.pyepics_tools import pyepicsUtils
-from lcls_tools.superconducting.scLinac import CRYOMODULE_OBJECTS
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
@@ -184,7 +183,7 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.pick_decarad.currentIndexChanged.connect(self.update_decarad)
 
-        self.ui.pick_cm.addItems(CRYOMODULE_OBJECTS.keys())
+        self.ui.pick_cm.addItems(COMMISSIONING_CRYOMODULE_OBJECTS.keys())
 
         self.ui.pick_cm.currentIndexChanged.connect(self.update_selection)
 
