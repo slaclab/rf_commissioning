@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from time import sleep
 from typing import Callable, Dict, List, Optional, Tuple
-from collections import defaultdict
 
 from numpy import nanmean
 
