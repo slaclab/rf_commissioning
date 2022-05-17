@@ -8,8 +8,10 @@ import commissioningUtilities as utils
 from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.common.pyepics_tools.pyepicsUtils import PV
 from lcls_tools.superconducting import scLinacUtils
-from lcls_tools.superconducting.scLinac import Cavity, Cryomodule, Rack, SSA, StepperTuner, make_lcls_cryomodules
-
+from lcls_tools.superconducting.scLinac import (Cavity, Cryomodule, Rack, SSA, StepperTuner,
+                                               Magnet, Linac, BEAMLINEVACUUM_INFIXES,
+                                               INSULATINGVACUUM_CRYOMODULES,
+                                               L0B, L1B, L1BHL, L2B, L3B)
 
 class DecaradHead:
     def __init__(self, number, decarad):
@@ -324,6 +326,33 @@ class CommissioningStepper(StepperTuner):
         self.step_tot_pv.add_callback(self.checkTemp)
 
 
-COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = make_lcls_cryomodules(
-        cryomoduleClass=CommissioningCryomodule,
-        rackClass=CommissioningRack, cavityClass=CommissioningCavity, stepperClass=CommissioningStepper)
+linacs = {"L0B": Linac("L0B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[0], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[0]),
+          "L1B": Linac("L1B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[1], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[1]),
+          "L2B": Linac("L2B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[2], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[2]),
+          "L3B": Linac("L3B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[3], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[3])}
+
+ALL_CRYOMODULES = L0B + L1B + L1BHL + L2B + L3B
+
+class CryoDict(dict):
+    def __missing__(self, key):
+        if key in L0B:
+            linac = linacs['L0B']
+        elif key in L1B:
+            linac = linacs['L1B']
+        elif key in L1BHL:
+            linac = linacs['L1B']
+        elif key in L2B:
+            linac = linacs['L2B']
+        elif key in L3B:
+            linac = linacs['L3B']
+        else:
+            raise ValueError("Cryomodule {} not found in any linac region.".format(key))
+        return CommissioningCryomodule(cryoName=key,
+                        linacObject=linac,
+                        cavityClass=CommissioningCavity,
+                        magnetClass=Magnet,
+                        rackClass=CommissioningRack,
+                        stepperClass=CommissioningStepper,
+                        isHarmonicLinearizer=(key in L1BHL))
+
+COMMISSIONING_CRYOMODULE_OBJECTS = CryoDict()
