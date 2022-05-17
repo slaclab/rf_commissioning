@@ -116,8 +116,10 @@ class CommissioningCavity(Cavity):
         self.interlock_PV: PV = PV(self.pvPrefix + "RFPERMIT")
         self.coupler_top_PVName = self.pvPrefix + "CPLRTEMP1"
         self.coupler_bot_PVName = self.pvPrefix + "CPLRTEMP2"
-        self.hom_us_PVName = "CTE:CM{cm}:1{cavity}18:UH:TEMP".format(cm=self.cryomodule.name, cavity=self.number)
-        self.hom_ds_PVName = "CTE:CM{cm}:1{cavity}20:DH:TEMP".format(cm=self.cryomodule.name, cavity=self.number)
+        self.hom_us_PVName = self.ctePrefix + "18:UH:TEMP"
+        self.hom_ds_PVName = self.ctePrefix + "20:DH:TEMP"
+        self.vessel_top_PVName = self.ctePrefix + "14:VT:TEMP"
+        self.vessel_bot_PVName = self.ctePrefix + "15:VB:TEMP"
         self.detune_best_PV: PV = PV(self.pvPrefix + "DFBEST")
         self.detune_rfs_PV: PV = PV(self.pvPrefix + "DF")
         self.forward_pwr_PVName = self.pvPrefix + "FWD:PWRMEAN"
@@ -164,9 +166,17 @@ class CommissioningCavity(Cavity):
         self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
         self.ades_max_PV: PV = PV(self.pvPrefix + "ADES_MAX")
         self.tuning_pvs: List[str] = [self.detune_best_PV.pvname,
-                                      self.stepper_temp_PV.pvname]
+                                      self.stepper_temp_PV.pvname,
+                                      self.steppertuner.step_signed_pv.pvname]
 
         self.current_steps = 0
+        self.plot_pvs: List[str] = [self.stepper_temp_PV.pvname,
+                                    self.coupler_top_PVName,
+                                    self.coupler_bot_PVName, self.hom_ds_PVName,
+                                    self.hom_us_PVName, self.vessel_top_PVName,
+                                    self.vessel_bot_PVName]
+        self.non_zero_rad_flagged = False
+        self.rad_exceeded_flagged = False
 
     # TODO set the chirp parameters to default before starting
     def setup_tuning(self):

@@ -133,11 +133,11 @@ class CommissioningCavityResults:
     ssa_maxdrive: Optional[float] = None
     ssa_characterized: bool = False
     is_tuned: bool = False
-    cold_landing_frequency_2K: Optional[float] = None
+    cold_land_freq_2K: Optional[float] = None
     steps_to_tuned_2K: Optional[int] = None
     steps_to_tuned_4K: Optional[int] = None
     final_frequency: Optional[float] = None
-    eightpiovernine_frequency_measured: bool = False
+    eight_pi_nine_freq_measured: bool = False
     cavity_calibration_run: bool = False
     fpc_qext_cold: Optional[float] = None
     fpc_qext_warm: Optional[float] = None
