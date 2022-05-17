@@ -14,11 +14,12 @@ from PyQt5.QtWidgets import QMessageBox
 from edmbutton import PyDMEDMDisplayButton
 from epics.ca import CASeverityException
 from pydm import Display
-from qtpy.QtCore import Signal as signal, Slot as slot, Qt
+from qtpy.QtCore import Qt, Signal as signal, Slot as slot
 
 import commissioningUtilities as utils
 import lcls_tools.superconducting.scLinacUtils as scLinacUtils
-from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad, ALL_CRYOMODULES
+from commissioningLinac import (ALL_CRYOMODULES, COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity,
+                                CommissioningCryomodule, Decarad)
 from lcls_tools.common.pydm_tools.displayUtils import make_error_popup, make_info_popup, showDisplay
 from lcls_tools.common.pydm_tools.pydmPlotUtil import (TimePlotParams,
                                                        TimePlotUpdater,
@@ -34,6 +35,7 @@ class GuidedCommissioningScreens(Display):
     rad_exceeded_signal = signal(str)
     success_signal = signal(str)
     change_max_ades_signal = signal(float)
+    piezo_pre_rf_failed = signal(str)
 
     def __init__(self, parent=None, args=None):
         super(GuidedCommissioningScreens, self).__init__(parent=parent, args=args)
@@ -75,6 +77,7 @@ class GuidedCommissioningScreens(Display):
         self.change_max_ades_signal.connect(self.set_ades_max_srf_PV, Qt.QueuedConnection)
 
         self.success_signal.connect(self.handle_success)
+        self.piezo_pre_rf_failed.connect(self.handle_piezo_pre_rf_fail, Qt.QueuedConnection)
 
         self.selap_timer = QTimer()
         self.selap_timer.timeout.connect(self.end_selap)
@@ -105,43 +108,54 @@ class GuidedCommissioningScreens(Display):
     def set_ades_max_srf_PV(self, new_max):
         self.current_cavity.ades_max_srf_PV.put(new_max)
 
-    def check_radiation(self, severity, **kwargs):
+    @slot(str)
+    def handle_piezo_pre_rf_fail(self, message):
+        piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
+        make_error_popup(title='Error during piezo pre-rf check',
+                         expert_edmbutton=piezo_prerf_edmbutton,
+                         exception=message,
+                         action_func=self.piezo_prerf_actionbutton_clicked)
+
+    def check_nonzero_rad(self, severity):
         max_avg_dose = self.current_cm.decarad.max_avg_dose
-        if (severity == pyepicsUtils.EPICS_INVALID_VAL
-                or max_avg_dose == 0):
+        if (severity == pyepicsUtils.EPICS_INVALID_VAL or max_avg_dose == 0
+                or self.current_cavity.non_zero_rad_flagged):
             return
 
-        if not self.current_cavity.non_zero_rad_flagged:
-            if (utils.RADIATION_LIMIT
-                    > max_avg_dose > 0):
+        if utils.RADIATION_LIMIT > max_avg_dose > 0:
 
-                threshold = (utils.GRADIENT_THRESHOLD_RADLIMIT
-                             * self.current_cavity.length)
-                new_max = min(threshold, self.current_cavity.ades_max_srf_PV.value)
-                self.change_max_ades_signal.emit(new_max)
+            threshold = (utils.GRADIENT_THRESHOLD_RADLIMIT
+                         * self.current_cavity.length)
+            new_max = min(threshold, self.current_cavity.ades_max_srf_PV.value)
+            self.change_max_ades_signal.emit(new_max)
 
-                if self.current_cavity.selAmplitudeActPV.value <= threshold:
-                    self.current_cavity.results.commissioned_amplitude = threshold
-                    self.non_zero_rad_signal.emit('Field emission detected. Proceed with'
-                                                  ' caution without exceeding {thresh} MV.'
-                                                  .format(thresh=threshold))
-
-                else:
-                    self.current_cavity.results.commissioned_amplitude = self.current_cavity.selAmplitudeDesPV.value
-                    self.non_zero_rad_signal.emit('Field emission detected above {thresh} MV.'
-                                                  ' Please stop.'.format(thresh=threshold))
-                self.current_cavity.non_zero_rad_flagged = True
-
-        if not self.current_cavity.rad_exceeded_flagged:
-            if max_avg_dose >= utils.RADIATION_LIMIT:
-                self.change_max_ades_signal.emit(self.current_cavity.selAmplitudeDesPV.value)
-                self.rad_exceeded_signal.emit('Radiation exceeds {limit}mR/hr. Please stop.'
-                                              .format(limit=utils.RADIATION_LIMIT))
+            if self.current_cavity.selAmplitudeActPV.value <= threshold:
+                self.current_cavity.results.commissioned_amplitude = threshold
+                self.non_zero_rad_signal.emit('Field emission detected. Proceed with'
+                                              ' caution without exceeding {thresh} MV.'
+                                              .format(thresh=threshold))
 
             else:
-                self.rad_exceeded_signal.emit('Negative radiation values detected. Verify that'
-                                              ' the decarads are reading correctly')
+                self.current_cavity.results.commissioned_amplitude = self.current_cavity.selAmplitudeDesPV.value
+                self.non_zero_rad_signal.emit('Field emission detected above {thresh} MV.'
+                                              ' Please stop.'.format(thresh=threshold))
+            self.current_cavity.non_zero_rad_flagged = True
+
+    def check_rad_exceeded(self, severity):
+        max_avg_dose = self.current_cm.decarad.max_avg_dose
+        if (severity == pyepicsUtils.EPICS_INVALID_VAL or max_avg_dose == 0
+                or self.current_cavity.rad_exceeded_flagged):
+            return
+        if max_avg_dose >= utils.RADIATION_LIMIT:
+            self.change_max_ades_signal.emit(self.current_cavity.selAmplitudeDesPV.value)
+            self.rad_exceeded_signal.emit('Radiation exceeds {limit}mR/hr. Please stop.'
+                                          .format(limit=utils.RADIATION_LIMIT))
+
             self.current_cavity.rad_exceeded_flagged = True
+
+    def check_radiation(self, severity, **kwargs):
+        self.check_nonzero_rad(severity)
+        self.check_rad_exceeded(severity)
 
     def connect_tuner_window(self):
         self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
@@ -477,19 +491,20 @@ class GuidedCommissioningScreens(Display):
                 self.current_cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
                 self.current_cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
                 self.current_cavity.results.piezo_prerf_checked = True
-                print("Piezo pre-rf check complete and successful")
+                self.success_signal.emit("Piezo pre-rf check complete and successful")
 
             else:
-                raise utils.PiezoError("Piezo pre-rf test failed")
+                self.piezo_pre_rf_failed.emit("Piezo pre-rf test failed")
         else:
             piezo.prerf_test_status_pv.clear_callbacks()
-            raise utils.PiezoError("Piezo pre-rf test failed")
+            self.piezo_pre_rf_failed.emit("Piezo pre-rf test failed")
 
     def trigger_start_test(self, value, **kwargs):
         if value == 0:
             print("piezo dc offset at 0")
             self.current_cavity.piezo.prerf_test_status_pv.add_callback(self.trigger_pass)
             self.current_cavity.piezo.prerf_test_start_pv.put(1)
+            self.current_cavity.piezo.dc_setpoint_PV.clear_callbacks()
 
     def trigger_dc_zero(self, value, **kwargs):
         if value == utils.PIEZO_MANUAL_VALUE:
@@ -506,6 +521,7 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.piezo.enable_PV.clear_callbacks()
 
     def run_piezo_prerf_check(self):
+        self.current_cavity.turnOff()
         self.current_cavity.piezo.enable_PV.add_callback(self.trigger_manual)
         self.current_cavity.piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
 
