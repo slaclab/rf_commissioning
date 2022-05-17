@@ -77,11 +77,20 @@
      <property name="toolTip">
       <string/>
      </property>
+     <property name="showXGrid">
+      <bool>true</bool>
+     </property>
+     <property name="showYGrid">
+      <bool>true</bool>
+     </property>
      <property name="title" stdset="0">
       <string>Tuning Signals</string>
      </property>
      <property name="showLegend">
       <bool>true</bool>
+     </property>
+     <property name="maxRedrawRate" stdset="0">
+      <number>1</number>
      </property>
      <property name="updatesAsynchronously">
       <bool>true</bool>

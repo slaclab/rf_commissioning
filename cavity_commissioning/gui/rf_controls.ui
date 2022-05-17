@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>678</width>
-    <height>844</height>
+    <width>658</width>
+    <height>854</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -772,14 +772,17 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label_timer">
         <property name="text">
-         <string>TextLabel</string>
+         <string>Timer not running</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QPushButton" name="button_start_timer">
+      <item row="0" column="3">
+       <widget class="QPushButton" name="button_stop_timer">
         <property name="text">
-         <string>Start timer</string>
+         <string>Stop timer</string>
         </property>
        </widget>
       </item>
@@ -790,10 +793,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="3">
-       <widget class="QPushButton" name="button_stop_timer">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="button_start_timer">
         <property name="text">
-         <string>Stop timer</string>
+         <string>Start timer</string>
         </property>
        </widget>
       </item>

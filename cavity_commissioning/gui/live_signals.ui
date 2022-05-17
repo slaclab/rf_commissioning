@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>936</width>
-    <height>611</height>
+    <width>875</width>
+    <height>656</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -276,34 +276,106 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>864</width>
-            <height>72</height>
+            <width>803</width>
+            <height>117</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
-           <item row="0" column="2">
-            <layout class="QFormLayout" name="coup_top_form"/>
-           </item>
-           <item row="0" column="0">
-            <layout class="QFormLayout" name="stepper_form"/>
-           </item>
            <item row="0" column="1">
-            <layout class="QFormLayout" name="up_hom_form"/>
-           </item>
-           <item row="0" column="3">
-            <layout class="QFormLayout" name="cryo_form"/>
-           </item>
-           <item row="1" column="0">
-            <layout class="QFormLayout" name="vacuum_form"/>
-           </item>
-           <item row="1" column="1">
-            <layout class="QFormLayout" name="down_hom_form"/>
-           </item>
-           <item row="1" column="2">
-            <layout class="QFormLayout" name="coup_bot_hom"/>
+            <widget class="QGroupBox" name="groupBox_2">
+             <property name="title">
+              <string>Upstream HOM temps</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_3">
+              <item>
+               <layout class="QFormLayout" name="up_hom_form"/>
+              </item>
+             </layout>
+            </widget>
            </item>
            <item row="1" column="3">
-            <layout class="QFormLayout" name="decarad_form"/>
+            <widget class="QGroupBox" name="groupBox_8">
+             <property name="title">
+              <string>Decarad</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_9">
+              <item>
+               <layout class="QFormLayout" name="decarad_form"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QGroupBox" name="groupBox_3">
+             <property name="title">
+              <string>Coupler top temps</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <layout class="QFormLayout" name="coup_top_form"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QGroupBox" name="groupBox_4">
+             <property name="title">
+              <string>Cryo signals</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_5">
+              <item>
+               <layout class="QFormLayout" name="cryo_form"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QGroupBox" name="groupBox_5">
+             <property name="title">
+              <string>Vacuum Signals</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_6">
+              <item>
+               <layout class="QFormLayout" name="vacuum_form"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QGroupBox" name="groupBox_6">
+             <property name="title">
+              <string>Downstream HOM temps</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_7">
+              <item>
+               <layout class="QFormLayout" name="down_hom_form"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QGroupBox" name="groupBox">
+             <property name="title">
+              <string>Stepper temps</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <layout class="QFormLayout" name="stepper_form"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QGroupBox" name="groupBox_7">
+             <property name="title">
+              <string>Coupler bottom temps</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_8">
+              <item>
+               <layout class="QFormLayout" name="coup_bot_hom"/>
+              </item>
+             </layout>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -321,6 +393,18 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="showXGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showYGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showLegend">
+          <bool>true</bool>
+         </property>
+         <property name="maxRedrawRate" stdset="0">
+          <number>1</number>
+         </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
@@ -331,6 +415,12 @@
        </item>
        <item row="0" column="1">
         <widget class="QScrollArea" name="scrollArea_2">
+         <property name="maximumSize">
+          <size>
+           <width>300</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <property name="widgetResizable">
           <bool>true</bool>
          </property>
@@ -340,7 +430,7 @@
             <x>0</x>
             <y>0</y>
             <width>72</width>
-            <height>530</height>
+            <height>575</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout">
