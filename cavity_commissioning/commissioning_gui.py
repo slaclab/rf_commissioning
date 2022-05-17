@@ -96,10 +96,10 @@ class GuidedCommissioningScreens(Display):
 
     def check_radiation(self, severity, **kwargs):
         if (severity == pyepicsUtils.EPICS_INVALID_VAL
-                or self.current_cavity.cryomodule.decarad.max_avg_dose == 0):
+                or self.current_cm.decarad.max_avg_dose == 0):
             return
         if (utils.RADIATION_LIMIT
-                > self.current_cavity.cryomodule.decarad.max_avg_dose > 0):
+                > self.current_cm.decarad.max_avg_dose > 0):
 
             threshold = (utils.GRADIENT_THRESHOLD_RADLIMIT
                          * self.current_cavity.length)
@@ -118,7 +118,7 @@ class GuidedCommissioningScreens(Display):
                 self.rad_error.emit('Field emission detected above {thresh} MV.'
                                     ' Please stop.'.format(thresh=threshold))
 
-        elif (self.current_cavity.cryomodule.decarad.max_avg_dose
+        elif (self.current_cm.decarad.max_avg_dose
               >= utils.RADIATION_LIMIT):
             self.current_cavity.ades_max_srf_PV.put(self.current_cavity.selAmplitudeDesPV.value)
             self.rad_error.emit('Radiation exceeds {limit}mR/hr. Please stop.'
