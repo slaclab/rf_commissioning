@@ -491,6 +491,8 @@ class GuidedCommissioningScreens(Display):
                 self.current_cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
                 self.current_cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
                 self.current_cavity.results.piezo_prerf_checked = True
+                self.populate_status_labels()
+                self.save_results()
                 self.success_signal.emit("Piezo pre-rf check complete and successful")
 
             else:
@@ -762,9 +764,9 @@ class GuidedCommissioningScreens(Display):
     def piezo_prerf_button_pressed(self):
         try:
             self.run_piezo_prerf_check()
-            self.populate_status_labels()
-            self.save_results()
-            self.success_signal.emit("Piezo pre rf check successful")
+            # self.populate_status_labels()
+            # self.save_results()
+            # self.success_signal.emit("Piezo pre rf check successful")
         except (utils.PiezoError, pyepicsUtils.PVInvalidError) as e:
             piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
             make_error_popup(title='Error during piezo pre-rf check',
