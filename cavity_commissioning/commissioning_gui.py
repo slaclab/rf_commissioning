@@ -18,7 +18,7 @@ from qtpy.QtCore import Signal as signal, Slot as slot, Qt
 
 import commissioningUtilities as utils
 import lcls_tools.superconducting.scLinacUtils as scLinacUtils
-from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad
+from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad, ALL_CRYOMODULES
 from lcls_tools.common.pydm_tools.displayUtils import make_error_popup, make_info_popup, showDisplay
 from lcls_tools.common.pydm_tools.pydmPlotUtil import (TimePlotParams,
                                                        TimePlotUpdater,
@@ -211,7 +211,7 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.pick_decarad.currentIndexChanged.connect(self.update_decarad)
 
-        self.ui.pick_cm.addItems(COMMISSIONING_CRYOMODULE_OBJECTS.keys())
+        self.ui.pick_cm.addItems(ALL_CRYOMODULES)
 
         self.ui.pick_cm.currentIndexChanged.connect(self.update_cavity)
 

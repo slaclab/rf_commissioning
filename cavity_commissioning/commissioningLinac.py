@@ -331,6 +331,8 @@ linacs = {"L0B": Linac("L0B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[0], i
           "L2B": Linac("L2B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[2], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[2]),
           "L3B": Linac("L3B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[3], insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[3])}
 
+ALL_CRYOMODULES = L0B + L1B + L1BHL + L2B + L3B
+
 class CryoDict(dict):
     def __missing__(self, key):
         if key in L0B:
@@ -344,7 +346,7 @@ class CryoDict(dict):
         elif key in L3B:
             linac = linacs['L3B']
         else:
-            raise ValueError("Cryomodule not found in any linac region.")
+            raise ValueError("Cryomodule {} not found in any linac region.".format(key))
         return CommissioningCryomodule(cryoName=key,
                         linacObject=linac,
                         cavityClass=CommissioningCavity,
