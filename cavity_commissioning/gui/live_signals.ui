@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1033</width>
-    <height>685</height>
+    <width>936</width>
+    <height>611</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,19 +24,28 @@
        <string>Full CM Overview</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="1" column="1">
-        <widget class="PyDMTimePlot" name="plot_homds_temp">
+       <item row="1" column="0">
+        <widget class="PyDMTimePlot" name="plot_cmvacuum">
          <property name="toolTip">
           <string/>
+         </property>
+         <property name="showXGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showYGrid">
+          <bool>true</bool>
          </property>
          <property name="yAxes">
           <stringlist/>
          </property>
          <property name="title" stdset="0">
-          <string>Downstream HOM temperatures</string>
+          <string>Vacuum signals</string>
          </property>
          <property name="showLegend">
           <bool>true</bool>
+         </property>
+         <property name="maxRedrawRate" stdset="0">
+          <number>1</number>
          </property>
          <property name="curves">
           <stringlist/>
@@ -54,61 +63,20 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="showXGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showYGrid">
+          <bool>true</bool>
+         </property>
          <property name="title" stdset="0">
           <string>Coupler bottom temperatures</string>
          </property>
          <property name="showLegend">
           <bool>true</bool>
          </property>
-         <property name="updatesAsynchronously">
-          <bool>true</bool>
-         </property>
-         <property name="timeSpan">
-          <double>300.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="PyDMTimePlot" name="plot_homus_temp">
-         <property name="toolTip">
-          <string/>
-         </property>
-         <property name="yAxes">
-          <stringlist/>
-         </property>
-         <property name="title" stdset="0">
-          <string>Upstream HOM temperatures</string>
-         </property>
-         <property name="showLegend">
-          <bool>true</bool>
-         </property>
-         <property name="curves">
-          <stringlist/>
-         </property>
-         <property name="updatesAsynchronously">
-          <bool>true</bool>
-         </property>
-         <property name="timeSpan">
-          <double>300.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="PyDMTimePlot" name="plot_cmvacuum">
-         <property name="toolTip">
-          <string/>
-         </property>
-         <property name="yAxes">
-          <stringlist/>
-         </property>
-         <property name="title" stdset="0">
-          <string>Vacuum signals</string>
-         </property>
-         <property name="showLegend">
-          <bool>true</bool>
-         </property>
-         <property name="curves">
-          <stringlist/>
+         <property name="maxRedrawRate" stdset="0">
+          <number>1</number>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
@@ -123,11 +91,20 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="showXGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showYGrid">
+          <bool>true</bool>
+         </property>
          <property name="title" stdset="0">
           <string>Coupler top temperatures</string>
          </property>
          <property name="showLegend">
           <bool>true</bool>
+         </property>
+         <property name="maxRedrawRate" stdset="0">
+          <number>1</number>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
@@ -137,16 +114,65 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="PyDMTimePlot" name="plot_steppertemps">
+       <item row="0" column="1">
+        <widget class="PyDMTimePlot" name="plot_homus_temp">
          <property name="toolTip">
           <string/>
          </property>
+         <property name="showXGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showYGrid">
+          <bool>true</bool>
+         </property>
+         <property name="yAxes">
+          <stringlist/>
+         </property>
          <property name="title" stdset="0">
-          <string>Stepper temperatures</string>
+          <string>Upstream HOM temperatures</string>
          </property>
          <property name="showLegend">
           <bool>true</bool>
+         </property>
+         <property name="maxRedrawRate" stdset="0">
+          <number>1</number>
+         </property>
+         <property name="curves">
+          <stringlist/>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="PyDMTimePlot" name="plot_homds_temp">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="showXGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showYGrid">
+          <bool>true</bool>
+         </property>
+         <property name="yAxes">
+          <stringlist/>
+         </property>
+         <property name="title" stdset="0">
+          <string>Downstream HOM temperatures</string>
+         </property>
+         <property name="showLegend">
+          <bool>true</bool>
+         </property>
+         <property name="maxRedrawRate" stdset="0">
+          <number>1</number>
+         </property>
+         <property name="curves">
+          <stringlist/>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
@@ -161,11 +187,48 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="showXGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showYGrid">
+          <bool>true</bool>
+         </property>
          <property name="title" stdset="0">
           <string>Cryo signals</string>
          </property>
          <property name="showLegend">
           <bool>true</bool>
+         </property>
+         <property name="maxRedrawRate" stdset="0">
+          <number>1</number>
+         </property>
+         <property name="updatesAsynchronously">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpan">
+          <double>300.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="PyDMTimePlot" name="plot_steppertemps">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="showXGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showYGrid">
+          <bool>true</bool>
+         </property>
+         <property name="title" stdset="0">
+          <string>Stepper temperatures</string>
+         </property>
+         <property name="showLegend">
+          <bool>true</bool>
+         </property>
+         <property name="maxRedrawRate" stdset="0">
+          <number>1</number>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
@@ -180,11 +243,20 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="showXGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showYGrid">
+          <bool>true</bool>
+         </property>
          <property name="title" stdset="0">
           <string>Decarad</string>
          </property>
          <property name="showLegend">
           <bool>true</bool>
+         </property>
+         <property name="maxRedrawRate" stdset="0">
+          <number>1</number>
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
@@ -192,6 +264,49 @@
          <property name="timeSpan">
           <double>300.000000000000000</double>
          </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="4">
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents_3">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>864</width>
+            <height>72</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="0" column="2">
+            <layout class="QFormLayout" name="coup_top_form"/>
+           </item>
+           <item row="0" column="0">
+            <layout class="QFormLayout" name="stepper_form"/>
+           </item>
+           <item row="0" column="1">
+            <layout class="QFormLayout" name="up_hom_form"/>
+           </item>
+           <item row="0" column="3">
+            <layout class="QFormLayout" name="cryo_form"/>
+           </item>
+           <item row="1" column="0">
+            <layout class="QFormLayout" name="vacuum_form"/>
+           </item>
+           <item row="1" column="1">
+            <layout class="QFormLayout" name="down_hom_form"/>
+           </item>
+           <item row="1" column="2">
+            <layout class="QFormLayout" name="coup_bot_hom"/>
+           </item>
+           <item row="1" column="3">
+            <layout class="QFormLayout" name="decarad_form"/>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
@@ -212,6 +327,28 @@
          <property name="timeSpan">
           <double>300.000000000000000</double>
          </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QScrollArea" name="scrollArea_2">
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents_4">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>72</width>
+            <height>530</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <layout class="QFormLayout" name="single_cav_form"/>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
