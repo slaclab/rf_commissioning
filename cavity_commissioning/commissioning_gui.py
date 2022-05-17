@@ -14,11 +14,11 @@ from PyQt5.QtWidgets import QMessageBox
 from edmbutton import PyDMEDMDisplayButton
 from epics.ca import CASeverityException
 from pydm import Display
-from qtpy.QtCore import Signal as signal, Slot as slot
+from qtpy.QtCore import Signal as signal, Slot as slot, Qt
 
 import commissioningUtilities as utils
 import lcls_tools.superconducting.scLinacUtils as scLinacUtils
-from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad
+from commissioningLinac import COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity, CommissioningCryomodule, Decarad, ALL_CRYOMODULES
 from lcls_tools.common.pydm_tools.displayUtils import make_error_popup, make_info_popup, showDisplay
 from lcls_tools.common.pydm_tools.pydmPlotUtil import (TimePlotParams,
                                                        TimePlotUpdater,
@@ -33,6 +33,7 @@ class GuidedCommissioningScreens(Display):
     non_zero_rad_signal = signal(str)
     rad_exceeded_signal = signal(str)
     success_signal = signal(str)
+    change_max_ades_signal = signal(float)
 
     def __init__(self, parent=None, args=None):
         super(GuidedCommissioningScreens, self).__init__(parent=parent, args=args)
@@ -69,8 +70,9 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.button_selap_rampup.clicked.connect(self.selap_button_pressed)
 
-        self.non_zero_rad_signal.connect(self.handle_non_zero_rad)
-        self.rad_exceeded_signal.connect(self.handle_rad_exceeded)
+        self.non_zero_rad_signal.connect(self.handle_non_zero_rad, Qt.QueuedConnection)
+        self.rad_exceeded_signal.connect(self.handle_rad_exceeded, Qt.QueuedConnection)
+        self.change_max_ades_signal.connect(self.set_ades_max_srf_PV, Qt.QueuedConnection)
 
         self.success_signal.connect(self.handle_success)
 
@@ -99,21 +101,24 @@ class GuidedCommissioningScreens(Display):
             self.success_popup.setText(message)
             self.success_popup.exec()
 
-    def check_radiation(self, severity, **kwargs):
+    @slot(float)
+    def set_ades_max_srf_PV(self, new_max):
+        self.current_cavity.ades_max_srf_PV.put(new_max)
 
+    def check_radiation(self, severity, **kwargs):
+        max_avg_dose = self.current_cm.decarad.max_avg_dose
         if (severity == pyepicsUtils.EPICS_INVALID_VAL
-                or self.current_cm.decarad.max_avg_dose == 0):
+                or max_avg_dose == 0):
             return
 
         if not self.current_cavity.non_zero_rad_flagged:
             if (utils.RADIATION_LIMIT
-                    > self.current_cm.decarad.max_avg_dose > 0):
+                    > max_avg_dose > 0):
 
                 threshold = (utils.GRADIENT_THRESHOLD_RADLIMIT
                              * self.current_cavity.length)
-
-                self.current_cavity.ades_max_srf_PV.put(min(threshold,
-                                                            self.current_cavity.ades_max_srf_PV.value))
+                new_max = min(threshold, self.current_cavity.ades_max_srf_PV.value)
+                self.change_max_ades_signal.emit(new_max)
 
                 if self.current_cavity.selAmplitudeActPV.value <= threshold:
                     self.current_cavity.results.commissioned_amplitude = threshold
@@ -128,8 +133,8 @@ class GuidedCommissioningScreens(Display):
                 self.current_cavity.non_zero_rad_flagged = True
 
         if not self.current_cavity.rad_exceeded_flagged:
-            if self.current_cm.decarad.max_avg_dose >= utils.RADIATION_LIMIT:
-                self.current_cavity.ades_max_srf_PV.put(self.current_cavity.selAmplitudeDesPV.value)
+            if max_avg_dose >= utils.RADIATION_LIMIT:
+                self.change_max_ades_signal.emit(self.current_cavity.selAmplitudeDesPV.value)
                 self.rad_exceeded_signal.emit('Radiation exceeds {limit}mR/hr. Please stop.'
                                               .format(limit=utils.RADIATION_LIMIT))
 
@@ -207,7 +212,7 @@ class GuidedCommissioningScreens(Display):
 
         self.ui.pick_decarad.currentIndexChanged.connect(self.update_decarad)
 
-        self.ui.pick_cm.addItems(COMMISSIONING_CRYOMODULE_OBJECTS.keys())
+        self.ui.pick_cm.addItems(ALL_CRYOMODULES)
 
         self.ui.pick_cm.currentIndexChanged.connect(self.update_cavity)
 
