@@ -106,13 +106,14 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.ades_max_srf_PV.put(new_max)
 
     def check_radiation(self, severity, **kwargs):
+        max_avg_dose = self.current_cm.decarad.max_avg_dose
         if (severity == pyepicsUtils.EPICS_INVALID_VAL
-                or self.current_cm.decarad.max_avg_dose == 0):
+                or max_avg_dose == 0):
             return
 
         if not self.current_cavity.non_zero_rad_flagged:
             if (utils.RADIATION_LIMIT
-                    > self.current_cm.decarad.max_avg_dose > 0):
+                    > max_avg_dose > 0):
 
                 threshold = (utils.GRADIENT_THRESHOLD_RADLIMIT
                              * self.current_cavity.length)
@@ -132,7 +133,7 @@ class GuidedCommissioningScreens(Display):
                 self.current_cavity.non_zero_rad_flagged = True
 
         if not self.current_cavity.rad_exceeded_flagged:
-            if self.current_cm.decarad.max_avg_dose >= utils.RADIATION_LIMIT:
+            if max_avg_dose >= utils.RADIATION_LIMIT:
                 self.change_max_ades_signal.emit(self.current_cavity.selAmplitudeDesPV.value)
                 self.rad_exceeded_signal.emit('Radiation exceeds {limit}mR/hr. Please stop.'
                                               .format(limit=utils.RADIATION_LIMIT))
