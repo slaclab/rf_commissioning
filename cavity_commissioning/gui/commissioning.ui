@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>496</width>
-    <height>831</height>
+    <width>614</width>
+    <height>849</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -382,52 +382,45 @@
       <string>Step selection and progress</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
+      <item row="6" column="3">
+       <widget class="QLabel" name="label_selap_rampup">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="button_measure_8pi9">
+        <property name="text">
+         <string>Measure 8pi/9 mode frequency</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QProgressBar" name="progressBar_6">
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QProgressBar" name="pre_rf_progressbar">
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QProgressBar" name="progressBar_5">
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
       <item row="5" column="1">
        <widget class="QPushButton" name="button_piezo_withrf">
         <property name="text">
          <string>Run piezo with-RF check</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="3">
-       <widget class="QLabel" name="label_piezo_withrf">
-        <property name="text">
-         <string>Status</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="button_ssa_char">
-        <property name="text">
-         <string>Run SSA characterization</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QPushButton" name="button_selap_rampup">
-        <property name="text">
-         <string>Ramp up cavity in SELAP</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3">
-       <widget class="QLabel" name="label_cavity_calibration">
-        <property name="text">
-         <string>Status</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3">
-       <widget class="QLabel" name="label_tune_cavity">
-        <property name="text">
-         <string>Status</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="3">
-       <widget class="QLabel" name="label_selap_rampup">
-        <property name="text">
-         <string>Status</string>
         </property>
        </widget>
       </item>
@@ -438,29 +431,59 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0" rowspan="8">
-       <widget class="PyDMDrawingLine" name="PyDMDrawingLine">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="rotation" stdset="0">
-         <double>270.000000000000000</double>
-        </property>
-        <property name="arrowEndPoint" stdset="0">
-         <bool>true</bool>
+      <item row="6" column="1">
+       <widget class="QPushButton" name="button_selap_rampup">
+        <property name="text">
+         <string>Ramp up cavity in SELAP</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="3">
-       <widget class="QLabel" name="label_ssa_char">
+      <item row="3" column="2">
+       <widget class="QProgressBar" name="progressBar_4">
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="button_ssa_char">
         <property name="text">
-         <string>Status</string>
+         <string>Run SSA characterization</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="button_cavity_calibration">
+        <property name="text">
+         <string>Perform cavity calibration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="button_tune_cavity">
+        <property name="text">
+         <string>Tune cavity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QProgressBar" name="progressBar_3">
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLabel" name="label_tune_cavity">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="label_cavity_calibration">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
@@ -492,49 +515,71 @@
           <property name="text">
            <string/>
           </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
        </layout>
       </item>
-      <item row="4" column="1">
-       <widget class="QPushButton" name="button_cavity_calibration">
+      <item row="0" column="3">
+       <widget class="QLabel" name="label_piezo_prerf">
         <property name="text">
-         <string>Perform cavity calibration</string>
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QPushButton" name="button_measure_8pi9">
+      <item row="5" column="3">
+       <widget class="QLabel" name="label_piezo_withrf">
         <property name="text">
-         <string>Measure 8pi/9 mode frequency</string>
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLabel" name="label_ssa_char">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
       <item row="3" column="3">
        <widget class="QLabel" name="label_measure_8pi9">
         <property name="text">
-         <string>Status</string>
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="button_tune_cavity">
-        <property name="text">
-         <string>Tune cavity</string>
+      <item row="1" column="2">
+       <widget class="QProgressBar" name="progressBar_2">
+        <property name="value">
+         <number>0</number>
         </property>
        </widget>
       </item>
-      <item row="0" column="3">
-       <widget class="QLabel" name="label_piezo_prerf">
-        <property name="text">
-         <string>Status</string>
+      <item row="6" column="2">
+       <widget class="QProgressBar" name="progressBar_7">
+        <property name="value">
+         <number>0</number>
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QPushButton" name="piezo_prerf_abort_button">
-        <property name="text">
-         <string>Abort</string>
+      <item row="0" column="0" rowspan="8">
+       <widget class="PyDMDrawingLine" name="PyDMDrawingLine">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="rotation" stdset="0">
+         <double>270.000000000000000</double>
+        </property>
+        <property name="arrowEndPoint" stdset="0">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

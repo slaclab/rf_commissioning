@@ -9,7 +9,7 @@ from threading import Lock
 from time import sleep
 from typing import Optional
 
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QObject, QThread, QTimer
 from PyQt5.QtWidgets import QMessageBox
 from edmbutton import PyDMEDMDisplayButton
 from epics.ca import CASeverityException
@@ -30,12 +30,74 @@ from lcls_tools.common.pyepics_tools import pyepicsUtils
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
+class PiezoPreRFWorker(QObject):
+    finished = signal(str)
+    progress = signal(int)
+    error = signal(str)
+    status = signal(str)
+
+    def run(self, cavity: CommissioningCavity):
+        self.status.emit("Turning RF off")
+        cavity.turnOff()
+        self.progress.emit(16.5)
+        piezo = cavity.piezo
+
+        piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
+        self.status.emit("Waiting for piezo to be enabled")
+        while piezo.enable_PV.value != utils.PIEZO_ENABLE_VALUE:
+            sleep(1)
+        self.progress.emit(33)
+
+        piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
+        self.status.emit("Waiting for piezo to be set to manual")
+        while piezo.feedback_mode_PV.value != utils.PIEZO_MANUAL_VALUE:
+            sleep(1)
+        self.progress.emit(49.5)
+
+        # set piezo DC voltage offset to 0V
+        piezo.dc_setpoint_PV.put(0)
+        self.status.emit("Waiting for piezo dc offset to be 0")
+        while piezo.dc_setpoint_PV.value != 0:
+            sleep(1)
+        self.progress.emit(66)
+
+        # run the test script
+        piezo.prerf_test_start_pv.put(1)
+
+        self.status.emit("waiting 5 seconds for piezo tuner test to start")
+        sleep(5)
+
+        self.status.emit("waiting for piezo tuner test to finish running", datetime.now())
+        while piezo.prerf_test_status_pv.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
+            sleep(1)
+
+        self.progress.emit(82.5)
+
+        self.status.emit("waiting 5s for piezo test status to update")
+        sleep(5)
+
+        if piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE:
+            self.error.emit('Piezo pre-rf test script was not successful')
+            return
+
+        if (piezo.prerf_cha_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE
+                and piezo.prerf_chb_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE):
+            cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
+            cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
+            cavity.results.piezo_prerf_checked = True
+            self.status.emit("Piezo pre-rf check complete and successful")
+            self.finished.emit("Piezo pre-rf check complete and successful")
+            self.progress.emit(100)
+
+        else:
+            self.error.emit("Piezo test unsuccessful")
+
+
 class GuidedCommissioningScreens(Display):
     non_zero_rad_signal = signal(str)
     rad_exceeded_signal = signal(str)
     success_signal = signal(str)
     change_max_ades_signal = signal(float)
-    piezo_pre_rf_failed = signal(str)
 
     def __init__(self, parent=None, args=None):
         super(GuidedCommissioningScreens, self).__init__(parent=parent, args=args)
@@ -62,29 +124,62 @@ class GuidedCommissioningScreens(Display):
         self.update_cavity()
         self.update_decarad()
 
-        self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
-        self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
-        self.ui.button_cavity_calibration.clicked.connect(partial(self.cavity_calibration_button_pushed, 3e7, 5e7))
-        self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
-        self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
-
-        self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
-
-        self.ui.button_selap_rampup.clicked.connect(self.selap_button_pressed)
+        self.setup_buttons()
 
         self.non_zero_rad_signal.connect(self.handle_non_zero_rad, Qt.QueuedConnection)
         self.rad_exceeded_signal.connect(self.handle_rad_exceeded, Qt.QueuedConnection)
         self.change_max_ades_signal.connect(self.set_ades_max_srf_PV, Qt.QueuedConnection)
 
         self.success_signal.connect(self.handle_success)
-        self.piezo_pre_rf_failed.connect(self.handle_piezo_pre_rf_fail, Qt.QueuedConnection)
 
         self.selap_timer = QTimer()
         self.selap_timer.timeout.connect(self.end_selap)
 
         self.success_popup: Optional[QMessageBox] = None
 
-        self.ui.piezo_prerf_abort_button.clicked.connect(self.abort_piezo_pre_rf)
+        # TODO move these into button press slot
+        self.piezo_pre_rf_thread = QThread()
+        self.piezo_pre_rf_worker = PiezoPreRFWorker()
+        self.setup_piezo_pre_rf_thread()
+
+    def setup_buttons(self):
+        self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
+        self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
+        self.ui.button_cavity_calibration.clicked.connect(partial(self.cavity_calibration_button_pushed, 3e7, 5e7))
+        self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
+        self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
+        self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
+        self.ui.button_selap_rampup.clicked.connect(self.selap_button_pressed)
+
+    def setup_piezo_pre_rf_thread(self):
+        self.piezo_pre_rf_worker.moveToThread(self.piezo_pre_rf_thread)
+        self.piezo_pre_rf_thread.started.connect(self.start_piezo_pre_rf_thread)
+        self.piezo_pre_rf_worker.finished.connect(self.piezo_pre_rf_thread.quit)
+        self.piezo_pre_rf_worker.finished.connect(self.piezo_pre_rf_worker.deleteLater)
+        self.piezo_pre_rf_worker.finished.connect(self.handle_success)
+        self.piezo_pre_rf_thread.finished.connect(self.piezo_pre_rf_thread.deleteLater)
+        self.piezo_pre_rf_worker.progress.connect(self.report_piezo_pre_rf_progress)
+        self.piezo_pre_rf_worker.status.connect(self.report_piezo_pre_rf_status)
+        self.piezo_pre_rf_worker.error.connect(self.handle_piezo_pre_rf_error)
+
+    @slot(str)
+    def handle_piezo_pre_rf_error(self, message):
+        piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
+        make_error_popup(title='Error during piezo pre-rf check',
+                         expert_edmbutton=piezo_prerf_edmbutton,
+                         exception=message,
+                         action_func=self.piezo_prerf_actionbutton_clicked)
+
+    @slot(int)
+    def report_piezo_pre_rf_progress(self, progress: int):
+        self.ui.pre_rf_progressbar.setValue(progress)
+
+    @slot(str)
+    def report_piezo_pre_rf_status(self, status: str):
+        self.ui.status_label.setText(status)
+
+    def start_piezo_pre_rf_thread(self):
+        self.piezo_pre_rf_worker.run(self.current_cavity)
 
     @slot(str)
     def handle_non_zero_rad(self, message):
@@ -109,14 +204,6 @@ class GuidedCommissioningScreens(Display):
     @slot(float)
     def set_ades_max_srf_PV(self, new_max):
         self.current_cavity.ades_max_srf_PV.put(new_max)
-
-    @slot(str)
-    def handle_piezo_pre_rf_fail(self, message):
-        piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
-        make_error_popup(title='Error during piezo pre-rf check',
-                         expert_edmbutton=piezo_prerf_edmbutton,
-                         exception=message,
-                         action_func=self.piezo_prerf_actionbutton_clicked)
 
     def check_nonzero_rad(self, severity):
         max_avg_dose = self.current_cm.decarad.max_avg_dose
@@ -484,98 +571,6 @@ class GuidedCommissioningScreens(Display):
                  "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
         return macro_string
 
-    def trigger_pass(self, value, **kwargs):
-        piezo = self.current_cavity.piezo
-        if value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
-            self.ui.status_label.setText("Test is running")
-        elif value == utils.PIEZO_SCRIPT_COMPLETE_VALUE:
-            self.ui.status_label.setText("Test finished running")
-            piezo.prerf_test_status_pv.clear_callbacks()
-            if (piezo.prerf_cha_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE
-                    and piezo.prerf_chb_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE):
-                self.current_cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
-                self.current_cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
-                self.current_cavity.results.piezo_prerf_checked = True
-                self.populate_status_labels()
-                self.save_results()
-                self.success_signal.emit("Piezo pre-rf check complete and successful")
-
-            else:
-                self.piezo_pre_rf_failed.emit("Piezo pre-rf test failed")
-        else:
-            piezo.prerf_test_status_pv.clear_callbacks()
-            self.piezo_pre_rf_failed.emit("Piezo pre-rf test failed")
-
-    def trigger_start_test(self, value, **kwargs):
-        if value == 0:
-            self.ui.status_label.setText("piezo dc offset at 0")
-            self.current_cavity.piezo.prerf_test_status_pv.add_callback(self.trigger_pass)
-            self.current_cavity.piezo.prerf_test_start_pv.put(1)
-            self.current_cavity.piezo.dc_setpoint_PV.clear_callbacks()
-
-    def trigger_dc_zero(self, value, **kwargs):
-        if value == utils.PIEZO_MANUAL_VALUE:
-            self.ui.status_label.setText("Piezo in manual")
-            self.current_cavity.piezo.dc_setpoint_PV.add_callback(self.trigger_start_test)
-            self.current_cavity.piezo.dc_setpoint_PV.put(0)
-            self.current_cavity.piezo.feedback_mode_PV.clear_callbacks()
-
-    def trigger_manual(self, value, **kwargs):
-        self.ui.status_label.setText("piezo enable value is {val}".format(val=value))
-        if value == utils.PIEZO_ENABLE_VALUE:
-            self.ui.status_label.setText("Piezo enabled")
-            self.current_cavity.piezo.feedback_mode_PV.add_callback(self.trigger_dc_zero)
-            self.current_cavity.piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
-            self.current_cavity.piezo.enable_PV.clear_callbacks()
-
-    def run_piezo_prerf_check(self):
-        self.current_cavity.turnOff()
-        self.current_cavity.piezo.enable_PV.add_callback(self.trigger_manual)
-        self.ui.status_label.setText("enabling piezo and triggering callback chain")
-        self.current_cavity.piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
-
-    @slot()
-    def abort_piezo_pre_rf(self):
-        self.ui.status_label.setText("Clearing piezo callback chain")
-        piezo = self.current_cavity.piezo
-        piezo.enable_PV.clear_callbacks()
-        piezo.feedback_mode_PV.clear_callbacks()
-        piezo.dc_setpoint_PV.clear_callbacks()
-        piezo.prerf_test_status_pv.clear_callbacks()
-
-    def run_piezo_prerf_check1(self):
-        self.current_cavity.turnOff()
-        piezo = self.current_cavity.piezo
-        piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
-        piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
-        # set piezo DC voltage offset to 0V
-        piezo.dc_setpoint_PV.put(0)
-        # run the test script
-        piezo.prerf_test_start_pv.put(1)
-
-        self.ui.status_label.setText("waiting 5 seconds for piezo tuner test to start")
-        sleep(5)
-
-        while piezo.prerf_test_status_pv.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
-            self.ui.status_label.setText("waiting for piezo tuner test to finish running", datetime.now())
-            sleep(1)
-
-        self.ui.status_label.setText("waiting 5s for piezo test status to update")
-        sleep(5)
-
-        if piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE:
-            raise utils.PiezoError('Piezo pre-rf test script was not successful')
-
-        if (piezo.prerf_cha_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE
-                and piezo.prerf_chb_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE):
-            self.current_cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
-            self.current_cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
-            self.current_cavity.results.piezo_prerf_checked = True
-            self.ui.status_label.setText("Piezo pre-rf check complete and successful")
-
-        else:
-            raise utils.PiezoError("Piezo test unsuccessful")
-
     def run_piezo_withrf_check(self):
         self.ui.status_label.setText("turning RF off")
         self.current_cavity.turnOff()
@@ -779,10 +774,7 @@ class GuidedCommissioningScreens(Display):
 
     def piezo_prerf_button_pressed(self):
         try:
-            self.run_piezo_prerf_check()
-            # self.populate_status_labels()
-            # self.save_results()
-            # self.success_signal.emit("Piezo pre rf check successful")
+            self.piezo_pre_rf_thread.start()
         except (utils.PiezoError, pyepicsUtils.PVInvalidError) as e:
             piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
             make_error_popup(title='Error during piezo pre-rf check',
