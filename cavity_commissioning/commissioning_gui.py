@@ -1,25 +1,21 @@
 import dataclasses
-import json
 import sys
 import warnings
-from datetime import datetime, timedelta
+from datetime import timedelta
 from functools import partial
 from os import path
 from threading import Lock
-from time import sleep
-from typing import Optional
+from typing import Callable, Optional
 
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QThread, QTimer
+from PyQt5.QtWidgets import QMessageBox, QProgressBar, QPushButton
 from edmbutton import PyDMEDMDisplayButton
-from epics.ca import CASeverityException
 from pydm import Display
-from qtpy.QtCore import Qt, Signal as signal, Slot as slot
+from qtpy.QtCore import Qt, Slot as slot
 
-import commissioningUtilities as utils
-import lcls_tools.superconducting.scLinacUtils as scLinacUtils
-from commissioningLinac import (ALL_CRYOMODULES, COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningCavity,
+from commissioningLinac import (ALL_CRYOMODULES, COMMISSIONING_CRYOMODULE_OBJECTS,
                                 CommissioningCryomodule, Decarad)
+from commissioning_workers import *
 from lcls_tools.common.pydm_tools.displayUtils import make_error_popup, make_info_popup, showDisplay
 from lcls_tools.common.pydm_tools.pydmPlotUtil import (TimePlotParams,
                                                        TimePlotUpdater,
@@ -34,8 +30,11 @@ class GuidedCommissioningScreens(Display):
     non_zero_rad_signal = signal(str)
     rad_exceeded_signal = signal(str)
     success_signal = signal(str)
+
     change_max_ades_signal = signal(float)
-    piezo_pre_rf_failed = signal(str)
+
+    def ui_filename(self):
+        return 'gui/commissioning.ui'
 
     def __init__(self, parent=None, args=None):
         super(GuidedCommissioningScreens, self).__init__(parent=parent, args=args)
@@ -48,6 +47,14 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity: Optional[CommissioningCavity] = None
         self.current_pvprefix = None
 
+        self.piezo_pre_rf_thread: QThread = None
+        self.ssa_char_thread: QThread = None
+        self.tune_thread: QThread = None
+        self.large_rack_thread: QThread = None
+        self.cav_cal_thread: QThread = None
+        self.piezo_with_rf_thread: QThread = None
+        self.selap_thread: QThread = None
+
         self.setup_combo_boxes()
 
         self.rf_controls_window = None
@@ -58,33 +65,140 @@ class GuidedCommissioningScreens(Display):
         self.tuner_window = None
         self.waveform_plot_updater = None
         self.time_plot_updater = TimePlotUpdater({})
+        self.ui.tuning_button.clicked.connect(self.setup_tuner_window)
 
         self.update_cavity()
         self.update_decarad()
 
-        self.ui.button_piezo_prerf.clicked.connect(self.piezo_prerf_button_pressed)
-        self.ui.button_ssa_char.clicked.connect(self.ssa_calibration_button_pushed)
-        self.ui.button_cavity_calibration.clicked.connect(partial(self.cavity_calibration_button_pushed, 3e7, 5e7))
-        self.ui.button_measure_8pi9.clicked.connect(self.freq_scan_button_pressed)
-        self.ui.button_piezo_withrf.clicked.connect(self.piezo_withrf_button_pressed)
-
-        self.ui.button_tune_cavity.clicked.connect(self.tune_cavity)
-
-        self.ui.button_selap_rampup.clicked.connect(self.selap_button_pressed)
+        self.connect_buttons()
 
         self.non_zero_rad_signal.connect(self.handle_non_zero_rad, Qt.QueuedConnection)
         self.rad_exceeded_signal.connect(self.handle_rad_exceeded, Qt.QueuedConnection)
-        self.change_max_ades_signal.connect(self.set_ades_max_srf_PV, Qt.QueuedConnection)
+        self.change_max_ades_signal.connect(self.current_cavity.ades_max_srf_PV.put)
 
         self.success_signal.connect(self.handle_success)
-        self.piezo_pre_rf_failed.connect(self.handle_piezo_pre_rf_fail, Qt.QueuedConnection)
 
         self.selap_timer = QTimer()
         self.selap_timer.timeout.connect(self.end_selap)
 
         self.success_popup: Optional[QMessageBox] = None
 
-        self.ui.piezo_prerf_abort_button.clicked.connect(self.abort_piezo_pre_rf)
+    def connect_buttons(self):
+        self.ui.button_piezo_prerf.clicked.connect(self.launch_piezo_pre_rf_thread)
+        self.ui.button_ssa_char.clicked.connect(self.launch_ssa_char_thread)
+
+        self.ui.button_cavity_calibration.clicked.connect(self.setup_rf_window)
+        self.ui.button_cavity_calibration.clicked.connect(self.launch_cav_cal_thread)
+
+        self.ui.button_measure_8pi9.clicked.connect(self.launch_large_rack_thread)
+        self.ui.button_piezo_withrf.clicked.connect(self.launch_piezo_with_rf_thread)
+
+        self.ui.button_tune_cavity.clicked.connect(self.setup_tuner_window)
+        self.ui.button_tune_cavity.clicked.connect(self.launch_tune_thread)
+
+        self.ui.button_selap_rampup.clicked.connect(self.launch_selap_thread)
+        self.ui.button_selap_rampup.clicked.connect(self.setup_rf_window)
+
+    def setup_thread(self, thread: QThread, worker: Worker,
+                     progressBar: QProgressBar,
+                     error_handler: Callable, abortButton: QPushButton,
+                     action_desc: Optional[str] = None):
+        worker.moveToThread(thread)
+        thread.started.connect(partial(worker.run, self.current_cavity))
+
+        worker.finished.connect(thread.quit)
+        worker.finished.connect(worker.deleteLater)
+        worker.finished.connect(self.handle_success)
+
+        thread.finished.connect(thread.deleteLater)
+
+        worker.progress.connect(progressBar.setValue)
+        worker.status.connect(self.ui.status_label.setText)
+
+        worker.error.connect(error_handler)
+        worker.error.connect(self.ui.status_label.setText)
+
+        abortButton.clicked.connect(thread.terminate)
+        abortButton.clicked.connect(partial(self.ui.status_label.setText,
+                                            "termination command sent to {action} thread".format(action=action_desc)))
+        thread.start()
+
+    @slot(str)
+    def handle_selap_error(self, e):
+        showDisplay(self.rf_controls_window)
+        popup = QMessageBox()
+        popup.setIcon(QMessageBox.Critical)
+        popup.setWindowTitle("SELAP Error")
+        popup.setText(str(e))
+        popup.exec()
+
+    def launch_selap_thread(self):
+        self.selap_thread = QThread()
+        worker = SELAPWorker()
+        self.setup_thread(self.selap_thread, worker,
+                          self.ui.selap_progressbar, self.handle_selap_error,
+                          self.ui.selap_abort, "SELAP setup")
+
+    def launch_piezo_with_rf_thread(self):
+        self.piezo_with_rf_thread = QThread()
+        worker = PiezoWithRFWorker()
+        self.setup_thread(self.piezo_with_rf_thread, worker,
+                          self.ui.piezo_with_rf_progressbar, self.handle_peizo_with_rf_error,
+                          self.ui.piezo_with_rf_abort, "Piezo with RF")
+
+    def launch_cav_cal_thread(self):
+        self.cav_cal_thread = QThread()
+        worker = CavCalWorker()
+        self.setup_thread(self.cav_cal_thread, worker,
+                          self.ui.cav_cal_progressbar, self.handle_cav_cal_error,
+                          self.ui.cavity_cal_abort, "Cavity calibration")
+
+    def handle_cav_cal_error(self, e):
+        cavity_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl')
+        make_error_popup('Cavity calibration failed', cavity_expert_button, e,
+                         self.cavity_actionbutton_clicked)
+
+    def launch_tune_thread(self):
+        self.tune_thread = QThread()
+        worker = TuneWorker()
+        self.setup_thread(self.tune_thread, worker, self.ui.tune_progressbar,
+                          self.handle_tune_error, self.ui.tune_abort, "Tune cavity")
+
+    @slot(str)
+    def handle_tune_error(self, message):
+        tuner_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_tuner_embed.edl')
+        make_error_popup('Detune PV invalid', tuner_expert_button, message, None)
+
+    def launch_large_rack_thread(self):
+        self.large_rack_thread = QThread()
+        worker = LargeRackWorker()
+        self.setup_thread(self.large_rack_thread, worker,
+                          self.ui.large_rack_progressbar, self.handle_large_rack_error,
+                          self.ui.large_rack_abort, "8pi/9")
+
+    def launch_ssa_char_thread(self):
+        self.ssa_char_thread = QThread()
+        worker = SSACharWorker()
+        self.setup_thread(self.ssa_char_thread, worker,
+                          self.ui.ssa_char_progressbar,
+                          self.handle_ssa_char_error, self.ui.ssa_char_abort,
+                          "ssa characterization")
+
+    def launch_piezo_pre_rf_thread(self):
+        self.piezo_pre_rf_thread = QThread()
+        worker = PiezoPreRFWorker()
+        self.setup_thread(self.piezo_pre_rf_thread, worker,
+                          self.ui.pre_rf_progressbar,
+                          self.handle_piezo_pre_rf_error,
+                          self.ui.piezo_pre_rf_abort, "piezo pre rf")
+
+    @slot(str)
+    def handle_piezo_pre_rf_error(self, message):
+        piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
+        make_error_popup(title='Error during piezo pre-rf check',
+                         expert_edmbutton=piezo_prerf_edmbutton,
+                         exception=message,
+                         action_func=self.piezo_prerf_actionbutton_clicked)
 
     @slot(str)
     def handle_non_zero_rad(self, message):
@@ -100,23 +214,13 @@ class GuidedCommissioningScreens(Display):
 
     @slot(str)
     def handle_success(self, message):
+        self.populate_status_labels()
+        self.current_cavity.save_results()
         if not self.success_popup:
             self.success_popup = make_info_popup(message)
         else:
             self.success_popup.setText(message)
             self.success_popup.exec()
-
-    @slot(float)
-    def set_ades_max_srf_PV(self, new_max):
-        self.current_cavity.ades_max_srf_PV.put(new_max)
-
-    @slot(str)
-    def handle_piezo_pre_rf_fail(self, message):
-        piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
-        make_error_popup(title='Error during piezo pre-rf check',
-                         expert_edmbutton=piezo_prerf_edmbutton,
-                         exception=message,
-                         action_func=self.piezo_prerf_actionbutton_clicked)
 
     def check_nonzero_rad(self, severity):
         max_avg_dose = self.current_cm.decarad.max_avg_dose
@@ -164,14 +268,22 @@ class GuidedCommissioningScreens(Display):
         self.tuner_window.ui.step_des_line_edit.returnPressed.connect(self.des_step_changed)
         self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
         self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
-        self.tuner_window.ui.button_mark_tuned.clicked.connect(self.tuned_button_clicked)
+        self.tuner_window.ui.button_mark_tuned.clicked.connect(self.mark_tuned_button_clicked)
+
+    def update_plot_timespan(self):
+        self.time_plot_updater.updateTimespans(self.live_signals_window.ui.timespan_spinbox.value())
 
     def live_signal_button_clicked(self):
-        if not self.live_signals_window:
-            self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
-            self.setup_plots()
-            self.update_cavity_plots()
-            self.update_decarad_plot()
+        try:
+            if not self.live_signals_window:
+                self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
+                self.setup_plots()
+                self.live_signals_window.ui.timespan_spinbox.editingFinished.connect(self.update_plot_timespan)
+                self.update_cavity_plots()
+                self.update_decarad_plot()
+        except AttributeError:
+            pass
+
         showDisplay(self.live_signals_window)
 
     def setup_plots(self):
@@ -198,29 +310,8 @@ class GuidedCommissioningScreens(Display):
         }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
-    def ui_filename(self):
-        return 'gui/commissioning.ui'
-
     def getPath(self, fileName):
         return path.join(self.pathHere, fileName)
-
-    def tune_cavity(self):
-        try:
-            if not self.tuner_window:
-                self.tuner_window = Display(ui_filename=self.getPath("gui/tuning.ui"))
-                self.time_plot_updater.plotParams[utils.DETUNE_PLOT_KEY] = TimePlotParams(
-                        plot=self.tuner_window.ui.tuning_plot, formLayout=self.tuner_window.ui.plot_layout)
-                self.connect_tuner_window()
-            self.update_tuner_window()
-            self.ui.status_label.setText("Setting cavity up for tuning")
-            self.current_cavity.setup_tuning()
-            self.current_cavity.steppertuner.connect_callback()
-            self.ui.status_label.setText("Ready for tuning")
-        except (utils.DetuneError, pyepicsUtils.PVInvalidError) as e:
-            tuner_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_tuner_embed.edl')
-            make_error_popup('Detune PV invalid', tuner_expert_button, e, None)
-
-        showDisplay(self.tuner_window)
 
     def setup_combo_boxes(self):
         self.ui.testlead.addItems(utils.TESTLEAD_LIST)
@@ -275,7 +366,8 @@ class GuidedCommissioningScreens(Display):
             label.setStyleSheet(status_map[status].stylesheet)
 
     def update_cavity(self):
-        self.save_results()
+        if self.current_cavity:
+            self.current_cavity.save_results()
 
         self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
             self.ui.pick_cm.currentText()]
@@ -283,7 +375,7 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.steppertuner.step_tot_pv.clear_callbacks()
         self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
-        self.load_results()
+        self.current_cavity.load_results()
 
         self.populate_status_labels()
 
@@ -345,7 +437,6 @@ class GuidedCommissioningScreens(Display):
                                    utils.CRYOSIGNALS_PLOT_KEY  : self.current_cm.cryo_signal_PVs,
                                    utils.SINGLE_CAVITY_PLOT_KEY: self.current_cavity.plot_pvs}
 
-            print(timeplot_update_map)
             self.time_plot_updater.updatePlots(timeplot_update_map)
 
     def update_tuner_window(self):
@@ -368,9 +459,18 @@ class GuidedCommissioningScreens(Display):
                                                                    +
                                                                    self.current_cavity.steppertuner.steps_cold_landing_pv.value)
 
-    def tuned_button_clicked(self):
+    def setup_tuner_window(self):
+        if not self.tuner_window:
+            self.tuner_window = Display(ui_filename=self.getPath("gui/tuning.ui"))
+            self.time_plot_updater.plotParams[utils.DETUNE_PLOT_KEY] = TimePlotParams(
+                    plot=self.tuner_window.ui.tuning_plot, formLayout=self.tuner_window.ui.plot_layout)
+            self.connect_tuner_window()
+        self.update_tuner_window()
+        showDisplay(self.tuner_window)
+
+    def mark_tuned_button_clicked(self):
         self.current_cavity.results.is_tuned = True
-        self.save_results()
+        self.current_cavity.save_results()
         self.populate_status_labels()
         self.success_signal.emit("Tuning successful")
 
@@ -443,7 +543,7 @@ class GuidedCommissioningScreens(Display):
     def onehour_done_button_pressed(self):
         self.current_cavity.results.onehourrun_complete = True
         self.current_cavity.results.commissioned_amplitude = self.current_cavity.ades_max_srf_PV.value
-        self.save_results()
+        self.current_cavity.save_results()
         self.current_cavity.turnOff()
         self.success_signal.emit("One hour run complete")
 
@@ -453,212 +553,28 @@ class GuidedCommissioningScreens(Display):
 
     @property
     def macro_string(self):
+        rfs_map = {1: "1A", 2: "1A", 3: "2A", 4: "2A", 5: "1B", 6: "1B", 7: "2B", 8: "2B"}
 
-        c = str(self.current_cavity.number)
+        rfs = rfs_map[self.current_cavity.number]
 
-        if self.current_cavity.number in (1, 2):
-            rfs = '1A'
-        elif self.current_cavity.number in (3, 4):
-            rfs = '2A'
-        elif self.current_cavity.number in (5, 6):
-            rfs = '1B'
-        else:
-            rfs = '2B'
-
-        if 1 <= self.current_cavity.number <= 4:
-            r = 'A'
-        else:
-            r = 'B'
-
+        r = self.current_cavity.rack.rackName
         cm = self.current_cm.pvPrefix[:-3]  # need to remove trailing colon and zeroes to match needed format
-
         id = self.current_cm.name
 
-        if self.current_cavity.number in (2, 4):
-            ch = 2
-        else:
-            ch = 1
+        ch = 2 if self.current_cavity.number in [2, 4] else 1
 
-        macro_string = ",".join(
-                ["C={c}".format(c=c), "RFS={rfs}".format(rfs=rfs), "R={r}".format(r=r), "CM={cm}".format(cm=cm),
-                 "ID={id}".format(id=id), "CH={ch}".format(ch=ch)])
+        macro_string = ",".join(["C={c}".format(c=self.current_cavity.number),
+                                 "RFS={rfs}".format(rfs=rfs),
+                                 "R={r}".format(r=r), "CM={cm}".format(cm=cm),
+                                 "ID={id}".format(id=id),
+                                 "CH={ch}".format(ch=ch)])
         return macro_string
 
-    def trigger_pass(self, value, **kwargs):
-        piezo = self.current_cavity.piezo
-        if value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
-            self.ui.status_label.setText("Test is running")
-        elif value == utils.PIEZO_SCRIPT_COMPLETE_VALUE:
-            self.ui.status_label.setText("Test finished running")
-            piezo.prerf_test_status_pv.clear_callbacks()
-            if (piezo.prerf_cha_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE
-                    and piezo.prerf_chb_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE):
-                self.current_cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
-                self.current_cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
-                self.current_cavity.results.piezo_prerf_checked = True
-                self.populate_status_labels()
-                self.save_results()
-                self.success_signal.emit("Piezo pre-rf check complete and successful")
-
-            else:
-                self.piezo_pre_rf_failed.emit("Piezo pre-rf test failed")
-        else:
-            piezo.prerf_test_status_pv.clear_callbacks()
-            self.piezo_pre_rf_failed.emit("Piezo pre-rf test failed")
-
-    def trigger_start_test(self, value, **kwargs):
-        if value == 0:
-            self.ui.status_label.setText("piezo dc offset at 0")
-            self.current_cavity.piezo.prerf_test_status_pv.add_callback(self.trigger_pass)
-            self.current_cavity.piezo.prerf_test_start_pv.put(1)
-            self.current_cavity.piezo.dc_setpoint_PV.clear_callbacks()
-
-    def trigger_dc_zero(self, value, **kwargs):
-        if value == utils.PIEZO_MANUAL_VALUE:
-            self.ui.status_label.setText("Piezo in manual")
-            self.current_cavity.piezo.dc_setpoint_PV.add_callback(self.trigger_start_test)
-            self.current_cavity.piezo.dc_setpoint_PV.put(0)
-            self.current_cavity.piezo.feedback_mode_PV.clear_callbacks()
-
-    def trigger_manual(self, value, **kwargs):
-        self.ui.status_label.setText("piezo enable value is {val}".format(val=value))
-        if value == utils.PIEZO_ENABLE_VALUE:
-            self.ui.status_label.setText("Piezo enabled")
-            self.current_cavity.piezo.feedback_mode_PV.add_callback(self.trigger_dc_zero)
-            self.current_cavity.piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
-            self.current_cavity.piezo.enable_PV.clear_callbacks()
-
-    def run_piezo_prerf_check(self):
-        self.current_cavity.turnOff()
-        self.current_cavity.piezo.enable_PV.add_callback(self.trigger_manual)
-        self.ui.status_label.setText("enabling piezo and triggering callback chain")
-        self.current_cavity.piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
-
-    @slot()
-    def abort_piezo_pre_rf(self):
-        self.ui.status_label.setText("Clearing piezo callback chain")
-        piezo = self.current_cavity.piezo
-        piezo.enable_PV.clear_callbacks()
-        piezo.feedback_mode_PV.clear_callbacks()
-        piezo.dc_setpoint_PV.clear_callbacks()
-        piezo.prerf_test_status_pv.clear_callbacks()
-
-    def run_piezo_prerf_check1(self):
-        self.current_cavity.turnOff()
-        piezo = self.current_cavity.piezo
-        piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
-        piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
-        # set piezo DC voltage offset to 0V
-        piezo.dc_setpoint_PV.put(0)
-        # run the test script
-        piezo.prerf_test_start_pv.put(1)
-
-        self.ui.status_label.setText("waiting 5 seconds for piezo tuner test to start")
-        sleep(5)
-
-        while piezo.prerf_test_status_pv.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
-            self.ui.status_label.setText("waiting for piezo tuner test to finish running", datetime.now())
-            sleep(1)
-
-        self.ui.status_label.setText("waiting 5s for piezo test status to update")
-        sleep(5)
-
-        if piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE:
-            raise utils.PiezoError('Piezo pre-rf test script was not successful')
-
-        if (piezo.prerf_cha_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE
-                and piezo.prerf_chb_status_PV.value == utils.PIEZO_PRERF_CHECKOUT_PASS_VALUE):
-            self.current_cavity.results.piezo_capacitance_a = piezo.capacitance_a_PV.value
-            self.current_cavity.results.piezo_capacitance_b = piezo.capacitance_b_PV.value
-            self.current_cavity.results.piezo_prerf_checked = True
-            self.ui.status_label.setText("Piezo pre-rf check complete and successful")
-
-        else:
-            raise utils.PiezoError("Piezo test unsuccessful")
-
-    def run_piezo_withrf_check(self):
-        self.ui.status_label.setText("turning RF off")
-        self.current_cavity.turnOff()
-
-        self.ui.status_label.setText("turning SSA on")
-        self.current_cavity.ssa.turnOn()
-
-        self.ui.status_label.setText("setting ADES to 5MV")
-        self.current_cavity.selAmplitudeDesPV.put(5)
-
-        self.ui.status_label.setText("setting cavity to SEL")
-        self.current_cavity.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SEL)
-
-        self.ui.status_label.setText("turning RF on")
-        self.current_cavity.turnOn()
-        piezo = self.current_cavity.piezo
-
-        self.ui.status_label.setText("waiting 5s for the detune to catch up")
-        sleep(5)
-
-        self.ui.status_label.setText("enabling piezo")
-        piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
-
-        self.ui.status_label.setText("setting piezo to manual")
-        piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
-
-        self.ui.status_label.setText("verifying that RFS detune is <100Hz")
-        if (self.current_cavity.detune_rfs_PV.severity == 3
-                or abs(self.current_cavity.detune_rfs_PV.value) > 100):
-            raise utils.PiezoError('Detuning is invalid or larger than 100Hz')
-
-        self.ui.status_label.setText("running piezo test script")
-        piezo.withrf_run_check_PV.put(1)
-
-        self.ui.status_label.setText("waiting 5s for piezo test script to run")
-        sleep(5)
-
-        while piezo.withrf_check_status_PV.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
-            self.ui.status_label.setText("waiting for piezo test script to finish running", datetime.now())
-            sleep(1)
-        if piezo.withrf_check_status_PV.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE:
-            raise utils.PiezoError('Piezo with-rf test script has exited with status \'crash\' ')
-
-        self.current_cavity.results.piezo_amplifiergain_a = piezo.amplifiergain_a_PV.value
-        self.current_cavity.results.piezo_amplifiergain_b = piezo.amplifiergain_b_PV.value
-
-        self.ui.status_label.setText("pushing and saving gain")
-        piezo.withrf_push_dfgain_PV.put(1)
-        piezo.withrf_save_dfgain_PV.put(1)
-
-        self.current_cavity.results.piezo_detune_gain = piezo.detunegain_new_PV.value
-        self.current_cavity.results.piezo_withrf_checked = True
-
-    def run_ssa_calibration(self, drivemax=0.8, attemptnumber=1):
-        self.ui.status_label.setText("trying calibration at {drive}; attempt #{attempt}".format(drive=drivemax,
-                                                                                                attempt=attemptnumber))
-        self.current_cavity.ssa_maxdrive_PV.put(drivemax)
-        try:
-            self.current_cavity.ssa.runCalibration()
-            self.current_cavity.results.ssa_maxdrive = drivemax
-            self.current_cavity.results.ssa_characterized = True
-        except scLinacUtils.SSACalibrationError:
-            self.ui.status_label.setText("calibration failed, lowering drive")
-            if attemptnumber <= 3:
-                self.run_ssa_calibration(drivemax - 0.05, attemptnumber + 1)
-            else:
-                raise
-
-    def ssa_calibration_button_pushed(self):
-        try:
-            self.run_ssa_calibration()
-            self.populate_status_labels()
-            self.save_results()
-            self.success_signal.emit("SSA calibration successful")
-        except (scLinacUtils.SSACalibrationError, scLinacUtils.SSAPowerError,
-                pyepicsUtils.PVInvalidError) as e:
-            self.ui.status_label.setText(e)
-            ssa_expert_button = PyDMEDMDisplayButton()
-            ssa_expert_button.filenames = ['$TOOLS/edm/display/llrf/rf_srf_char_embed_ssa.edl']
-            ssa_expert_button.macros = self.macro_string
-            ssa_expert_button.setText('Open SSA EDM expert screen')
-            ssa_expert_button.setDefault(True)
-            make_error_popup('SSA calibration failed', ssa_expert_button, e, self.ssa_actionbutton_clicked)
+    @slot(str)
+    def handle_ssa_char_error(self, message):
+        ssa_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ssa.edl')
+        make_error_popup('SSA calibration failed', ssa_expert_button, message,
+                         self.ssa_actionbutton_clicked)
 
     def ssa_actionbutton_clicked(self, qmessagebox: QMessageBox):
         clickedbutton = qmessagebox.clickedButton()
@@ -692,25 +608,6 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.results.piezo_withrf_checked = True
         self.populate_status_labels()
 
-    def cavity_calibration_button_pushed(self, loadedQLowerlimit, loadedQUpperlimit):
-        try:
-            if not self.rf_controls_window:
-                self.setup_rf_window()
-            self.rf_controls_window.show()
-            self.current_cavity.runCalibration(loadedQLowerlimit, loadedQUpperlimit)
-            self.current_cavity.results.fpc_qext_cold = self.current_cavity.measuredQLoadedPV.value
-            self.current_cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
-            self.current_cavity.results.cavity_calibration_run = True
-            self.populate_status_labels()
-            self.save_results()
-            self.success_signal.emit("Cavity calibration successful")
-        except (
-                scLinacUtils.CavityQLoadedCalibrationError, scLinacUtils.CavityScaleFactorCalibrationError,
-                TypeError, CASeverityException, pyepicsUtils.PVInvalidError) as e:
-            cavity_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl')
-            make_error_popup('Cavity calibration failed', cavity_expert_button, e,
-                             self.cavity_actionbutton_clicked)
-
     def make_edmbutton(self, filepath: str):
         edmbutton = PyDMEDMDisplayButton()
         edmbutton.filenames = [filepath]
@@ -727,88 +624,30 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
         self.populate_status_labels()
 
-    def measure_8pi9mode(self):
-        other_cavities = list(self.current_cavity.rack.cavities.keys())
-        other_cavities.remove(self.current_cavity.number)
-
-        self.ui.status_label.setText("removing other cavities from rack frequency scan")
-        for cavity in other_cavities:
-            self.current_cm.cavities[cavity].freq_search_select_PV.put(0)
-
-        self.ui.status_label.setText("selecting current cavity for rack frequency scan")
-        self.current_cavity.freq_search_select_PV.put(1)
-
-        self.current_cavity.rack.freq_search_low_PV.put(utils.FREQ_SEARCH_LOW)
-        self.current_cavity.rack.freq_search_high_PV.put(utils.FREQ_SEARCH_HIGH)
-        self.current_cavity.rack.freq_search_rms_thresh_PV.put(utils.FREQ_SEARCH_RMS_THRESH)
-        self.current_cavity.rack.freq_search_modeoverlap_PV.put(utils.FREQ_SEARCH_MODEOVERLAP)
-
-        self.current_cavity.rack.freq_search_start_PV.put(1)
-        self.ui.status_label.setText("Waiting 5s for the rack frequency scan to start")
-        sleep(5)
-
-        while self.current_cavity.rack.freq_search_status_PV.value == 3:
-            self.ui.status_label.setText("waiting for scan to finish running")
-            sleep(1)
-        if self.current_cavity.rack.freq_search_status_PV.value != 5:
-            raise utils.FreqSearchError('Frequency search did not exit successfully')
-        if (self.current_cavity.freq_search_8pi9_PV.value > -750000
-                or self.current_cavity.freq_search_8pi9_PV.value < -850000):
-            raise utils.FreqSearchError('8pi/9 frequency outside tolerance')
-        self.current_cavity.freq_search_push_PV.put(1)
-        self.current_cavity.results.eight_pi_nine_freq_measured = True
-
-        self.success_signal.emit("8pi/9 scan successful")
-
     def testlead_selected(self):
         self.current_cavity.results.test_lead = self.ui.testlead.currentText()
-        self.save_results()
+        self.current_cavity.save_results()
 
-    def freq_scan_button_pressed(self):
-        try:
-            self.measure_8pi9mode()
-        except (utils.FreqSearchError, pyepicsUtils.PVInvalidError) as e:
-            # TODO check why this does not get pulled up with the correct macros
-            freq_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_freq_scan_rack_embed_search.edl')
-            make_error_popup(title='Error finding 8pi/9 frequency',
-                             expert_edmbutton=freq_edmbutton,
-                             exception=e,
-                             action_func=self.freq_actionbutton_clicked)
-        self.populate_status_labels()
-        self.save_results()
+    @slot(str)
+    def handle_large_rack_error(self, e):
+        freq_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_freq_scan_rack_embed_search.edl')
+        make_error_popup(title='Error finding 8pi/9 frequency',
+                         expert_edmbutton=freq_edmbutton,
+                         exception=e,
+                         action_func=self.freq_actionbutton_clicked)
 
-    def piezo_prerf_button_pressed(self):
-        try:
-            self.run_piezo_prerf_check()
-            # self.populate_status_labels()
-            # self.save_results()
-            # self.success_signal.emit("Piezo pre rf check successful")
-        except (utils.PiezoError, pyepicsUtils.PVInvalidError) as e:
-            piezo_prerf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt.edl')
-            make_error_popup(title='Error during piezo pre-rf check',
-                             expert_edmbutton=piezo_prerf_edmbutton,
-                             exception=e,
-                             action_func=self.piezo_prerf_actionbutton_clicked)
-
-    def piezo_withrf_button_pressed(self):
-        try:
-            self.run_piezo_withrf_check()
-            self.populate_status_labels()
-            self.save_results()
-            self.success_signal.emit("Piezo with rf check successful")
-        except (utils.PiezoError, scLinacUtils.SSAPowerError,
-                pyepicsUtils.PVInvalidError) as e:
-            piezo_withrf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt_rf.edl')
-            make_error_popup(title='Error during piezo with-rf check',
-                             expert_edmbutton=piezo_withrf_edmbutton,
-                             exception=e,
-                             action_func=self.piezo_withrf_actionbutton_clicked)
+    def handle_peizo_with_rf_error(self, e):
+        piezo_withrf_edmbutton = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_pzt_rf.edl')
+        make_error_popup(title='Error during piezo with-rf check',
+                         expert_edmbutton=piezo_withrf_edmbutton,
+                         exception=e,
+                         action_func=self.piezo_withrf_actionbutton_clicked)
 
     def cold_freq_button_pressed(self):
         self.current_cavity.results.cold_land_freq_2K = float(self.tuner_window.ui.label_current_freq.text())
         self.tuner_window.ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_land_freq_2K))
         self.populate_status_labels()
-        self.save_results()
+        self.current_cavity.save_results()
 
     def end_selap(self):
         try:
@@ -818,43 +657,27 @@ class GuidedCommissioningScreens(Display):
                                                loadedQUpperlimit=scLinacUtils.LOADED_Q_UPPER_LIMIT)
             self.current_cavity.turnOff()
             self.current_cavity.ssa.turnOff()
-            self.save_results()
+            self.current_cavity.save_results()
             self.populate_status_labels()
             self.success_signal.emit('1h run complete')
         except scLinacUtils.CavityQLoadedCalibrationError as e:
-            cavity_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl')
-            make_error_popup('Cavity calibration failed', cavity_expert_button, e,
-                             self.cavity_actionbutton_clicked)
-
-    def selap_button_pressed(self):
-        try:
-            if not self.rf_controls_window:
-                self.setup_rf_window()
-                self.update_rf_plots()
-
-            self.current_cavity.selap_setup()
-            showDisplay(self.rf_controls_window)
-            make_info_popup('Walk amplitude up to {amax}MV in SELA'.format(amax=self.current_cavity.ades_max_PV.value))
-        except (utils.PiezoError, utils.DetuneError, scLinacUtils.SSAPowerError,
-                pyepicsUtils.PVInvalidError) as e:
-            showDisplay(self.rf_controls_window)
-            self.ui.status_label.setText(e)
-        self.populate_status_labels()
-        self.save_results()
+            self.handle_cav_cal_error(e)
 
     def setup_rf_window(self):
-        self.rf_controls_window = Display(ui_filename=self.getPath("gui/rf_controls.ui"))
-        self.waveform_plot_updater = WaveformPlotUpdater(
-                {utils.RFWAVEFORM_PLOT_KEY:
-                     WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
-                 utils.CHEETO_PLOT_KEY    : WaveformPlotParams(
-                         plot=self.rf_controls_window.ui.waveform_cheeto)})
-        self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
-        self.rf_controls_window.ui.button_start_timer.clicked.connect(self.start_timer)
-        self.rf_controls_window.ui.button_reset_timer.clicked.connect(self.restart_timer)
-        self.rf_controls_window.ui.button_stop_timer.clicked.connect(self.stop_timer)
+        if not self.rf_controls_window:
+            self.rf_controls_window = Display(ui_filename=self.getPath("gui/rf_controls.ui"))
+            self.waveform_plot_updater = WaveformPlotUpdater(
+                    {utils.RFWAVEFORM_PLOT_KEY:
+                         WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
+                     utils.CHEETO_PLOT_KEY    : WaveformPlotParams(
+                             plot=self.rf_controls_window.ui.waveform_cheeto)})
+            self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
+            self.rf_controls_window.ui.button_start_timer.clicked.connect(self.start_timer)
+            self.rf_controls_window.ui.button_reset_timer.clicked.connect(self.restart_timer)
+            self.rf_controls_window.ui.button_stop_timer.clicked.connect(self.stop_timer)
         self.update_rf_controls()
         self.update_rf_plots()
+        showDisplay(self.rf_controls_window)
 
     def start_timer(self):
         self.selap_timer.start(3600000)
@@ -868,40 +691,3 @@ class GuidedCommissioningScreens(Display):
     def stop_timer(self):
         self.selap_timer.stop()
         self.rf_controls_window.ui.label_timer.setText("Timer stopped")
-
-    # TODO add people handling
-    def load_results(self):
-        with open('results/cryomodule_results.json', 'r+') as f:
-            data = json.load(f)
-            if self.current_cm.name in data:
-                self.current_cm.results.__dict__.update(data[self.current_cm.name])
-        with open('results/cavity_results.json', 'r+') as f:
-            data = json.load(f)
-            if self.current_cm.name in data:
-                cav_data = data[self.current_cm.name]
-                # required precondition: keys in cav_data are ints 1 through 8
-                if str(self.current_cavity.number) in cav_data:
-                    self.current_cavity.results.__dict__.update(cav_data[str(self.current_cavity.number)])
-
-    def save_results(self):
-        if not self.current_cm:
-            return
-
-        fd = utils.acquireLock()
-
-        with open('results/cryomodule_results.json', 'r+') as f:
-            data = json.load(f)
-
-            data[self.current_cm.name] = self.current_cm.results.__dict__
-            f.seek(0)
-            json.dump(data, f)
-            f.truncate()
-        with open('results/cavity_results.json', 'r+') as f:
-            data = json.load(f)
-            if self.current_cm.name not in data:
-                data[self.current_cm.name] = {cav_number: {} for cav_number in self.current_cm.cavities.keys()}
-            data[self.current_cm.name][self.current_cavity.number] = self.current_cavity.results.__dict__
-            f.seek(0)
-            json.dump(data, f)
-            f.truncate()
-        utils.releaseLock(fd)
