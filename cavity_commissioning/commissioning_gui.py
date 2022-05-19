@@ -558,10 +558,12 @@ class GuidedCommissioningScreens(Display):
         ui.button_open_edm_rfcontrols.macros = [self.macro_string]
 
     def onehour_done_button_pressed(self):
+        self.selap_timer.stop()
         self.current_cavity.results.onehourrun_complete = True
+        self.current_cavity.ades_max_srf_PV.put(self.current_cavity.selAmplitudeDesPV.value)
         self.current_cavity.results.commissioned_amplitude = self.current_cavity.ades_max_srf_PV.value
-        self.current_cavity.save_results()
         self.current_cavity.turnOff()
+        self.current_cavity.save_results()
         self.success_signal.emit("One hour run complete")
 
     def update_stepsize(self):
