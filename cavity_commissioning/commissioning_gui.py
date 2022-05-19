@@ -269,16 +269,16 @@ class GuidedCommissioningScreens(Display):
         self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
         self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
         self.tuner_window.ui.button_mark_tuned.clicked.connect(self.mark_tuned_button_clicked)
-        self.tuner_window.ui.timespan_spinbox.returnPressed.connect(self.update_plot_timespan)
 
     def update_plot_timespan(self):
-        self.time_plot_updater.updateTimespans(self.tuner_window.ui.timespan_spinbox.value())
+        self.time_plot_updater.updateTimespans(self.live_signals_window.ui.timespan_spinbox.value())
 
     def live_signal_button_clicked(self):
         try:
             if not self.live_signals_window:
                 self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
                 self.setup_plots()
+                self.live_signals_window.ui.timespan_spinbox.editingFinished.connect(self.update_plot_timespan)
                 self.update_cavity_plots()
                 self.update_decarad_plot()
         except AttributeError:
