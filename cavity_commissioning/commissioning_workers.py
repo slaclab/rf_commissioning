@@ -100,7 +100,7 @@ class SSACharWorker(Worker):
                     self.run(cavity, drivemax - 0.05, attemptnumber + 1)
                 else:
                     self.error.emit(str(e))
-        except PVInvalidError as e:
+        except (PVInvalidError, scLinacUtils.SSAPowerError) as e:
             self.error.emit(str(e))
 
 
