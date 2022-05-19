@@ -47,6 +47,8 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity: Optional[CommissioningCavity] = None
         self.current_pvprefix = None
 
+        # These are here because otherwise the thread goes out of scope when the
+        # "launch thread" function exits
         self.piezo_pre_rf_thread: QThread = None
         self.ssa_char_thread: QThread = None
         self.tune_thread: QThread = None
@@ -54,6 +56,7 @@ class GuidedCommissioningScreens(Display):
         self.cav_cal_thread: QThread = None
         self.piezo_with_rf_thread: QThread = None
         self.selap_thread: QThread = None
+        self.stepper_thread: QThread = None
 
         self.setup_combo_boxes()
 
@@ -99,6 +102,8 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_selap_rampup.clicked.connect(self.launch_selap_thread)
         self.ui.button_selap_rampup.clicked.connect(self.setup_rf_window)
 
+        self.ui.rf_button.clicked.connect(self.setup_rf_window)
+
     def setup_thread(self, thread: QThread, worker: Worker,
                      progressBar: QProgressBar,
                      error_handler: Callable, abortButton: QPushButton,
@@ -109,14 +114,18 @@ class GuidedCommissioningScreens(Display):
         worker.finished.connect(thread.quit)
         worker.finished.connect(worker.deleteLater)
         worker.finished.connect(self.handle_success)
+        worker.finished.connect(print)
 
         thread.finished.connect(thread.deleteLater)
 
-        worker.progress.connect(progressBar.setValue)
+        if progressBar:
+            worker.progress.connect(progressBar.setValue)
         worker.status.connect(self.ui.status_label.setText)
+        worker.status.connect(print)
 
         worker.error.connect(error_handler)
         worker.error.connect(self.ui.status_label.setText)
+        worker.error.connect(print)
 
         abortButton.clicked.connect(thread.terminate)
         abortButton.clicked.connect(partial(self.ui.status_label.setText,
@@ -265,10 +274,10 @@ class GuidedCommissioningScreens(Display):
 
     def connect_tuner_window(self):
         self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
-        self.tuner_window.ui.step_des_line_edit.returnPressed.connect(self.des_step_changed)
         self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
         self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
         self.tuner_window.ui.button_mark_tuned.clicked.connect(self.mark_tuned_button_clicked)
+        self.tuner_window.ui.step_des_spinBox.editingFinished.connect(self.launch_stepper_worker)
 
     def update_plot_timespan(self):
         self.time_plot_updater.updateTimespans(self.live_signals_window.ui.timespan_spinbox.value())
@@ -482,15 +491,23 @@ class GuidedCommissioningScreens(Display):
         ui.estimated_steps_label.setText(str(int(est_steps)))
         ui.label_current_freq.setText(str(value + self.current_cavity.frequency))
 
-    def des_step_changed(self):
-        des_steps = int(self.tuner_window.ui.step_des_line_edit.text())
-        self.ui.status_label.setText("Issuing stepper move command")
-        self.current_cavity.steppertuner.move(des_steps,
-                                              maxSteps=utils.STEPPER_MAX_STEPS,
-                                              speed=scLinacUtils.MAX_STEPPER_SPEED)
-        self.ui.status_label.setText("stepper done moving")
-        self.current_cavity.current_steps += des_steps
-        self.tuner_window.ui.label_session_steps.setText(str(self.current_cavity.current_steps))
+    def launch_stepper_worker(self):
+        if (not self.tuner_window.ui.step_des_spinBox.value()
+                or (self.stepper_thread and not self.stepper_thread.isFinished())):
+            return
+        self.stepper_thread = QThread()
+        worker = StepperWorker(self.tuner_window.ui.step_des_spinBox.value())
+        self.setup_thread(self.stepper_thread, worker,
+                          None, self.handle_stepper_err,
+                          self.tuner_window.ui.step_abort_button, "Stepper move")
+
+    @slot(str)
+    def handle_stepper_err(self, exception):
+        popup = QMessageBox()
+        popup.setIcon(QMessageBox.Critical)
+        popup.setWindowTitle("Stepper Error")
+        popup.setText(exception)
+        popup.exec()
 
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)

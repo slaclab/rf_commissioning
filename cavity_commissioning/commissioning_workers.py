@@ -266,3 +266,20 @@ class SELAPWorker(Worker):
         except (utils.PiezoError, utils.DetuneError, scLinacUtils.SSAPowerError,
                 pyepicsUtils.PVInvalidError) as e:
             self.error.emit(str(e))
+
+
+class StepperWorker(Worker):
+    def __init__(self, des_steps: int):
+        super().__init__()
+        self.des_steps = des_steps
+
+    def run(self, cavity: CommissioningCavity):
+        try:
+            self.status.emit("Sending move command")
+            cavity.steppertuner.move(self.des_steps, maxSteps=utils.STEPPER_MAX_STEPS,
+                                     speed=scLinacUtils.MAX_STEPPER_SPEED)
+            self.status.emit("stepper done moving")
+            cavity.current_steps += self.des_steps
+            self.finished.emit(str(cavity.current_steps))
+        except (scLinacUtils.StepperError, PVInvalidError) as e:
+            self.error.emit(str(e))
