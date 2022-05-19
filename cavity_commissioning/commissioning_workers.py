@@ -218,7 +218,7 @@ class LargeRackWorker(Worker):
 
             self.progress.emit(50)
 
-            cavity.rack.freq_search_start_PV.put(1)
+            cavity.rack.freq_search_start_PV.put(1, waitForPut=False)
             self.status.emit("Waiting 5s for the rack frequency scan to start")
             sleep(5)
 
