@@ -1,6 +1,7 @@
+import json
 from datetime import datetime, timedelta
 from time import sleep
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 from numpy import nanmean
 
@@ -8,9 +9,10 @@ import commissioningUtilities as utils
 from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.common.pyepics_tools.pyepicsUtils import PV
 from lcls_tools.superconducting import scLinacUtils
-from lcls_tools.superconducting.scLinac import (BEAMLINEVACUUM_INFIXES, Cavity, Cryomodule,
-                                                INSULATINGVACUUM_CRYOMODULES, L0B, L1B, L1BHL, L2B, L3B, Linac, Magnet,
-                                                Rack, SSA, StepperTuner)
+from lcls_tools.superconducting.scLinac import (Cavity, CryoDict, Cryomodule,
+                                                L0B, L1B, L1BHL, L2B, L3B, Rack, SSA, StepperTuner)
+
+ALL_CRYOMODULES = L0B + L1B + L1BHL + L2B + L3B
 
 
 class DecaradHead:
@@ -186,6 +188,39 @@ class CommissioningCavity(Cavity):
         self.non_zero_rad_flagged = False
         self.rad_exceeded_flagged = False
 
+    def load_results(self):
+        with open('results/cryomodule_results.json', 'r+') as f:
+            data = json.load(f)
+            if self.cryomodule.name in data:
+                self.cryomodule.results.__dict__.update(data[self.cryomodule.name])
+        with open('results/cavity_results.json', 'r+') as f:
+            data = json.load(f)
+            if self.cryomodule.name in data:
+                cav_data = data[self.cryomodule.name]
+                # required precondition: keys in cav_data are ints 1 through 8
+                if str(self.number) in cav_data:
+                    self.results.__dict__.update(cav_data[str(self.number)])
+
+    def save_results(self):
+        fd = utils.acquireLock()
+
+        with open('results/cryomodule_results.json', 'r+') as f:
+            data = json.load(f)
+
+            data[self.cryomodule.name] = self.cryomodule.results.__dict__
+            f.seek(0)
+            json.dump(data, f)
+            f.truncate()
+        with open('results/cavity_results.json', 'r+') as f:
+            data = json.load(f)
+            if self.cryomodule.name not in data:
+                data[self.cryomodule.name] = {cav_number: {} for cav_number in self.cryomodule.cavities.keys()}
+            data[self.cryomodule.name][self.number] = self.results.__dict__
+            f.seek(0)
+            json.dump(data, f)
+            f.truncate()
+        utils.releaseLock(fd)
+
     # TODO set the chirp parameters to default before starting
     def setup_tuning(self):
         # self.turnOff()
@@ -339,39 +374,7 @@ class CommissioningStepper(StepperTuner):
         self.step_tot_pv.add_callback(self.checkTemp)
 
 
-linacs = {"L0B": Linac("L0B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[0],
-                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[0]),
-          "L1B": Linac("L1B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[1],
-                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[1]),
-          "L2B": Linac("L2B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[2],
-                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[2]),
-          "L3B": Linac("L3B", beamlineVacuumInfixes=BEAMLINEVACUUM_INFIXES[3],
-                       insulatingVacuumCryomodules=INSULATINGVACUUM_CRYOMODULES[3])}
-
-ALL_CRYOMODULES = L0B + L1B + L1BHL + L2B + L3B
-
-
-class CryoDict(dict):
-    def __missing__(self, key):
-        if key in L0B:
-            linac = linacs['L0B']
-        elif key in L1B:
-            linac = linacs['L1B']
-        elif key in L1BHL:
-            linac = linacs['L1B']
-        elif key in L2B:
-            linac = linacs['L2B']
-        elif key in L3B:
-            linac = linacs['L3B']
-        else:
-            raise ValueError("Cryomodule {} not found in any linac region.".format(key))
-        return CommissioningCryomodule(cryoName=key,
-                                       linacObject=linac,
-                                       cavityClass=CommissioningCavity,
-                                       magnetClass=Magnet,
-                                       rackClass=CommissioningRack,
-                                       stepperClass=CommissioningStepper,
-                                       isHarmonicLinearizer=(key in L1BHL))
-
-
-COMMISSIONING_CRYOMODULE_OBJECTS = CryoDict()
+COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = CryoDict(cryomoduleClass=CommissioningCryomodule,
+                                                                                cavityClass=CommissioningCavity,
+                                                                                rackClass=CommissioningRack,
+                                                                                stepperClass=CommissioningStepper)
