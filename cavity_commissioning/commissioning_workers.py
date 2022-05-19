@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from datetime import datetime
 from time import sleep
-from typing import Dict
 
 from PyQt5.QtCore import QObject
 from epics.ca import CASeverityException
@@ -194,15 +193,11 @@ class PiezoWithRFWorker(Worker):
 class LargeRackWorker(Worker):
     def run(self, cavity: CommissioningCavity):
         try:
-            other_cavities: Dict[int, CommissioningCavity] = {}
-            for num, other_cavity in cavity.rack.cavities.items():
-                if num != cavity.number:
-                    other_cavities[num] = other_cavity
-
             self.status.emit("removing cavities not {num} from rack frequency scan"
                              .format(num=cavity.number))
-            for cavity in other_cavities.values():
-                cavity.freq_search_select_PV.put(0)
+            for num, other_cavity in cavity.rack.cavities.items():
+                if num != cavity.number:
+                    other_cavity.freq_search_select_PV.put(0)
 
             self.progress.emit(0)
 
