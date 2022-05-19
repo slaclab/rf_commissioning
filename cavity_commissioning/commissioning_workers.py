@@ -51,11 +51,11 @@ class PiezoPreRFWorker(Worker):
             piezo.prerf_test_start_pv.put(1)
 
             self.status.emit("waiting for piezo tuner test to start")
-            while cavity.piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_RUNNING_VALUE:
+            while piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_RUNNING_VALUE:
                 sleep(1)
 
             self.status.emit("waiting for piezo test to finish")
-            while cavity.piezo.prerf_test_status_pv == utils.PIEZO_SCRIPT_RUNNING_VALUE:
+            while piezo.prerf_test_status_pv.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
                 sleep(1)
 
             self.progress.emit(82.5)
