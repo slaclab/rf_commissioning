@@ -313,7 +313,8 @@ class CommissioningRack(Rack):
         self.freq_search_rms_thresh_PV: PV = PV(self.pvPrefix + "FSCAN:RMS_THRESH")
         self.freq_search_modeoverlap_PV: PV = PV(self.pvPrefix + "FSCAN:MODE_OVERLAP")
         self.freq_search_start_PV: PV = PV(self.pvPrefix + "FSCAN:START")
-        self.freq_search_status_PV: PV = PV(self.pvPrefix + "FSCAN:STAT")
+        self.freq_scan_status_PV: PV = PV(self.pvPrefix + "FSCAN:STAT")
+        self.freq_search_stat_PV: PV = PV(self.pvPrefix + "FSCAN:SEARCHSTAT")
 
 
 class CommissioningCryomodule(Cryomodule):

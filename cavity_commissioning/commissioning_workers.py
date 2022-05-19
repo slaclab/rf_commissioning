@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from copy import copy
 from datetime import datetime
 from time import sleep
 from typing import Dict
@@ -195,8 +194,10 @@ class PiezoWithRFWorker(Worker):
 class LargeRackWorker(Worker):
     def run(self, cavity: CommissioningCavity):
         try:
-            other_cavities: Dict[int, CommissioningCavity] = copy(cavity.rack.cavities)
-            other_cavities.pop(cavity.number)
+            other_cavities: Dict[int, CommissioningCavity] = {}
+            for num, other_cavity in cavity.rack.cavities.items():
+                if num != cavity.number:
+                    other_cavities[num] = other_cavity
 
             self.status.emit("removing other cavities from rack frequency scan")
             for cavity in other_cavities.values():
@@ -223,16 +224,18 @@ class LargeRackWorker(Worker):
             sleep(5)
 
             self.status.emit("waiting for scan to finish running")
-            while cavity.rack.freq_search_status_PV.value == 3:
+            while cavity.rack.freq_scan_status_PV.value == 3:
                 sleep(1)
 
             self.progress.emit(75)
 
-            if cavity.rack.freq_search_status_PV.value != 5:
+            if cavity.rack.freq_search_stat_PV.value != 0:
                 self.error.emit('Frequency search did not exit successfully')
+                return
             if (cavity.freq_search_8pi9_PV.value > -750000
                     or cavity.freq_search_8pi9_PV.value < -850000):
                 self.error.emit('8pi/9 frequency outside tolerance')
+                return
             cavity.freq_search_push_PV.put(1)
             cavity.results.eight_pi_nine_freq_measured = True
 
