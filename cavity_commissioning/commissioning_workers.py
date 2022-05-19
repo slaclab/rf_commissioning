@@ -199,13 +199,15 @@ class LargeRackWorker(Worker):
                 if num != cavity.number:
                     other_cavities[num] = other_cavity
 
-            self.status.emit("removing other cavities from rack frequency scan")
+            self.status.emit("removing cavities not {num} from rack frequency scan"
+                             .format(num=cavity.number))
             for cavity in other_cavities.values():
                 cavity.freq_search_select_PV.put(0)
 
             self.progress.emit(0)
 
-            self.status.emit("selecting current cavity for rack frequency scan")
+            self.status.emit("selecting cavity {num} for rack frequency scan"
+                             .format(num=cavity.number))
             cavity.freq_search_select_PV.put(1)
 
             self.progress.emit(25)
