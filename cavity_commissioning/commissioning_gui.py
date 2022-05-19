@@ -1,5 +1,4 @@
 import dataclasses
-import json
 import sys
 import warnings
 from datetime import timedelta
@@ -216,7 +215,7 @@ class GuidedCommissioningScreens(Display):
     @slot(str)
     def handle_success(self, message):
         self.populate_status_labels()
-        self.save_results()
+        self.current_cavity.save_results()
         if not self.success_popup:
             self.success_popup = make_info_popup(message)
         else:
@@ -270,13 +269,21 @@ class GuidedCommissioningScreens(Display):
         self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
         self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
         self.tuner_window.ui.button_mark_tuned.clicked.connect(self.mark_tuned_button_clicked)
+        self.tuner_window.ui.timespan_spinbox.returnPressed.connect(self.update_plot_timespan)
+
+    def update_plot_timespan(self):
+        self.time_plot_updater.updateTimespans(self.tuner_window.ui.timespan_spinbox.value())
 
     def live_signal_button_clicked(self):
-        if not self.live_signals_window:
-            self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
-            self.setup_plots()
-            self.update_cavity_plots()
-            self.update_decarad_plot()
+        try:
+            if not self.live_signals_window:
+                self.live_signals_window = Display(ui_filename=self.getPath("gui/live_signals.ui"))
+                self.setup_plots()
+                self.update_cavity_plots()
+                self.update_decarad_plot()
+        except AttributeError:
+            pass
+
         showDisplay(self.live_signals_window)
 
     def setup_plots(self):
@@ -359,7 +366,8 @@ class GuidedCommissioningScreens(Display):
             label.setStyleSheet(status_map[status].stylesheet)
 
     def update_cavity(self):
-        self.save_results()
+        if self.current_cavity:
+            self.current_cavity.save_results()
 
         self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
             self.ui.pick_cm.currentText()]
@@ -367,7 +375,7 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.steppertuner.step_tot_pv.clear_callbacks()
         self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
-        self.load_results()
+        self.current_cavity.load_results()
 
         self.populate_status_labels()
 
@@ -462,7 +470,7 @@ class GuidedCommissioningScreens(Display):
 
     def mark_tuned_button_clicked(self):
         self.current_cavity.results.is_tuned = True
-        self.save_results()
+        self.current_cavity.save_results()
         self.populate_status_labels()
         self.success_signal.emit("Tuning successful")
 
@@ -535,7 +543,7 @@ class GuidedCommissioningScreens(Display):
     def onehour_done_button_pressed(self):
         self.current_cavity.results.onehourrun_complete = True
         self.current_cavity.results.commissioned_amplitude = self.current_cavity.ades_max_srf_PV.value
-        self.save_results()
+        self.current_cavity.save_results()
         self.current_cavity.turnOff()
         self.success_signal.emit("One hour run complete")
 
@@ -618,7 +626,7 @@ class GuidedCommissioningScreens(Display):
 
     def testlead_selected(self):
         self.current_cavity.results.test_lead = self.ui.testlead.currentText()
-        self.save_results()
+        self.current_cavity.save_results()
 
     @slot(str)
     def handle_large_rack_error(self, e):
@@ -639,7 +647,7 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity.results.cold_land_freq_2K = float(self.tuner_window.ui.label_current_freq.text())
         self.tuner_window.ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_land_freq_2K))
         self.populate_status_labels()
-        self.save_results()
+        self.current_cavity.save_results()
 
     def end_selap(self):
         try:
@@ -649,7 +657,7 @@ class GuidedCommissioningScreens(Display):
                                                loadedQUpperlimit=scLinacUtils.LOADED_Q_UPPER_LIMIT)
             self.current_cavity.turnOff()
             self.current_cavity.ssa.turnOff()
-            self.save_results()
+            self.current_cavity.save_results()
             self.populate_status_labels()
             self.success_signal.emit('1h run complete')
         except scLinacUtils.CavityQLoadedCalibrationError as e:
@@ -683,40 +691,3 @@ class GuidedCommissioningScreens(Display):
     def stop_timer(self):
         self.selap_timer.stop()
         self.rf_controls_window.ui.label_timer.setText("Timer stopped")
-
-    # TODO add people handling
-    def load_results(self):
-        with open('results/cryomodule_results.json', 'r+') as f:
-            data = json.load(f)
-            if self.current_cm.name in data:
-                self.current_cm.results.__dict__.update(data[self.current_cm.name])
-        with open('results/cavity_results.json', 'r+') as f:
-            data = json.load(f)
-            if self.current_cm.name in data:
-                cav_data = data[self.current_cm.name]
-                # required precondition: keys in cav_data are ints 1 through 8
-                if str(self.current_cavity.number) in cav_data:
-                    self.current_cavity.results.__dict__.update(cav_data[str(self.current_cavity.number)])
-
-    def save_results(self):
-        if not self.current_cm:
-            return
-
-        fd = utils.acquireLock()
-
-        with open('results/cryomodule_results.json', 'r+') as f:
-            data = json.load(f)
-
-            data[self.current_cm.name] = self.current_cm.results.__dict__
-            f.seek(0)
-            json.dump(data, f)
-            f.truncate()
-        with open('results/cavity_results.json', 'r+') as f:
-            data = json.load(f)
-            if self.current_cm.name not in data:
-                data[self.current_cm.name] = {cav_number: {} for cav_number in self.current_cm.cavities.keys()}
-            data[self.current_cm.name][self.current_cavity.number] = self.current_cavity.results.__dict__
-            f.seek(0)
-            json.dump(data, f)
-            f.truncate()
-        utils.releaseLock(fd)

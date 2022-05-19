@@ -1,6 +1,7 @@
+import json
 from datetime import datetime, timedelta
 from time import sleep
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 from numpy import nanmean
 
@@ -187,6 +188,39 @@ class CommissioningCavity(Cavity):
         self.non_zero_rad_flagged = False
         self.rad_exceeded_flagged = False
 
+    def load_results(self):
+        with open('results/cryomodule_results.json', 'r+') as f:
+            data = json.load(f)
+            if self.cryomodule.name in data:
+                self.cryomodule.results.__dict__.update(data[self.cryomodule.name])
+        with open('results/cavity_results.json', 'r+') as f:
+            data = json.load(f)
+            if self.cryomodule.name in data:
+                cav_data = data[self.cryomodule.name]
+                # required precondition: keys in cav_data are ints 1 through 8
+                if str(self.number) in cav_data:
+                    self.results.__dict__.update(cav_data[str(self.number)])
+
+    def save_results(self):
+        fd = utils.acquireLock()
+
+        with open('results/cryomodule_results.json', 'r+') as f:
+            data = json.load(f)
+
+            data[self.cryomodule.name] = self.cryomodule.results.__dict__
+            f.seek(0)
+            json.dump(data, f)
+            f.truncate()
+        with open('results/cavity_results.json', 'r+') as f:
+            data = json.load(f)
+            if self.cryomodule.name not in data:
+                data[self.cryomodule.name] = {cav_number: {} for cav_number in self.cryomodule.cavities.keys()}
+            data[self.cryomodule.name][self.number] = self.results.__dict__
+            f.seek(0)
+            json.dump(data, f)
+            f.truncate()
+        utils.releaseLock(fd)
+
     # TODO set the chirp parameters to default before starting
     def setup_tuning(self):
         # self.turnOff()
@@ -340,7 +374,7 @@ class CommissioningStepper(StepperTuner):
         self.step_tot_pv.add_callback(self.checkTemp)
 
 
-COMMISSIONING_CRYOMODULE_OBJECTS = CryoDict(cryomoduleClass=CommissioningCryomodule,
-                                            cavityClass=CommissioningCavity,
-                                            rackClass=CommissioningRack,
-                                            stepperClass=CommissioningStepper)
+COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = CryoDict(cryomoduleClass=CommissioningCryomodule,
+                                                                                cavityClass=CommissioningCavity,
+                                                                                rackClass=CommissioningRack,
+                                                                                stepperClass=CommissioningStepper)
