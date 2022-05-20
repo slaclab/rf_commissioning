@@ -142,6 +142,7 @@ class GuidedCommissioningScreens(Display):
         popup.exec()
 
     def launch_selap_thread(self):
+        self.restart_thread(self.selap_thread)
         self.selap_thread = QThread()
         worker = SELAPWorker()
         self.setup_thread(self.selap_thread, worker,
@@ -149,6 +150,7 @@ class GuidedCommissioningScreens(Display):
                           self.ui.selap_abort, "SELAP setup")
 
     def launch_piezo_with_rf_thread(self):
+        self.restart_thread(self.piezo_with_rf_thread)
         self.piezo_with_rf_thread = QThread()
         worker = PiezoWithRFWorker()
         self.setup_thread(self.piezo_with_rf_thread, worker,
@@ -156,11 +158,19 @@ class GuidedCommissioningScreens(Display):
                           self.ui.piezo_with_rf_abort, "Piezo with RF")
 
     def launch_cav_cal_thread(self):
+        self.restart_thread(self.cav_cal_thread)
+
         self.cav_cal_thread = QThread()
         worker = CavCalWorker()
         self.setup_thread(self.cav_cal_thread, worker,
                           self.ui.cav_cal_progressbar, self.handle_cav_cal_error,
                           self.ui.cavity_cal_abort, "Cavity calibration")
+
+    def restart_thread(self, thread):
+        if thread and not thread.isFinished():
+            thread.terminate()
+            thread.wait()
+            self.ui.status_label.setText("Restarting thread")
 
     def handle_cav_cal_error(self, e):
         cavity_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl')
@@ -168,6 +178,7 @@ class GuidedCommissioningScreens(Display):
                          self.cavity_actionbutton_clicked)
 
     def launch_tune_thread(self):
+        self.restart_thread(self.tune_thread)
         self.tune_thread = QThread()
         worker = TuneWorker()
         self.setup_thread(self.tune_thread, worker, self.ui.tune_progressbar,
@@ -179,6 +190,7 @@ class GuidedCommissioningScreens(Display):
         make_error_popup('Detune PV invalid', tuner_expert_button, message, None)
 
     def launch_large_rack_thread(self):
+        self.restart_thread(self.large_rack_thread)
         self.large_rack_thread = QThread()
         worker = LargeRackWorker()
         self.setup_thread(self.large_rack_thread, worker,
@@ -186,6 +198,7 @@ class GuidedCommissioningScreens(Display):
                           self.ui.large_rack_abort, "8pi/9")
 
     def launch_ssa_char_thread(self):
+        self.restart_thread(self.ssa_char_thread)
         self.ssa_char_thread = QThread()
         worker = SSACharWorker()
         self.setup_thread(self.ssa_char_thread, worker,
@@ -194,6 +207,7 @@ class GuidedCommissioningScreens(Display):
                           "ssa characterization")
 
     def launch_piezo_pre_rf_thread(self):
+        self.restart_thread(self.piezo_pre_rf_thread)
         self.piezo_pre_rf_thread = QThread()
         worker = PiezoPreRFWorker()
         self.setup_thread(self.piezo_pre_rf_thread, worker,
