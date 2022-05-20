@@ -298,24 +298,24 @@ class GuidedCommissioningScreens(Display):
     def setup_plots(self):
         ui = self.live_signals_window.ui
         time_plot_updater = {
-            utils.STEPPERTEMP_PLOT_KEY  : TimePlotParams(plot=ui.plot_steppertemps,
-                                                         formLayout=ui.stepper_form),
-            utils.HOMUS_PLOT_KEY        : TimePlotParams(plot=ui.plot_homus_temp,
-                                                         formLayout=ui.up_hom_form),
-            utils.HOMDS_PLOT_KEY        : TimePlotParams(plot=ui.plot_homds_temp,
-                                                         formLayout=ui.down_hom_form),
-            utils.CPLRTOP_PLOT_KEY      : TimePlotParams(plot=ui.plot_couplertop_temp,
-                                                         formLayout=ui.coup_top_form),
-            utils.CPLRBOT_PLOT_KEY      : TimePlotParams(plot=ui.plot_couplerbot_temp,
-                                                         formLayout=ui.coup_bot_hom),
-            utils.CMVACUUM_PLOT_KEY     : TimePlotParams(plot=ui.plot_cmvacuum,
-                                                         formLayout=ui.vacuum_form),
-            utils.CRYOSIGNALS_PLOT_KEY  : TimePlotParams(plot=ui.plot_cryosignals,
-                                                         formLayout=ui.cryo_form),
+            utils.STEPPERTEMP_PLOT_KEY: TimePlotParams(plot=ui.plot_steppertemps,
+                                                       formLayout=ui.stepper_form),
+            utils.HOMUS_PLOT_KEY: TimePlotParams(plot=ui.plot_homus_temp,
+                                                 formLayout=ui.up_hom_form),
+            utils.HOMDS_PLOT_KEY: TimePlotParams(plot=ui.plot_homds_temp,
+                                                 formLayout=ui.down_hom_form),
+            utils.CPLRTOP_PLOT_KEY: TimePlotParams(plot=ui.plot_couplertop_temp,
+                                                   formLayout=ui.coup_top_form),
+            utils.CPLRBOT_PLOT_KEY: TimePlotParams(plot=ui.plot_couplerbot_temp,
+                                                   formLayout=ui.coup_bot_hom),
+            utils.CMVACUUM_PLOT_KEY: TimePlotParams(plot=ui.plot_cmvacuum,
+                                                    formLayout=ui.vacuum_form),
+            utils.CRYOSIGNALS_PLOT_KEY: TimePlotParams(plot=ui.plot_cryosignals,
+                                                       formLayout=ui.cryo_form),
             utils.SINGLE_CAVITY_PLOT_KEY: TimePlotParams(plot=ui.plot_single_cavity_overview,
                                                          formLayout=ui.single_cav_form),
-            utils.DECARAD_PLOT_KEY      : TimePlotParams(plot=ui.plot_decarad,
-                                                         formLayout=ui.decarad_form)
+            utils.DECARAD_PLOT_KEY: TimePlotParams(plot=ui.plot_decarad,
+                                                   formLayout=ui.decarad_form)
         }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
@@ -344,7 +344,7 @@ class GuidedCommissioningScreens(Display):
             def stylesheet(self):
                 return 'color: {color};'.format(color=self.color)
 
-        status_map = {True : StatusMap('Complete', 'green'),
+        status_map = {True: StatusMap('Complete', 'green'),
                       False: StatusMap('Incomplete', 'red')}
 
         cm_results = self.current_cm.results
@@ -432,18 +432,18 @@ class GuidedCommissioningScreens(Display):
     def update_rf_plots(self):
         if self.rf_controls_window:
             waveformplot_update_map = {utils.RFWAVEFORM_PLOT_KEY: self.current_cavity.waveformplot_channelpairs,
-                                       utils.CHEETO_PLOT_KEY    : self.current_cavity.cheetoplot_channelpairs}
+                                       utils.CHEETO_PLOT_KEY: self.current_cavity.cheetoplot_channelpairs}
             self.waveform_plot_updater.updatePlots(waveformplot_update_map)
 
     def update_cavity_plots(self):
         if self.live_signals_window:
-            timeplot_update_map = {utils.STEPPERTEMP_PLOT_KEY  : self.current_cm.stepper_temp_PVs,
-                                   utils.HOMDS_PLOT_KEY        : self.current_cm.hom_ds_PVs,
-                                   utils.HOMUS_PLOT_KEY        : self.current_cm.hom_us_PVs,
-                                   utils.CPLRTOP_PLOT_KEY      : self.current_cm.coupler_top_PVs,
-                                   utils.CPLRBOT_PLOT_KEY      : self.current_cm.coupler_bot_PVs,
-                                   utils.CMVACUUM_PLOT_KEY     : self.current_cm.vacuumPlotPairs,
-                                   utils.CRYOSIGNALS_PLOT_KEY  : self.current_cm.cryo_signal_PVs,
+            timeplot_update_map = {utils.STEPPERTEMP_PLOT_KEY: self.current_cm.stepper_temp_PVs,
+                                   utils.HOMDS_PLOT_KEY: self.current_cm.hom_ds_PVs,
+                                   utils.HOMUS_PLOT_KEY: self.current_cm.hom_us_PVs,
+                                   utils.CPLRTOP_PLOT_KEY: self.current_cm.coupler_top_PVs,
+                                   utils.CPLRBOT_PLOT_KEY: self.current_cm.coupler_bot_PVs,
+                                   utils.CMVACUUM_PLOT_KEY: self.current_cm.vacuumPlotPairs,
+                                   utils.CRYOSIGNALS_PLOT_KEY: self.current_cm.cryo_signal_PVs,
                                    utils.SINGLE_CAVITY_PLOT_KEY: self.current_cavity.plot_pvs}
 
             self.time_plot_updater.updatePlots(timeplot_update_map)
@@ -472,7 +472,7 @@ class GuidedCommissioningScreens(Display):
         if not self.tuner_window:
             self.tuner_window = Display(ui_filename=self.getPath("gui/tuning.ui"))
             self.time_plot_updater.plotParams[utils.DETUNE_PLOT_KEY] = TimePlotParams(
-                    plot=self.tuner_window.ui.tuning_plot, formLayout=self.tuner_window.ui.plot_layout)
+                plot=self.tuner_window.ui.tuning_plot, formLayout=self.tuner_window.ui.plot_layout)
             self.connect_tuner_window()
         self.update_tuner_window()
         showDisplay(self.tuner_window)
@@ -555,13 +555,16 @@ class GuidedCommissioningScreens(Display):
         ui.label_cavity_limitation.channel = self.current_cavity.acceptancetest_cavity_limitation_PVName
 
         ui.button_onehour_done.clicked.connect(self.onehour_done_button_pressed)
-        ui.button_open_edm_rfcontrols.macros = [self.macro_string]
+        ui.button_open_edm_rfcontroller.macros = [self.macro_string]
+        ui.button_open_edm_waveforms.macros = [self.macro_string]
 
     def onehour_done_button_pressed(self):
+        self.selap_timer.stop()
         self.current_cavity.results.onehourrun_complete = True
+        self.current_cavity.ades_max_srf_PV.put(self.current_cavity.selAmplitudeDesPV.value)
         self.current_cavity.results.commissioned_amplitude = self.current_cavity.ades_max_srf_PV.value
-        self.current_cavity.save_results()
         self.current_cavity.turnOff()
+        self.current_cavity.save_results()
         self.success_signal.emit("One hour run complete")
 
     def update_stepsize(self):
@@ -684,10 +687,10 @@ class GuidedCommissioningScreens(Display):
         if not self.rf_controls_window:
             self.rf_controls_window = Display(ui_filename=self.getPath("gui/rf_controls.ui"))
             self.waveform_plot_updater = WaveformPlotUpdater(
-                    {utils.RFWAVEFORM_PLOT_KEY:
-                         WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
-                     utils.CHEETO_PLOT_KEY    : WaveformPlotParams(
-                             plot=self.rf_controls_window.ui.waveform_cheeto)})
+                {utils.RFWAVEFORM_PLOT_KEY:
+                     WaveformPlotParams(plot=self.rf_controls_window.ui.waveform_rfsignals),
+                 utils.CHEETO_PLOT_KEY: WaveformPlotParams(
+                     plot=self.rf_controls_window.ui.waveform_cheeto)})
             self.rf_controls_window.ui.lineedit_ades_stepsize.returnPressed.connect(self.update_stepsize)
             self.rf_controls_window.ui.button_start_timer.clicked.connect(self.start_timer)
             self.rf_controls_window.ui.button_reset_timer.clicked.connect(self.restart_timer)

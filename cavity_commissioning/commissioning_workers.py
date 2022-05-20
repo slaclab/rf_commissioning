@@ -1,8 +1,6 @@
 from abc import abstractmethod
-from copy import copy
 from datetime import datetime
 from time import sleep
-from typing import Dict
 
 from PyQt5.QtCore import QObject
 from epics.ca import CASeverityException
@@ -50,13 +48,15 @@ class PiezoPreRFWorker(Worker):
             # run the test script
             piezo.prerf_test_start_pv.put(1)
 
-            self.status.emit("waiting 5 seconds for piezo tuner test to start")
-            sleep(5)
+            self.status.emit("waiting for piezo tuner test to start")
+            while piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_RUNNING_VALUE:
+                sleep(1)
+
+            self.status.emit("waiting for piezo test to finish")
+            while piezo.prerf_test_status_pv.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
+                sleep(1)
 
             self.progress.emit(82.5)
-
-            self.status.emit("waiting 5s for piezo test status to update")
-            sleep(5)
 
             if piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE:
                 self.error.emit('Piezo pre-rf test script was not successful')
@@ -98,7 +98,7 @@ class SSACharWorker(Worker):
                     self.run(cavity, drivemax - 0.05, attemptnumber + 1)
                 else:
                     self.error.emit(str(e))
-        except PVInvalidError as e:
+        except (PVInvalidError, scLinacUtils.SSAPowerError) as e:
             self.error.emit(str(e))
 
 
@@ -193,16 +193,16 @@ class PiezoWithRFWorker(Worker):
 class LargeRackWorker(Worker):
     def run(self, cavity: CommissioningCavity):
         try:
-            other_cavities: Dict[int, CommissioningCavity] = copy(cavity.rack.cavities)
-            other_cavities.pop(cavity.number)
-
-            self.status.emit("removing other cavities from rack frequency scan")
-            for cavity in other_cavities.values():
-                cavity.freq_search_select_PV.put(0)
+            self.status.emit("removing cavities not {num} from rack frequency scan"
+                             .format(num=cavity.number))
+            for num, other_cavity in cavity.rack.cavities.items():
+                if num != cavity.number:
+                    other_cavity.freq_search_select_PV.put(0)
 
             self.progress.emit(0)
 
-            self.status.emit("selecting current cavity for rack frequency scan")
+            self.status.emit("selecting cavity {num} for rack frequency scan"
+                             .format(num=cavity.number))
             cavity.freq_search_select_PV.put(1)
 
             self.progress.emit(25)
@@ -216,21 +216,23 @@ class LargeRackWorker(Worker):
 
             self.progress.emit(50)
 
-            cavity.rack.freq_search_start_PV.put(1)
+            cavity.rack.freq_search_start_PV.put(1, waitForPut=False)
             self.status.emit("Waiting 5s for the rack frequency scan to start")
             sleep(5)
 
             self.status.emit("waiting for scan to finish running")
-            while cavity.rack.freq_search_status_PV.value == 3:
+            while cavity.rack.freq_scan_status_PV.value == 3:
                 sleep(1)
 
             self.progress.emit(75)
 
-            if cavity.rack.freq_search_status_PV.value != 5:
+            if cavity.rack.freq_search_stat_PV.value != 0:
                 self.error.emit('Frequency search did not exit successfully')
+                return
             if (cavity.freq_search_8pi9_PV.value > -750000
                     or cavity.freq_search_8pi9_PV.value < -850000):
                 self.error.emit('8pi/9 frequency outside tolerance')
+                return
             cavity.freq_search_push_PV.put(1)
             cavity.results.eight_pi_nine_freq_measured = True
 
