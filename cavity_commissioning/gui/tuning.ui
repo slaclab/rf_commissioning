@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>687</width>
+    <width>703</width>
     <height>718</height>
    </rect>
   </property>
@@ -164,12 +164,74 @@
      </layout>
     </widget>
    </item>
+   <item row="4" column="0" colspan="7">
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Steps to cold</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="1" column="0">
+       <widget class="QPushButton" name="button_add">
+        <property name="text">
+         <string>Add session steps to saved value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="button_replace">
+        <property name="text">
+         <string>Replace saved value with session steps</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <layout class="QFormLayout" name="formLayout_3">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Steps this session:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="label_session_steps">
+          <property name="text">
+           <string>None</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>Saved steps to cold landing frequency:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="PyDMLabel" name="label_cold_steps">
+          <property name="toolTip">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="7">
+    <widget class="QPushButton" name="button_mark_tuned">
+     <property name="text">
+      <string>Mark cavity as tuned</string>
+     </property>
+    </widget>
+   </item>
    <item row="2" column="0" colspan="7">
     <widget class="QGroupBox" name="groupBox_4">
      <property name="title">
       <string>GroupBox</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <widget class="PyDMTimePlot" name="tuning_plot">
         <property name="toolTip">
@@ -212,68 +274,6 @@
        <layout class="QFormLayout" name="plot_layout"/>
       </item>
      </layout>
-    </widget>
-   </item>
-   <item row="4" column="0" colspan="7">
-    <widget class="QGroupBox" name="groupBox_3">
-     <property name="title">
-      <string>Steps to cold</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="1" column="0">
-       <widget class="QPushButton" name="button_add">
-        <property name="text">
-         <string>Add session steps to saved value</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="button_replace">
-        <property name="text">
-         <string>Replace saved value with session steps</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="2">
-       <layout class="QFormLayout" name="formLayout_3">
-        <item row="0" column="1">
-         <widget class="QLabel" name="label_session_steps">
-          <property name="text">
-           <string>None</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>Steps this session:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="PyDMLabel" name="label_cold_steps">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_7">
-          <property name="text">
-           <string>Saved steps to cold landing frequency:</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="5" column="0" colspan="7">
-    <widget class="QPushButton" name="button_mark_tuned">
-     <property name="text">
-      <string>Mark cavity as tuned</string>
-     </property>
     </widget>
    </item>
   </layout>
