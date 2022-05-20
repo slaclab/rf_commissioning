@@ -12,7 +12,7 @@ from lcls_tools.superconducting import scLinacUtils
 from lcls_tools.superconducting.scLinac import (Cavity, CryoDict, Cryomodule,
                                                 L0B, L1B, L1BHL, L2B, L3B, Rack, SSA, StepperTuner)
 
-ALL_CRYOMODULES = L0B + L1B + L1BHL + L2B + L3B
+ALL_CRYOMODULES = [""] + L0B + L1B + L1BHL + L2B + L3B
 
 
 class DecaradHead:

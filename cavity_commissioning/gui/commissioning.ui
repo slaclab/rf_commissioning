@@ -63,6 +63,11 @@
        <widget class="QComboBox" name="pick_cavity">
         <item>
          <property name="text">
+          <string/>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>1</string>
          </property>
         </item>
@@ -150,6 +155,11 @@
       </item>
       <item>
        <widget class="QComboBox" name="pick_decarad">
+        <item>
+         <property name="text">
+          <string/>
+         </property>
+        </item>
         <item>
          <property name="text">
           <string>1</string>
@@ -349,7 +359,10 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="workflow_groupbox">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
        <horstretch>0</horstretch>

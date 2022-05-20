@@ -84,14 +84,14 @@ class GuidedCommissioningScreens(Display):
                              self.ui.piezo_with_rf_progressbar,
                              self.ui.selap_progressbar]
 
-        self.update_cavity()
-        self.update_decarad()
+        # self.update_cavity()
+        # self.update_decarad()
 
         self.connect_buttons()
 
         self.non_zero_rad_signal.connect(self.handle_non_zero_rad, Qt.QueuedConnection)
         self.rad_exceeded_signal.connect(self.handle_rad_exceeded, Qt.QueuedConnection)
-        self.change_max_ades_signal.connect(self.current_cavity.ades_max_srf_PV.put)
+        self.change_max_ades_signal.connect(self.update_amax)
 
         self.success_signal.connect(self.handle_success)
 
@@ -99,6 +99,10 @@ class GuidedCommissioningScreens(Display):
         self.selap_timer.timeout.connect(self.end_selap)
 
         self.success_popup: Optional[QMessageBox] = None
+
+    @slot(float)
+    def update_amax(self, value):
+        self.current_cavity.ades_max_srf_PV.put(value)
 
     def reset_progressbars(self):
         for progressbar in self.progressbars:
@@ -422,6 +426,7 @@ class GuidedCommissioningScreens(Display):
             label.setStyleSheet(status_map[status].stylesheet)
 
     def update_cavity(self):
+        self.ui.workflow_groupbox.setEnabled(True)
         if self.current_cavity:
             self.current_cavity.save_results()
 
@@ -429,22 +434,25 @@ class GuidedCommissioningScreens(Display):
             self.ui.pick_cm.currentText()]
         if self.current_cavity:
             self.current_cavity.steppertuner.step_tot_pv.clear_callbacks()
-        self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
+        try:
+            self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
-        self.current_cavity.load_results()
+            self.current_cavity.load_results()
 
-        self.populate_status_labels()
+            self.populate_status_labels()
 
-        self.update_rf_controls()
+            self.update_rf_controls()
 
-        self.update_cavity_plots()
-        self.update_rf_plots()
-        self.update_tuner_plot()
+            self.update_cavity_plots()
+            self.update_rf_plots()
+            self.update_tuner_plot()
 
-        self.update_tuner_window()
+            self.update_tuner_window()
 
-        self.update_interlock()
-        self.reset_progressbars()
+            self.update_interlock()
+            self.reset_progressbars()
+        except ValueError:
+            self.ui.workflow_groupbox.setEnabled(False)
 
     def update_decarad(self):
         self.current_cavity.cryomodule.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
