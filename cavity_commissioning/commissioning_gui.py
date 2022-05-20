@@ -115,9 +115,10 @@ class GuidedCommissioningScreens(Display):
                      error_handler: Callable, abortButton: QPushButton,
                      startButton: QPushButton,
                      action_desc: Optional[str] = None):
+        terminateFunc = partial(enable_after_deletion, startButton, worker)
         worker.started.connect(partial(startButton.setEnabled, False))
 
-        worker.finished.connect(worker.deleteLater)
+        worker.finished.connect(terminateFunc)
         worker.finished.connect(self.handle_success)
         worker.finished.connect(print)
 
@@ -130,7 +131,7 @@ class GuidedCommissioningScreens(Display):
         worker.error.connect(self.ui.status_label.setText)
         worker.error.connect(print)
 
-        abortButton.clicked.connect(partial(enable_after_deletion, startButton, worker))
+        abortButton.clicked.connect(terminateFunc)
         abortButton.clicked.connect(partial(self.ui.status_label.setText,
                                             "termination command sent to {action} thread".format(action=action_desc)))
         worker.start()
