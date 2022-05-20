@@ -555,8 +555,8 @@ class GuidedCommissioningScreens(Display):
         ui.label_cavity_limitation.channel = self.current_cavity.acceptancetest_cavity_limitation_PVName
 
         ui.button_onehour_done.clicked.connect(self.onehour_done_button_pressed)
-        ui.button_open_edm_rfcontroller.macros = [self.macro_string]
-        ui.button_open_edm_waveforms.macros = [self.macro_string]
+        ui.button_edm_rfcontroller.macros = [self.macro_string]
+        ui.button_edm_waveforms.macros = [self.macro_string]
 
     def onehour_done_button_pressed(self):
         self.selap_timer.stop()
