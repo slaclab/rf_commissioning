@@ -534,7 +534,7 @@
       <item row="4" column="2">
        <widget class="QPushButton" name="button_cavity_calibration">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Runs cavity calibration script to obtain FPC Qext, cavity probe Qext and scaling factor. Leaves cavity in pulsed mode after completion.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>Runs cavity calibration script to obtain FPC Qext, cavity probe Qext and scaling factor. Leaves cavity in pulsed mode after completion.</string>
         </property>
         <property name="text">
          <string>Perform cavity calibration</string>

@@ -266,7 +266,7 @@
          <bool>true</bool>
         </property>
         <property name="timeSpan">
-         <double>300.000000000000000</double>
+         <double>600.000000000000000</double>
         </property>
        </widget>
       </item>
