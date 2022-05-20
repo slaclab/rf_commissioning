@@ -76,6 +76,14 @@ class GuidedCommissioningScreens(Display):
         self.time_plot_updater = TimePlotUpdater({})
         self.ui.tuning_button.clicked.connect(self.setup_tuner_window)
 
+        self.progressbars = [self.ui.pre_rf_progressbar,
+                             self.ui.ssa_char_progressbar,
+                             self.ui.tune_progressbar,
+                             self.ui.large_rack_progressbar,
+                             self.ui.cav_cal_progressbar,
+                             self.ui.piezo_with_rf_progressbar,
+                             self.ui.selap_progressbar]
+
         self.update_cavity()
         self.update_decarad()
 
@@ -91,6 +99,10 @@ class GuidedCommissioningScreens(Display):
         self.selap_timer.timeout.connect(self.end_selap)
 
         self.success_popup: Optional[QMessageBox] = None
+
+    def reset_progressbars(self):
+        for progressbar in self.progressbars:
+            progressbar.setValue(0)
 
     def connect_buttons(self):
         self.ui.button_piezo_prerf.clicked.connect(self.launch_piezo_pre_rf_thread)
@@ -432,6 +444,7 @@ class GuidedCommissioningScreens(Display):
         self.update_tuner_window()
 
         self.update_interlock()
+        self.reset_progressbars()
 
     def update_decarad(self):
         self.current_cavity.cryomodule.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
