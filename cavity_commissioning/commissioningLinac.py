@@ -127,6 +127,7 @@ class CommissioningCavity(Cavity):
         self.detune_best_PV: PV = PV(self.pvPrefix + "DFBEST")
         self.detune_rfs_PV: PV = PV(self.pvPrefix + "DF")
         self.forward_pwr_PVName = self.pvPrefix + "FWD:PWRMEAN"
+        self.ades_proc_pv = PV(self.pvPrefix + "ADES.PROC")
 
         self.ssa_maxdrive_PV: PV = PV(self.pvPrefix + "SSA:DRV_MAX_REQ")
         self.ssa_reactive_power_fraction_PV: PV = PV(self.pvPrefix + "SSA:REACTIVE")

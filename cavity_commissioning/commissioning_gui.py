@@ -547,6 +547,7 @@ class GuidedCommissioningScreens(Display):
         ui.label_amp_low.channel = self.current_cavity.feedback_amplitude_low_PVName
 
         ui.spinbox_reactive_power.channel = self.current_cavity.ssa_reactive_power_fraction_PV.pvname
+        ui.spinbox_reactive_power.editingFinished.connect(partial(self.current_cavity.ades_proc_pv.put, 1))
         ui.label_reactive_power_rdbk.channel = self.current_cavity.ssa_reactive_power_fraction_PV.pvname
 
         ui.label_max_amplitude.channel = self.current_cavity.acceptancetest_max_amplitude_PVName
