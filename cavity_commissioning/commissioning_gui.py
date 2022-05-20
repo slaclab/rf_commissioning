@@ -429,12 +429,11 @@ class GuidedCommissioningScreens(Display):
         self.ui.workflow_groupbox.setEnabled(True)
         if self.current_cavity:
             self.current_cavity.save_results()
-
-        self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
-            self.ui.pick_cm.currentText()]
-        if self.current_cavity:
-            self.current_cavity.steppertuner.step_tot_pv.clear_callbacks()
         try:
+            self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
+                self.ui.pick_cm.currentText()]
+            if self.current_cavity:
+                self.current_cavity.steppertuner.step_tot_pv.clear_callbacks()
             self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
             self.current_cavity.load_results()
