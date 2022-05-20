@@ -168,7 +168,8 @@ class GuidedCommissioningScreens(Display):
 
     def restart_thread(self, thread):
         if thread and not thread.isFinished():
-            thread.quit()
+            thread.terminate()
+            thread.wait()
             self.ui.status_label.setText("Restarting thread")
 
     def handle_cav_cal_error(self, e):
