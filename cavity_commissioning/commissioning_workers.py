@@ -250,7 +250,7 @@ class LargeRackWorker(Worker):
             self.cavity.freq_search_push_PV.put(1)
             self.cavity.results.eight_pi_nine_freq_measured = True
 
-            self.success.emit("8pi/9 scan successful")
+            self.finished.emit("8pi/9 scan successful")
             self.progress.emit(100)
         except PVInvalidError as e:
             self.error.emit(str(e))
@@ -261,11 +261,11 @@ class CavCalWorker(Worker):
         try:
             self.status.emit("running cavity calibration")
             self.cavity.runCalibration(3e7, 5e7)
-            self.success.emit("cavity calibration done")
             self.progress.emit(100)
             self.cavity.results.fpc_qext_cold = self.current_cavity.measuredQLoadedPV.value
             self.cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
             self.cavity.results.cavity_calibration_run = True
+            self.finished.emit("cavity calibration done")
         except (scLinacUtils.CavityQLoadedCalibrationError,
                 scLinacUtils.CavityScaleFactorCalibrationError, TypeError,
                 CASeverityException, pyepicsUtils.PVInvalidError) as e:
