@@ -262,7 +262,7 @@ class CavCalWorker(Worker):
             self.cavity.results.fpc_qext_cold = self.current_cavity.measuredQLoadedPV.value
             self.cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
             self.cavity.results.cavity_calibration_run = True
-            self.finished.emit("cavity calibration done")
+            self.success.emit("cavity calibration done")
         except (scLinacUtils.CavityQLoadedCalibrationError,
                 scLinacUtils.CavityScaleFactorCalibrationError, TypeError,
                 CASeverityException, pyepicsUtils.PVInvalidError) as e:
