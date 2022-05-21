@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from datetime import datetime
 from time import sleep
 
 from PyQt5.QtCore import QThread
@@ -175,7 +174,7 @@ class PiezoWithRFWorker(Worker):
             self.status.emit("waiting 5s for piezo test script to run")
             sleep(5)
 
-            self.status.emit("waiting for piezo test script to finish running", datetime.now())
+            self.status.emit("waiting for piezo test script to finish running")
             while piezo.withrf_check_status_PV.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
                 sleep(1)
 
