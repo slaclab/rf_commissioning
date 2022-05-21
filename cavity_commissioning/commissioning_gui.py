@@ -1,7 +1,7 @@
 import dataclasses
 import sys
 import warnings
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 from os import path
 from threading import Lock
@@ -585,8 +585,8 @@ class GuidedCommissioningScreens(Display):
         ui.spinbox_ades.channel = self.current_cavity.selAmplitudeDesPV.pvname
         ui.label_ades_rdbk.channel = self.current_cavity.selAmplitudeDesPV.pvname
 
-        ui.lineedit_srfmax.channel = self.current_cavity.ades_max_srf_PV
-        ui.label_srfmax_rdbk.channel = self.current_cavity.ades_max_srf_PV
+        ui.lineedit_srfmax.channel = self.current_cavity.ades_max_srf_PV.pvname
+        ui.label_srfmax_rdbk.channel = self.current_cavity.ades_max_srf_PV.pvname
         ui.label_amax_rdbk.channel = self.current_cavity.ades_max_PV.pvname
 
         ui.spinbox_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PVName
