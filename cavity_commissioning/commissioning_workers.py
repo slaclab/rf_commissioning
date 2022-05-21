@@ -170,7 +170,7 @@ class PiezoWithRFWorker(Worker):
                 return
 
             self.status.emit("running piezo test script")
-            piezo.withrf_run_check_PV.put(1)
+            piezo.withrf_run_check_PV.put(1, waitForPut=False)
 
             self.status.emit("waiting 5s for piezo test script to run")
             sleep(5)
