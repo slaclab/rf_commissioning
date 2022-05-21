@@ -93,7 +93,7 @@ class Piezo:
         self.capacitance_b_PV: PV = PV(self.pvPrefix + "CHB_C")
         self.prerf_test_status_pv: PV = PV(self.pvPrefix + "TESTSTS")
 
-        self.withrf_run_check_PV: PV = PV(self.pvPrefix + "RFSTART")
+        self.withrf_run_check_PV: PV = PV(self.pvPrefix + "RFTESTSTRT")
         self.withrf_check_status_PV: PV = PV(self.pvPrefix + "RFTESTS")
         self.withrf_status_PV: PV = PV(self.pvPrefix + "RFSTESTSTAT")
         self.amplifiergain_a_PV: PV = PV(self.pvPrefix + "CHA_AMPGAIN")
