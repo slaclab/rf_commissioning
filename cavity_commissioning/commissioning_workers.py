@@ -272,15 +272,37 @@ class CavCalWorker(Worker):
             self.error.emit(str(e))
 
 
-class SELAPWorker(Worker):
+class StartSELAPWorker(Worker):
     def run(self):
         try:
             self.status.emit("Setting up for SELAP ramp up")
             self.cavity.selap_setup()
-            self.progress.emit(50)
+            self.progress.emit(14.3)
             self.finished.emit("Walk amplitude up to {amax}MV in SELA"
                                .format(amax=self.cavity.ades_max_PV.value))
         except (utils.PiezoError, utils.DetuneError, scLinacUtils.SSAPowerError,
+                pyepicsUtils.PVInvalidError) as e:
+            self.error.emit(str(e))
+
+
+class EndSELAPWorker(Worker):
+    def run(self):
+        try:
+            self.cavity.selAmplitudeDesPV.put(5)
+            self.progress.emit(28.6)
+            self.cavity.turnOff()
+            self.progress.emit(42.9)
+            self.cavity.runCalibration(loadedQLowerlimit=scLinacUtils.LOADED_Q_LOWER_LIMIT,
+                                       loadedQUpperlimit=scLinacUtils.LOADED_Q_UPPER_LIMIT)
+            self.progress.emit(57.2)
+            self.cavity.turnOff()
+            self.progress.emit(71.5)
+            self.cavity.ssa.turnOff()
+            self.progress.emit(85.8)
+            self.cavity.save_results()
+            self.progress.emit(100)
+            self.finished.emit('1h run complete')
+        except (scLinacUtils.CavityQLoadedCalibrationError,
                 pyepicsUtils.PVInvalidError) as e:
             self.error.emit(str(e))
 
