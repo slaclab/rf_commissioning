@@ -375,6 +375,9 @@
      <layout class="QGridLayout" name="gridLayout_4">
       <item row="1" column="2">
        <widget class="QPushButton" name="button_ssa_char">
+        <property name="toolTip">
+         <string>Runs the SSA characterization script.</string>
+        </property>
         <property name="text">
          <string>Run SSA characterization</string>
         </property>
@@ -440,6 +443,9 @@
       </item>
       <item row="0" column="2">
        <widget class="QPushButton" name="button_piezo_prerf">
+        <property name="toolTip">
+         <string>Turns cavity off and executes the script to check piezo capacitance without RF</string>
+        </property>
         <property name="text">
          <string>Run piezo pre-RF check</string>
         </property>
@@ -461,6 +467,9 @@
       </item>
       <item row="5" column="2">
        <widget class="QPushButton" name="button_piezo_withrf">
+        <property name="toolTip">
+         <string>Switches cavity on at 5MV in SEL and runs piezo check script with RF</string>
+        </property>
         <property name="text">
          <string>Run piezo with-RF check</string>
         </property>
@@ -537,6 +546,9 @@
       </item>
       <item row="4" column="2">
        <widget class="QPushButton" name="button_cavity_calibration">
+        <property name="toolTip">
+         <string>Runs cavity calibration script to obtain FPC Qext, cavity probe Qext and scaling factor. Leaves cavity in pulsed mode after completion.</string>
+        </property>
         <property name="text">
          <string>Perform cavity calibration</string>
         </property>
@@ -570,6 +582,9 @@
       </item>
       <item row="6" column="2">
        <widget class="QPushButton" name="button_selap_rampup">
+        <property name="toolTip">
+         <string>Turns the cavity on in SEL at 5MV, enables piezo feedback and then switches to SELA. Opens rf controls window for manual ramp up in SELAP.</string>
+        </property>
         <property name="text">
          <string>Ramp up cavity in SELAP</string>
         </property>
@@ -577,6 +592,9 @@
       </item>
       <item row="3" column="2">
        <widget class="QPushButton" name="button_measure_8pi9">
+        <property name="toolTip">
+         <string>Runs the script for measurement of 8pi/9-mode</string>
+        </property>
         <property name="text">
          <string>Measure 8pi/9 mode frequency</string>
         </property>
@@ -619,6 +637,9 @@
       </item>
       <item row="2" column="2">
        <widget class="QPushButton" name="button_tune_cavity">
+        <property name="toolTip">
+         <string>Sets cavity in chirp mode with piezo enabled in manual mode. Opens cavity tuning window.</string>
+        </property>
         <property name="text">
          <string>Tune cavity</string>
         </property>

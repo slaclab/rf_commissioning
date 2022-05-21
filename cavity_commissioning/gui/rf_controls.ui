@@ -796,6 +796,9 @@
           <string>/home/physics/srf/gitRepos/microphonics/CommMicro.py</string>
          </stringlist>
         </property>
+        <property name="openInNewWindow" stdset="0">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item row="2" column="2">
