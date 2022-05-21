@@ -134,9 +134,9 @@ class GuidedCommissioningScreens(Display):
         terminateFunc = partial(enable_after_deletion, startButton, worker)
         worker.started.connect(partial(startButton.setEnabled, False))
 
-        worker.finished.connect(terminateFunc)
-        worker.finished.connect(self.handle_success)
-        worker.finished.connect(print)
+        worker.success.connect(terminateFunc)
+        worker.success.connect(self.handle_success)
+        worker.success.connect(print)
 
         if progressBar:
             worker.progress.connect(progressBar.setValue)
