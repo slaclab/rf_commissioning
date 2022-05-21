@@ -291,8 +291,8 @@ class CommissioningCavity(Cavity):
 
         print("checking detune")
         if (self.detune_best_PV.severity == 3
-                or abs(self.detune_best_PV.value) > 50):
-            raise utils.DetuneError('Detune is invalid or larger than 50Hz')
+                or abs(self.detune_best_PV.value) > 100):
+            raise utils.DetuneError('Detune is invalid or larger than 100Hz')
 
         print("checking piezo with rf calibration")
         if not self.results.piezo_withrf_checked:
