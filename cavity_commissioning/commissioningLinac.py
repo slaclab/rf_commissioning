@@ -148,8 +148,8 @@ class CommissioningCavity(Cavity):
 
         self.cheetoplot_channelpairs: List[Tuple[Optional[str], str]] = [(self.iwaveform_PVName,
                                                                           self.qwaveform_PVName),
-                                                                         (self.controller_limit_a_PVName,
-                                                                          self.controller_limit_b_PVName)]
+                                                                         (self.controller_limit_b_PVName,
+                                                                          self.controller_limit_a_PVName)]
 
         self.acceptancetest_max_amplitude_PVName = self.pvPrefix + "AT:AMAX"
         self.acceptancetest_useable_amplitude_PVName = self.pvPrefix + "AT:AUSE"

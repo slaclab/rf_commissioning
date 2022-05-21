@@ -27,8 +27,9 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 def enable_after_deletion(button: QPushButton, thread: QThread):
-    thread.terminate()
-    thread.wait()
+    if thread:
+        thread.terminate()
+        thread.wait()
     button.setEnabled(True)
 
 
@@ -61,8 +62,9 @@ class GuidedCommissioningScreens(Display):
         self.large_rack_thread: QThread = None
         self.cav_cal_thread: QThread = None
         self.piezo_with_rf_thread: QThread = None
-        self.selap_thread: QThread = None
+        self.start_selap_thread: QThread = None
         self.stepper_thread: QThread = None
+        self.end_selap_thread: QThread = None
 
         self.setup_combo_boxes()
 
@@ -96,7 +98,8 @@ class GuidedCommissioningScreens(Display):
         self.success_signal.connect(self.handle_success)
 
         self.selap_timer = QTimer()
-        self.selap_timer.timeout.connect(self.end_selap)
+        self.selap_timer.setSingleShot(True)
+        self.selap_timer.timeout.connect(self.launch_end_selap_thread)
 
         self.success_popup: Optional[QMessageBox] = None
 
@@ -157,7 +160,8 @@ class GuidedCommissioningScreens(Display):
         def abort(qmessagebox: QMessageBox):
             clickedbutton = qmessagebox.clickedButton()
             if qmessagebox.buttonRole(clickedbutton) == QMessageBox.RejectRole:
-                enable_after_deletion(self.ui.button_selap_rampup, self.selap_thread)
+                enable_after_deletion(self.ui.button_selap_rampup, self.start_selap_thread)
+                enable_after_deletion(self.ui.button_selap_rampup, self.end_selap_thread)
 
         showDisplay(self.rf_controls_window)
         popup = QMessageBox()
@@ -170,8 +174,8 @@ class GuidedCommissioningScreens(Display):
         popup.exec()
 
     def launch_selap_thread(self):
-        self.selap_thread = SELAPWorker(self.current_cavity)
-        self.setup_thread(worker=self.selap_thread,
+        self.start_selap_thread = StartSELAPWorker(self.current_cavity)
+        self.setup_thread(worker=self.start_selap_thread,
                           progressBar=self.ui.selap_progressbar,
                           error_handler=self.handle_selap_error,
                           abortButton=self.ui.selap_abort,
@@ -747,19 +751,14 @@ class GuidedCommissioningScreens(Display):
         self.populate_status_labels()
         self.current_cavity.save_results()
 
-    def end_selap(self):
-        try:
-            self.current_cavity.selAmplitudeDesPV.put(5)
-            self.current_cavity.turnOff()
-            self.current_cavity.runCalibration(loadedQLowerlimit=scLinacUtils.LOADED_Q_LOWER_LIMIT,
-                                               loadedQUpperlimit=scLinacUtils.LOADED_Q_UPPER_LIMIT)
-            self.current_cavity.turnOff()
-            self.current_cavity.ssa.turnOff()
-            self.current_cavity.save_results()
-            self.populate_status_labels()
-            self.success_signal.emit('1h run complete')
-        except scLinacUtils.CavityQLoadedCalibrationError as e:
-            self.handle_cav_cal_error(e)
+    def launch_end_selap_thread(self):
+        self.end_selap_thread = EndSELAPWorker(self.current_cavity)
+        self.setup_thread(worker=self.end_selap_thread,
+                          progressBar=self.ui.selap_progressbar,
+                          error_handler=self.handle_selap_error,
+                          abortButton=self.ui.selap_abort,
+                          action_desc="SELAP rampdown",
+                          startButton=self.ui.button_selap_rampup)
 
     def setup_rf_window(self):
         if not self.rf_controls_window:
