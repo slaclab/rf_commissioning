@@ -237,6 +237,9 @@ class LargeRackWorker(Worker):
 
             self.progress.emit(75)
 
+            self.status.emit("waiting 5s for search status to update")
+            sleep(5)
+
             if self.cavity.rack.freq_search_stat_PV.value != 0:
                 self.error.emit('Frequency search did not exit successfully')
                 return
@@ -258,11 +261,11 @@ class CavCalWorker(Worker):
         try:
             self.status.emit("running cavity calibration")
             self.cavity.runCalibration(3e7, 5e7)
+            self.success.emit("cavity calibration done")
             self.progress.emit(100)
             self.cavity.results.fpc_qext_cold = self.current_cavity.measuredQLoadedPV.value
             self.cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
             self.cavity.results.cavity_calibration_run = True
-            self.success.emit("cavity calibration done")
         except (scLinacUtils.CavityQLoadedCalibrationError,
                 scLinacUtils.CavityScaleFactorCalibrationError, TypeError,
                 CASeverityException, pyepicsUtils.PVInvalidError) as e:
