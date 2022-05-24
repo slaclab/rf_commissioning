@@ -49,11 +49,11 @@ class PiezoPreRFWorker(Worker):
             self.progress.emit(66)
 
             # run the test script
-            piezo.prerf_test_start_pv.put(1)
+            piezo.prerf_test_start_pv.put(1, waitForPut=False)
 
             self.status.emit("waiting for piezo tuner test to start")
             while piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_RUNNING_VALUE:
-                sleep(1)
+                pass
 
             self.status.emit("waiting for piezo test to finish")
             while piezo.prerf_test_status_pv.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:
