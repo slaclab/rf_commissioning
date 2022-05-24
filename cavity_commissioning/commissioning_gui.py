@@ -34,10 +34,8 @@ def enable_after_deletion(button: QPushButton, thread: QThread):
 
 
 class GuidedCommissioningScreens(Display):
-    non_zero_rad_signal = signal(str)
-    rad_exceeded_signal = signal(str)
+    rad_error = signal(utils.RadHandler)
     success_signal = signal(str)
-
     change_max_ades_signal = signal(float)
 
     def ui_filename(self):
@@ -86,14 +84,9 @@ class GuidedCommissioningScreens(Display):
                              self.ui.piezo_with_rf_progressbar,
                              self.ui.selap_progressbar]
 
-        # self.update_cavity()
-        # self.update_decarad()
-
         self.connect_buttons()
 
-        self.non_zero_rad_signal.connect(self.handle_non_zero_rad, Qt.QueuedConnection)
-        self.rad_exceeded_signal.connect(self.handle_rad_exceeded, Qt.QueuedConnection)
-        self.change_max_ades_signal.connect(self.update_amax)
+        self.rad_error.connect(self.handle_radiation, Qt.QueuedConnection)
 
         self.success_signal.connect(self.handle_success)
 
@@ -102,6 +95,9 @@ class GuidedCommissioningScreens(Display):
         self.selap_timer.timeout.connect(self.launch_end_selap_thread)
 
         self.success_popup: Optional[QMessageBox] = None
+        self.rad_popup: Display = None
+
+        self.decarads = {"1": Decarad(1), "2": Decarad(2)}
 
     @slot(float)
     def update_amax(self, value):
@@ -264,17 +260,25 @@ class GuidedCommissioningScreens(Display):
                          exception=message,
                          action_func=self.piezo_prerf_actionbutton_clicked)
 
-    @slot(str)
-    def handle_non_zero_rad(self, message):
-        if not self.current_cavity.non_zero_rad_flagged:
-            make_info_popup(message)
-            self.current_cavity.non_zero_rad_flagged = True
+    @slot(utils.RadHandler)
+    def handle_radiation(self, radHandler: utils.RadHandler):
+        if not self.rad_popup:
+            self.rad_popup = Display(ui_filename=self.getPath("gui/rad_monitor.ui"))
 
-    @slot(str)
-    def handle_rad_exceeded(self, message):
-        if not self.current_cavity.rad_exceeded_flagged:
-            make_info_popup(message)
-            self.current_cavity.rad_exceeded_flagged = True
+        self.rad_popup.ui.yes_checkBox.stateChanged.connect(partial(self.handle_check, radHandler.action_func))
+        self.rad_popup.ui.no_checkBox.stateChanged.connect(self.reset_rad_popup)
+
+        self.rad_popup.ui.status_label.setText(radHandler.message)
+        showDisplay(self.rad_popup)
+
+    def reset_rad_popup(self):
+        self.rad_popup.hide()
+        self.rad_popup = None
+
+    def handle_check(self, action_func: Callable):
+        if self.rad_popup.ui.yes_checkBox.isChecked():
+            action_func()
+        self.reset_rad_popup()
 
     @slot(str)
     def handle_success(self, message):
@@ -286,46 +290,44 @@ class GuidedCommissioningScreens(Display):
             self.success_popup.setText(message)
             self.success_popup.exec()
 
-    def check_nonzero_rad(self, severity):
+    def check_radiation(self, severity, **kwargs):
         max_avg_dose = self.current_cm.decarad.max_avg_dose
-        if (severity == pyepicsUtils.EPICS_INVALID_VAL or max_avg_dose == 0
-                or self.current_cavity.non_zero_rad_flagged):
+
+        if severity == pyepicsUtils.EPICS_INVALID_VAL or max_avg_dose == 0:
             return
 
         if utils.RADIATION_LIMIT > max_avg_dose > 0:
+            if self.current_cavity.fe_onset_recorded:
+                return
 
-            threshold = (utils.GRADIENT_THRESHOLD_RADLIMIT
-                         * self.current_cavity.length)
-            new_max = min(threshold, self.current_cavity.ades_max_srf_PV.value)
-            self.change_max_ades_signal.emit(new_max)
-
-            if self.current_cavity.selAmplitudeActPV.value <= threshold:
-                self.current_cavity.results.commissioned_amplitude = threshold
-                self.non_zero_rad_signal.emit('Field emission detected. Proceed with'
-                                              ' caution without exceeding {thresh} MV.'
-                                              .format(thresh=threshold))
+            if self.current_cavity.selAmplitudeActPV.value <= self.current_cavity.rad_threshold:
+                message = ('Field emission detected. Proceed with caution'
+                           ' without exceeding {thresh} MV.'
+                           .format(thresh=self.current_cavity.rad_threshold))
+                radHandler = utils.RadHandler(message=message,
+                                              action_func=self.current_cavity.handle_rad_under50_underThresh)
 
             else:
-                self.current_cavity.results.commissioned_amplitude = self.current_cavity.selAmplitudeDesPV.value
-                self.non_zero_rad_signal.emit('Field emission detected above {thresh} MV.'
-                                              ' Please stop.'.format(thresh=threshold))
-            self.current_cavity.non_zero_rad_flagged = True
+                message = ('Field emission detected above {thresh} MV. Please'
+                           ' stop.'.format(thresh=self.current_cavity.rad_threshold))
+                radHandler = utils.RadHandler(message=message,
+                                              action_func=self.current_cavity.handle_rad_over50_overThresh)
+            self.rad_error.emit(radHandler)
 
-    def check_rad_exceeded(self, severity):
-        max_avg_dose = self.current_cm.decarad.max_avg_dose
-        if (severity == pyepicsUtils.EPICS_INVALID_VAL or max_avg_dose == 0
-                or self.current_cavity.rad_exceeded_flagged):
-            return
-        if max_avg_dose >= utils.RADIATION_LIMIT:
-            self.change_max_ades_signal.emit(self.current_cavity.selAmplitudeDesPV.value)
-            self.rad_exceeded_signal.emit('Radiation exceeds {limit}mR/hr. Please stop.'
-                                          .format(limit=utils.RADIATION_LIMIT))
+        elif max_avg_dose >= utils.RADIATION_LIMIT:
 
-            self.current_cavity.rad_exceeded_flagged = True
+            message = ('Radiation exceeds {limit}mR/hr. Please stop.'
+                       .format(limit=utils.RADIATION_LIMIT))
 
-    def check_radiation(self, severity, **kwargs):
-        self.check_nonzero_rad(severity)
-        self.check_rad_exceeded(severity)
+            if self.current_cavity.selAmplitudeActPV.value <= self.current_cavity.rad_threshold:
+
+                radHandler = utils.RadHandler(message=message,
+                                              action_func=self.current_cavity.handle_rad_over50_underThresh)
+
+            else:
+                radHandler = utils.RadHandler(message=message,
+                                              action_func=self.current_cavity.handle_rad_under50_overThresh)
+            self.rad_error.emit(radHandler)
 
     def connect_tuner_window(self):
         self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
@@ -370,7 +372,9 @@ class GuidedCommissioningScreens(Display):
             utils.SINGLE_CAVITY_PLOT_KEY: TimePlotParams(plot=ui.plot_single_cavity_overview,
                                                          formLayout=ui.single_cav_form),
             utils.DECARAD_PLOT_KEY      : TimePlotParams(plot=ui.plot_decarad,
-                                                         formLayout=ui.decarad_form)
+                                                         formLayout=ui.decarad_form),
+            utils.AMP_PLOT_KEY          : TimePlotParams(plot=ui.plot_amps,
+                                                         formLayout=ui.amp_form)
         }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
@@ -458,7 +462,9 @@ class GuidedCommissioningScreens(Display):
             self.ui.workflow_groupbox.setEnabled(False)
 
     def update_decarad(self):
-        self.current_cavity.cryomodule.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
+        decarad = self.decarads[self.ui.pick_decarad.currentText()]
+        self.current_cavity.cryomodule.decarad = decarad
+        self.current_cm.decarad = decarad
         self.ui.indicator_decarad.channel = self.current_cm.decarad.powerStatusPVName
         self.ui.label_decarad_onoff.channel = self.current_cm.decarad.powerStatusPVName
         self.ui.label_decarad_voltage.channel = self.current_cm.decarad.voltageReadbackPVName
@@ -503,6 +509,7 @@ class GuidedCommissioningScreens(Display):
                                    utils.CPLRBOT_PLOT_KEY      : self.current_cm.coupler_bot_PVs,
                                    utils.CMVACUUM_PLOT_KEY     : self.current_cm.vacuumPlotPairs,
                                    utils.CRYOSIGNALS_PLOT_KEY  : self.current_cm.cryo_signal_PVs,
+                                   utils.AMP_PLOT_KEY          : self.current_cm.amp_pvs,
                                    utils.SINGLE_CAVITY_PLOT_KEY: self.current_cavity.plot_pvs}
 
             self.time_plot_updater.updatePlots(timeplot_update_map)
@@ -623,8 +630,10 @@ class GuidedCommissioningScreens(Display):
     def onehour_done_button_pressed(self):
         self.selap_timer.stop()
         self.current_cavity.results.onehourrun_complete = True
-        self.current_cavity.ades_max_srf_PV.put(self.current_cavity.selAmplitudeDesPV.value)
-        self.current_cavity.results.commissioned_amplitude = self.current_cavity.ades_max_srf_PV.value
+        curr_amp = self.current_cavity.selAmplitudeDesPV.value
+        self.current_cavity.ades_max_srf_PV.put(curr_amp)
+        # TODO figure out if we need to save commissioned amp
+        self.current_cavity.results.onehour_amp = curr_amp
         self.current_cavity.turnOff()
         self.current_cavity.save_results()
         self.success_signal.emit("One hour run complete")
@@ -772,9 +781,13 @@ class GuidedCommissioningScreens(Display):
             self.rf_controls_window.ui.button_start_timer.clicked.connect(self.start_timer)
             self.rf_controls_window.ui.button_reset_timer.clicked.connect(self.restart_timer)
             self.rf_controls_window.ui.button_stop_timer.clicked.connect(self.stop_timer)
+            self.rf_controls_window.ui.sela_button.clicked.connect(self.save_sela_amp)
         self.update_rf_controls()
         self.update_rf_plots()
         showDisplay(self.rf_controls_window)
+
+    def save_sela_amp(self):
+        self.current_cavity.results.sela_amp = self.current_cavity.selAmplitudeDesPV.value
 
     def start_timer(self):
         self.selap_timer.start(3600000)
