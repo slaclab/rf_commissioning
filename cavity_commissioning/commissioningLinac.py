@@ -1,10 +1,9 @@
 import json
-from datetime import datetime, timedelta
 from time import sleep
 from typing import Callable, Dict, List, Optional, Tuple
 
 import requests
-from numpy import nanmean
+from numpy import empty, nan, nanmean
 
 import commissioningUtilities as utils
 from lcls_tools.common.pyepics_tools import pyepicsUtils
@@ -31,17 +30,21 @@ class DecaradHead:
 
         self.doseRatePV: PV = PV(self.pvPrefix + "GAMMA_DOSE_RATE")
 
+        self.buffer = empty(10)
+        self.buffer[:] = nan
+        self.counter = 0
+
+        self.doseRatePV.add_callback(self.fill_buffer, index=0)
+
+    def fill_buffer(self, value, **kwargs):
+        self.buffer[self.counter] = value
+        self.counter = (self.counter + 1) % 10
+
     @property
     def avgDose(self) -> float:
         # try to do averaging of the last 60 points to account for signal noise
         try:
-            archiverData = utils.ARCHIVER.getValuesOverTimeRange(pvList=[self.doseRatePV.pvname],
-                                                                 startTime=(datetime.now() - timedelta(minutes=1)),
-                                                                 endTime=datetime.now())
-
-            averageDose = nanmean(archiverData.values[self.doseRatePV.pvname])
-
-            return max(averageDose - utils.DECARAD_BACKGROUND_READING, 0)
+            return max(nanmean(self.buffer) - utils.DECARAD_BACKGROUND_READING, 0)
 
         # return the most recent value if we can't average for whatever reason
         except (AttributeError, requests.exceptions.ConnectionError):
@@ -285,8 +288,8 @@ class CommissioningCavity(Cavity):
     def connect_to_decarad(self, callbackfunc: Callable):
         for decaradhead in self.cryomodule.decarad.heads.values():
             if decaradhead.doseRatePV.severity != pyepicsUtils.EPICS_INVALID_VAL:
-                decaradhead.doseRatePV.clear_callbacks()
-                decaradhead.doseRatePV.add_callback(callbackfunc)
+                decaradhead.doseRatePV.remove_callback(1)
+                decaradhead.doseRatePV.add_callback(callbackfunc, index=1)
 
     @property
     def interlocks_cleared(self) -> bool:

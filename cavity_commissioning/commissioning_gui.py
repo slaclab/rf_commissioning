@@ -97,6 +97,8 @@ class GuidedCommissioningScreens(Display):
         self.success_popup: Optional[QMessageBox] = None
         self.rad_popup: Display = None
 
+        self.decarads = {"1": Decarad(1), "2": Decarad(2)}
+
     @slot(float)
     def update_amax(self, value):
         self.current_cavity.ades_max_srf_PV.put(value)
@@ -261,20 +263,22 @@ class GuidedCommissioningScreens(Display):
     @slot(utils.RadHandler)
     def handle_radiation(self, radHandler: utils.RadHandler):
         if not self.rad_popup:
-            self.rad_popup = Display(ui_filename="gui/rad_monitor.ui")
+            self.rad_popup = Display(ui_filename=self.getPath("gui/rad_monitor.ui"))
 
-        self.rad_popup.ui.yes_checkBox.setEnabled(True)
         self.rad_popup.ui.yes_checkBox.stateChanged.connect(partial(self.handle_check, radHandler.action_func))
-        self.rad_popup.ui.no_checkBox.stateChanged.connect(self.rad_popup.hide)
+        self.rad_popup.ui.no_checkBox.stateChanged.connect(self.reset_rad_popup)
 
         self.rad_popup.ui.status_label.setText(radHandler.message)
         showDisplay(self.rad_popup)
 
+    def reset_rad_popup(self):
+        self.rad_popup.hide()
+        self.rad_popup = None
+
     def handle_check(self, action_func: Callable):
         if self.rad_popup.ui.yes_checkBox.isChecked():
             action_func()
-            self.rad_popup.ui.yes_checkBox.setEnabled(False)
-        self.rad_popup.hide()
+        self.reset_rad_popup()
 
     def save_fe_onset(self):
         self.current_cavity.results.fe_onset_amp = self.current_cavity.selAmplitudeDesPV.value
@@ -289,14 +293,13 @@ class GuidedCommissioningScreens(Display):
             self.success_popup.setText(message)
             self.success_popup.exec()
 
-    def check_radiation(self, severity, value, **kwargs):
-        print(value)
+    def check_radiation(self, severity, **kwargs):
         max_avg_dose = self.current_cm.decarad.max_avg_dose
+
         if severity == pyepicsUtils.EPICS_INVALID_VAL or max_avg_dose == 0:
             return
 
         if utils.RADIATION_LIMIT > max_avg_dose > 0:
-            print("dose detected", max_avg_dose)
             if self.current_cavity.fe_onset_recorded:
                 return
 
@@ -328,11 +331,6 @@ class GuidedCommissioningScreens(Display):
                 radHandler = utils.RadHandler(message=message,
                                               action_func=self.current_cavity.handle_rad_under50_overThresh)
             self.rad_error.emit(radHandler)
-
-        else:
-            message = ('Negative radiation values detected. Verify that the '
-                       'decarads are reading correctly')
-            self.rad_error.emit(utils.RadHandler(message=message))
 
     def connect_tuner_window(self):
         self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
@@ -467,7 +465,7 @@ class GuidedCommissioningScreens(Display):
             self.ui.workflow_groupbox.setEnabled(False)
 
     def update_decarad(self):
-        decarad = Decarad(int(self.ui.pick_decarad.currentText()))
+        decarad = self.decarads[self.ui.pick_decarad.currentText()]
         self.current_cavity.cryomodule.decarad = decarad
         self.current_cm.decarad = decarad
         self.ui.indicator_decarad.channel = self.current_cm.decarad.powerStatusPVName
