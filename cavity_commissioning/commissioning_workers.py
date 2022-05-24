@@ -36,24 +36,20 @@ class PiezoPreRFWorker(Worker):
             self.progress.emit(16.5)
             piezo = self.cavity.piezo
 
-            self.status.emit("setting piezo parameters")
-
+            self.status.emit("enabling piezo")
             piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
             self.progress.emit(33)
 
+            self.status.emit("setting piezo to manual")
             piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
             self.progress.emit(49.5)
 
-            # set piezo DC voltage offset to 0V
+            self.status.emit("setting piezo dc voltage to 0")
             piezo.dc_setpoint_PV.put(0)
             self.progress.emit(66)
 
-            # run the test script
-            piezo.prerf_test_start_pv.put(1)
-
-            self.status.emit("waiting for piezo tuner test to start")
-            while piezo.prerf_test_status_pv.value != utils.PIEZO_SCRIPT_RUNNING_VALUE:
-                sleep(1)
+            self.status.emit("Starting piezo tuner pre rf test")
+            piezo.prerf_test_start_pv.put(1, waitForPut=False)
 
             self.status.emit("waiting for piezo test to finish")
             while piezo.prerf_test_status_pv.value == utils.PIEZO_SCRIPT_RUNNING_VALUE:

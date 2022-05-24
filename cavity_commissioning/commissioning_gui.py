@@ -458,6 +458,7 @@ class GuidedCommissioningScreens(Display):
 
             self.update_interlock()
             self.reset_progressbars()
+            self.update_decarad()
         except ValueError:
             self.ui.workflow_groupbox.setEnabled(False)
 
