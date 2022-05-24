@@ -48,10 +48,8 @@ class PiezoPreRFWorker(Worker):
             piezo.dc_setpoint_PV.put(0)
             self.progress.emit(66)
 
-            # run the test script
+            self.status.emit("Starting piezo tuner pre rf test")
             piezo.prerf_test_start_pv.put(1, waitForPut=False)
-
-            self.status.emit("waiting 5s for piezo tuner test to start")
             sleep(5)
 
             self.status.emit("waiting for piezo test to finish")
