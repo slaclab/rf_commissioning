@@ -1,6 +1,6 @@
 import dataclasses
 import fcntl
-from typing import Optional
+from typing import Callable, Optional
 
 from lcls_tools.common.data_analysis.archiver import Archiver
 
@@ -54,6 +54,7 @@ RFWAVEFORM_PLOT_KEY = 'rfwaveform'
 DECARAD_PLOT_KEY = 'decarad'
 DETUNE_PLOT_KEY = "detune"
 CHEETO_PLOT_KEY = 'cheeto'
+AMP_PLOT_KEY = "amp"
 
 STEPPER_MAX_STEPS = 5000000
 
@@ -62,6 +63,12 @@ MICROSTEPS_PER_STEP = 256
 # These are very rough values obtained empirically
 ESTIMATED_STEPS_PER_HZ = MICROSTEPS_PER_STEP / 1.4
 ESTIMATED_STEPS_PER_HZ_HL = MICROSTEPS_PER_STEP / 18.3
+
+
+@dataclasses.dataclass
+class RadHandler:
+    message: str
+    action_func: Optional[Callable] = None
 
 
 class ProbeQError(Exception):
@@ -151,6 +158,8 @@ class CommissioningCavityResults:
     final_phase_offset: Optional[float] = None
     onehourrun_complete: bool = False
     commissioned_amplitude: Optional[float] = None
+    onehour_amp: Optional[float] = None
+    fe_onset_amp: Optional[float] = None
     test_lead: Optional[str] = None
 
 

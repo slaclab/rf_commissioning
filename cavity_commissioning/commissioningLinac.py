@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from time import sleep
 from typing import Callable, Dict, List, Optional, Tuple
 
+import requests
 from numpy import nanmean
 
 import commissioningUtilities as utils
@@ -43,7 +44,7 @@ class DecaradHead:
             return max(averageDose - utils.DECARAD_BACKGROUND_READING, 0)
 
         # return the most recent value if we can't average for whatever reason
-        except AttributeError:
+        except (AttributeError, requests.exceptions.ConnectionError):
             return self.normalized_dose
 
     @property
@@ -110,6 +111,7 @@ class Piezo:
 
 
 class CommissioningCavity(Cavity):
+
     def __init__(self, cavityNum, rackObject, ssaClass=SSA, stepperClass=StepperTuner):
         super().__init__(cavityNum, rackObject, stepperClass=CommissioningStepper)
 
@@ -186,8 +188,35 @@ class CommissioningCavity(Cavity):
                                     (self.vessel_top_PVName, None),
                                     (self.vessel_bot_PVName, None),
                                     (self.selAmplitudeActPV.pvname, None)]
-        self.non_zero_rad_flagged = False
-        self.rad_exceeded_flagged = False
+
+        self.fe_onset_recorded = False
+        self.rad_threshold = (utils.GRADIENT_THRESHOLD_RADLIMIT * self.length)
+
+    def record_fe_onset(self):
+        if not self.fe_onset_recorded:
+            self.results.commissioned_amplitude = self.selAmplitudeDesPV.value
+            self.fe_onset_recorded = True
+
+    def handle_rad_under50_underThresh(self):
+        self.record_fe_onset()
+        self.ades_max_srf_PV.put(min(self.rad_threshold, self.ades_max_srf_PV.value))
+
+    def handle_rad_under50_overThresh(self):
+        self.record_fe_onset()
+        self.results.commissioned_amplitude = self.selAmplitudeDesPV.value
+        self.ades_max_srf_PV.put(self.rad_threshold)
+
+    def handle_rad_over50_underThresh(self):
+        self.record_fe_onset()
+        self.results.commissioned_amplitude = self.selAmplitudeDesPV.value
+        self.ades_max_srf_PV.put(self.selAmplitudeDesPV.value)
+        self.turnOff()
+
+    def handle_rad_over50_overThresh(self):
+        self.record_fe_onset()
+        self.results.commissioned_amplitude = self.selAmplitudeDesPV.value
+        self.ades_max_srf_PV.put(self.rad_threshold)
+        self.turnOff()
 
     def load_results(self):
         with open('results/cryomodule_results.json', 'r+') as f:
@@ -257,7 +286,7 @@ class CommissioningCavity(Cavity):
         for decaradhead in self.cryomodule.decarad.heads.values():
             if decaradhead.doseRatePV.severity != pyepicsUtils.EPICS_INVALID_VAL:
                 decaradhead.doseRatePV.clear_callbacks()
-                decaradhead.doseRatePV.add_callback(callbackfunc, with_ctrlvars=False)
+                decaradhead.doseRatePV.add_callback(callbackfunc)
 
     @property
     def interlocks_cleared(self) -> bool:
@@ -334,6 +363,7 @@ class CommissioningCryomodule(Cryomodule):
         self.hom_us_PVs = []
         self.hom_ds_PVs = []
         self.detune_PVs = []
+        self.amp_pvs = []
 
         for cavity in self.cavities.values():
             self.stepper_temp_PVs.append((cavity.stepper_temp_PV.pvname, None))
@@ -342,6 +372,7 @@ class CommissioningCryomodule(Cryomodule):
             self.hom_us_PVs.append((cavity.hom_us_PVName, None))
             self.hom_ds_PVs.append((cavity.hom_ds_PVName, None))
             self.detune_PVs.append((cavity.detune_best_PV.pvname, None))
+            self.amp_pvs.append((cavity.selAmplitudeActPV.pvname, None))
 
         self.cryo_signal_PVs = [(self.dsLevelPV.pvname, None),
                                 (self.usLevelPV.pvname, None),
