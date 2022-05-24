@@ -280,9 +280,6 @@ class GuidedCommissioningScreens(Display):
             action_func()
         self.reset_rad_popup()
 
-    def save_fe_onset(self):
-        self.current_cavity.results.fe_onset_amp = self.current_cavity.selAmplitudeDesPV.value
-
     @slot(str)
     def handle_success(self, message):
         self.populate_status_labels()
@@ -784,9 +781,13 @@ class GuidedCommissioningScreens(Display):
             self.rf_controls_window.ui.button_start_timer.clicked.connect(self.start_timer)
             self.rf_controls_window.ui.button_reset_timer.clicked.connect(self.restart_timer)
             self.rf_controls_window.ui.button_stop_timer.clicked.connect(self.stop_timer)
+            self.rf_controls_window.ui.sela_button.clicked.connect(self.save_sela_amp)
         self.update_rf_controls()
         self.update_rf_plots()
         showDisplay(self.rf_controls_window)
+
+    def save_sela_amp(self):
+        self.current_cavity.results.sela_amp = self.current_cavity.selAmplitudeDesPV.value
 
     def start_timer(self):
         self.selap_timer.start(3600000)

@@ -197,7 +197,7 @@ class CommissioningCavity(Cavity):
 
     def record_fe_onset(self):
         if not self.fe_onset_recorded:
-            self.results.commissioned_amplitude = self.selAmplitudeDesPV.value
+            self.results.fe_onset_amp = self.selAmplitudeDesPV.value
             self.fe_onset_recorded = True
 
     def handle_rad_under50_underThresh(self):
@@ -206,18 +206,18 @@ class CommissioningCavity(Cavity):
 
     def handle_rad_under50_overThresh(self):
         self.record_fe_onset()
-        self.results.commissioned_amplitude = self.selAmplitudeDesPV.value
+        self.results.sela_amp = self.selAmplitudeDesPV.value
         self.ades_max_srf_PV.put(self.rad_threshold)
 
     def handle_rad_over50_underThresh(self):
         self.record_fe_onset()
-        self.results.commissioned_amplitude = self.selAmplitudeDesPV.value
+        self.results.sela_amp = self.selAmplitudeDesPV.value
         self.ades_max_srf_PV.put(self.selAmplitudeDesPV.value)
         self.turnOff()
 
     def handle_rad_over50_overThresh(self):
         self.record_fe_onset()
-        self.results.commissioned_amplitude = self.selAmplitudeDesPV.value
+        self.results.sela_amp = self.selAmplitudeDesPV.value
         self.ades_max_srf_PV.put(self.rad_threshold)
         self.turnOff()
 
