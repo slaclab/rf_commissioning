@@ -633,8 +633,10 @@ class GuidedCommissioningScreens(Display):
     def onehour_done_button_pressed(self):
         self.selap_timer.stop()
         self.current_cavity.results.onehourrun_complete = True
-        self.current_cavity.ades_max_srf_PV.put(self.current_cavity.selAmplitudeDesPV.value)
-        self.current_cavity.results.commissioned_amplitude = self.current_cavity.ades_max_srf_PV.value
+        curr_amp = self.current_cavity.selAmplitudeDesPV.value
+        self.current_cavity.ades_max_srf_PV.put(curr_amp)
+        # TODO figure out if we need to save commissioned amp
+        self.current_cavity.results.onehour_amp = curr_amp
         self.current_cavity.turnOff()
         self.current_cavity.save_results()
         self.success_signal.emit("One hour run complete")
