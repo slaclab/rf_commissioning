@@ -14,34 +14,44 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="10" column="3">
-    <widget class="QLabel" name="label_26">
+   <item row="8" column="0">
+    <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>MHz</string>
+      <string>Piezo Capacitance B</string>
      </property>
     </widget>
    </item>
-   <item row="13" column="2">
-    <widget class="QLineEdit" name="qext_fpc_cold_edit"/>
-   </item>
-   <item row="11" column="0">
-    <widget class="QLabel" name="label_7">
+   <item row="22" column="3">
+    <widget class="QLabel" name="label_37">
      <property name="text">
-      <string>Final Frequency</string>
+      <string>MV</string>
      </property>
     </widget>
    </item>
-   <item row="18" column="3">
-    <widget class="QLabel" name="label_33">
+   <item row="8" column="2">
+    <widget class="QLineEdit" name="piezo_cap_b_edit"/>
+   </item>
+   <item row="7" column="3">
+    <widget class="QLabel" name="label_23">
      <property name="text">
-      <string>Hz/f.s.</string>
+      <string>uF</string>
      </property>
     </widget>
    </item>
-   <item row="21" column="0">
-    <widget class="QLabel" name="label_16">
+   <item row="2" column="0">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>Commissioned Amplitude</string>
+      <string>Operator</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="2">
+    <widget class="QLineEdit" name="piezo_amp_a_edit"/>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>SSA Max Drive</string>
      </property>
     </widget>
    </item>
@@ -52,26 +62,51 @@
      </property>
     </widget>
    </item>
-   <item row="26" column="2">
-    <widget class="QPushButton" name="submitButton">
+   <item row="0" column="2">
+    <widget class="QComboBox" name="cm_dropdown"/>
+   </item>
+   <item row="18" column="2">
+    <widget class="QLineEdit" name="piezo_detune_edit"/>
+   </item>
+   <item row="17" column="0">
+    <widget class="QLabel" name="label_12">
      <property name="text">
-      <string>Submit</string>
+      <string>Piezo Amp Gain B</string>
      </property>
     </widget>
    </item>
-   <item row="9" column="0">
-    <widget class="QLabel" name="label_5">
+   <item row="15" column="2">
+    <widget class="QLineEdit" name="qext_probe_edit"/>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="label_6">
      <property name="text">
-      <string>SSA Max Drive</string>
+      <string>Cold Landing Frequency</string>
      </property>
     </widget>
    </item>
-   <item row="19" column="3">
-    <widget class="QLabel" name="label_34">
+   <item row="6" column="2">
+    <widget class="QLineEdit" name="date_edit"/>
+   </item>
+   <item row="20" column="0">
+    <widget class="QLabel" name="label_15">
      <property name="text">
-      <string>MV</string>
+      <string>Final Phase Offset</string>
      </property>
     </widget>
+   </item>
+   <item row="12" column="0">
+    <widget class="QLabel" name="label_8">
+     <property name="text">
+      <string>Steps to Reach FF</string>
+     </property>
+    </widget>
+   </item>
+   <item row="21" column="2">
+    <widget class="QLineEdit" name="com_amp_edit"/>
+   </item>
+   <item row="17" column="2">
+    <widget class="QLineEdit" name="piezo_amp_b_edit"/>
    </item>
    <item row="8" column="3">
     <widget class="QLabel" name="label_24">
@@ -80,45 +115,52 @@
      </property>
     </widget>
    </item>
-   <item row="15" column="2">
-    <widget class="QLineEdit" name="qext_probe_edit"/>
+   <item row="11" column="2">
+    <widget class="QLineEdit" name="final_freq_edit"/>
    </item>
-   <item row="10" column="2">
-    <widget class="QLineEdit" name="cold_freq_edit"/>
+   <item row="16" column="3">
+    <widget class="QLabel" name="label_31">
+     <property name="text">
+      <string>V/f.s.</string>
+     </property>
+    </widget>
    </item>
-   <item row="21" column="2">
-    <widget class="QLineEdit" name="com_amp_edit"/>
+   <item row="14" column="2">
+    <widget class="QLineEdit" name="qext_fpc_warm_edit"/>
+   </item>
+   <item row="23" column="2">
+    <widget class="QComboBox" name="hour_run_dropdown"/>
+   </item>
+   <item row="9" column="2">
+    <widget class="QLineEdit" name="ssa_drive_edit"/>
+   </item>
+   <item row="19" column="2">
+    <widget class="QLineEdit" name="rad_edit"/>
    </item>
    <item row="24" column="2">
     <widget class="QComboBox" name="status_dropdown"/>
    </item>
-   <item row="18" column="2">
-    <widget class="QLineEdit" name="piezo_detune_edit"/>
-   </item>
-   <item row="7" column="2">
-    <widget class="QLineEdit" name="piezo_cap_a_edit"/>
-   </item>
-   <item row="16" column="0">
-    <widget class="QLabel" name="label_11">
+   <item row="19" column="3">
+    <widget class="QLabel" name="label_34">
      <property name="text">
-      <string>Piezo Amp Gain A</string>
+      <string>MV</string>
      </property>
     </widget>
    </item>
-   <item row="17" column="2">
-    <widget class="QLineEdit" name="piezo_amp_b_edit"/>
+   <item row="12" column="2">
+    <widget class="QLineEdit" name="ff_steps_edit"/>
    </item>
-   <item row="13" column="0">
-    <widget class="QLabel" name="label_9">
+   <item row="14" column="0">
+    <widget class="QLabel" name="label_21">
      <property name="text">
-      <string>Qext FPC, cold</string>
+      <string>Qext FPC, warm</string>
      </property>
     </widget>
    </item>
-   <item row="20" column="0">
-    <widget class="QLabel" name="label_15">
+   <item row="10" column="3">
+    <widget class="QLabel" name="label_26">
      <property name="text">
-      <string>Final Phase Offset</string>
+      <string>MHz</string>
      </property>
     </widget>
    </item>
@@ -129,65 +171,10 @@
      </property>
     </widget>
    </item>
-   <item row="19" column="2">
-    <widget class="QLineEdit" name="rad_edit"/>
-   </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Operator</string>
-     </property>
-    </widget>
-   </item>
    <item row="21" column="3">
     <widget class="QLabel" name="label_36">
      <property name="text">
       <string>MV</string>
-     </property>
-    </widget>
-   </item>
-   <item row="19" column="0">
-    <widget class="QLabel" name="label_14">
-     <property name="text">
-      <string>Radiation Onset</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="3">
-    <widget class="QLabel" name="label_23">
-     <property name="text">
-      <string>uF</string>
-     </property>
-    </widget>
-   </item>
-   <item row="20" column="3">
-    <widget class="QLabel" name="label_35">
-     <property name="text">
-      <string>degrees</string>
-     </property>
-    </widget>
-   </item>
-   <item row="25" column="2">
-    <widget class="QLineEdit" name="add_details_edit"/>
-   </item>
-   <item row="10" column="0">
-    <widget class="QLabel" name="label_6">
-     <property name="text">
-      <string>Cold Landing Frequency</string>
-     </property>
-    </widget>
-   </item>
-   <item row="25" column="0">
-    <widget class="QLabel" name="label_20">
-     <property name="text">
-      <string>Additional Details</string>
-     </property>
-    </widget>
-   </item>
-   <item row="23" column="0">
-    <widget class="QLabel" name="label_18">
-     <property name="text">
-      <string>1 hour run</string>
      </property>
     </widget>
    </item>
@@ -198,83 +185,17 @@
      </property>
     </widget>
    </item>
-   <item row="23" column="2">
-    <widget class="QComboBox" name="hour_run_dropdown"/>
-   </item>
-   <item row="6" column="0">
-    <widget class="QLabel" name="label_2">
+   <item row="23" column="0">
+    <widget class="QLabel" name="label_18">
      <property name="text">
-      <string>Date</string>
+      <string>1 hour run</string>
      </property>
     </widget>
    </item>
-   <item row="8" column="0">
-    <widget class="QLabel" name="label_4">
+   <item row="13" column="0">
+    <widget class="QLabel" name="label_9">
      <property name="text">
-      <string>Piezo Capacitance B</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="2">
-    <widget class="QLineEdit" name="operator_edit">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2">
-    <widget class="QComboBox" name="cav_dropdown"/>
-   </item>
-   <item row="22" column="2">
-    <widget class="QLineEdit" name="hour_run_edit"/>
-   </item>
-   <item row="6" column="2">
-    <widget class="QLineEdit" name="date_edit"/>
-   </item>
-   <item row="16" column="2">
-    <widget class="QLineEdit" name="piezo_amp_a_edit"/>
-   </item>
-   <item row="12" column="0">
-    <widget class="QLabel" name="label_8">
-     <property name="text">
-      <string>Steps to Reach FF</string>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="2">
-    <widget class="QLineEdit" name="final_freq_edit"/>
-   </item>
-   <item row="15" column="0">
-    <widget class="QLabel" name="label_10">
-     <property name="text">
-      <string>Qext Probe</string>
-     </property>
-    </widget>
-   </item>
-   <item row="20" column="2">
-    <widget class="QLineEdit" name="phase_edit"/>
-   </item>
-   <item row="7" column="0">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Piezo Capacitance A</string>
-     </property>
-    </widget>
-   </item>
-   <item row="17" column="0">
-    <widget class="QLabel" name="label_12">
-     <property name="text">
-      <string>Piezo Amp Gain B</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="2">
-    <widget class="QComboBox" name="cm_dropdown"/>
-   </item>
-   <item row="22" column="3">
-    <widget class="QLabel" name="label_37">
-     <property name="text">
-      <string>MV</string>
+      <string>Qext FPC, cold</string>
      </property>
     </widget>
    </item>
@@ -285,6 +206,93 @@
      </property>
     </widget>
    </item>
+   <item row="25" column="2">
+    <widget class="QLineEdit" name="add_details_edit"/>
+   </item>
+   <item row="13" column="2">
+    <widget class="QLineEdit" name="qext_fpc_cold_edit"/>
+   </item>
+   <item row="20" column="3">
+    <widget class="QLabel" name="label_35">
+     <property name="text">
+      <string>degrees</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>Final Frequency</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2">
+    <widget class="QLineEdit" name="operator_edit"/>
+   </item>
+   <item row="22" column="2">
+    <widget class="QLineEdit" name="hour_run_edit"/>
+   </item>
+   <item row="25" column="0">
+    <widget class="QLabel" name="label_20">
+     <property name="text">
+      <string>Additional Details</string>
+     </property>
+    </widget>
+   </item>
+   <item row="21" column="0">
+    <widget class="QLabel" name="label_16">
+     <property name="text">
+      <string>Commissioned Amplitude</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="0">
+    <widget class="QLabel" name="label_11">
+     <property name="text">
+      <string>Piezo Amp Gain A</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Date</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Piezo Capacitance A</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QComboBox" name="cav_dropdown"/>
+   </item>
+   <item row="7" column="2">
+    <widget class="QLineEdit" name="piezo_cap_a_edit"/>
+   </item>
+   <item row="20" column="2">
+    <widget class="QLineEdit" name="phase_edit"/>
+   </item>
+   <item row="15" column="0">
+    <widget class="QLabel" name="label_10">
+     <property name="text">
+      <string>Qext Probe</string>
+     </property>
+    </widget>
+   </item>
+   <item row="26" column="2">
+    <widget class="QPushButton" name="submitButton">
+     <property name="text">
+      <string>Submit</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="2">
+    <widget class="QLineEdit" name="cold_freq_edit"/>
+   </item>
    <item row="22" column="0">
     <widget class="QLabel" name="label_17">
      <property name="text">
@@ -292,29 +300,31 @@
      </property>
     </widget>
    </item>
-   <item row="9" column="2">
-    <widget class="QLineEdit" name="ssa_drive_edit"/>
-   </item>
-   <item row="16" column="3">
-    <widget class="QLabel" name="label_31">
+   <item row="19" column="0">
+    <widget class="QLabel" name="label_14">
      <property name="text">
-      <string>V/f.s.</string>
+      <string>Radiation Onset</string>
      </property>
     </widget>
    </item>
-   <item row="12" column="2">
-    <widget class="QLineEdit" name="ff_steps_edit"/>
-   </item>
-   <item row="8" column="2">
-    <widget class="QLineEdit" name="piezo_cap_b_edit"/>
-   </item>
-   <item row="14" column="2">
-    <widget class="QLineEdit" name="qext_fpc_warm_edit"/>
-   </item>
-   <item row="14" column="0">
-    <widget class="QLabel" name="label_21">
+   <item row="18" column="3">
+    <widget class="QLabel" name="label_33">
      <property name="text">
-      <string>Qext FPC, warm</string>
+      <string>Hz/f.s.</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="4">
+    <widget class="QPushButton" name="cold_freq_help_button">
+     <property name="text">
+      <string>Use Detune</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="4">
+    <widget class="QPushButton" name="final_freq_help_button">
+     <property name="text">
+      <string>Use Detune</string>
      </property>
     </widget>
    </item>
@@ -323,7 +333,6 @@
  <tabstops>
   <tabstop>cm_dropdown</tabstop>
   <tabstop>cav_dropdown</tabstop>
-  <tabstop>operator_edit</tabstop>
   <tabstop>date_edit</tabstop>
   <tabstop>piezo_cap_a_edit</tabstop>
   <tabstop>piezo_cap_b_edit</tabstop>
