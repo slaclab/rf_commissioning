@@ -1,13 +1,13 @@
 import dataclasses
 import sys
 import warnings
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 from os import path
 from threading import Lock
 from typing import Callable, Optional
 
-from PyQt5.QtCore import QThread, QTimer
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMessageBox, QProgressBar, QPushButton
 from edmbutton import PyDMEDMDisplayButton
 from pydm import Display
@@ -26,11 +26,16 @@ from lcls_tools.common.pyepics_tools import pyepicsUtils
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
-class GuidedCommissioningScreens(Display):
-    non_zero_rad_signal = signal(str)
-    rad_exceeded_signal = signal(str)
-    success_signal = signal(str)
+def enable_after_deletion(button: QPushButton, thread: QThread):
+    if thread:
+        thread.terminate()
+        thread.wait()
+    button.setEnabled(True)
 
+
+class GuidedCommissioningScreens(Display):
+    rad_error = signal(utils.RadHandler)
+    success_signal = signal(str)
     change_max_ades_signal = signal(float)
 
     def ui_filename(self):
@@ -47,13 +52,17 @@ class GuidedCommissioningScreens(Display):
         self.current_cavity: Optional[CommissioningCavity] = None
         self.current_pvprefix = None
 
+        # These are here because otherwise the thread goes out of scope when the
+        # "launch thread" function exits
         self.piezo_pre_rf_thread: QThread = None
         self.ssa_char_thread: QThread = None
         self.tune_thread: QThread = None
         self.large_rack_thread: QThread = None
         self.cav_cal_thread: QThread = None
         self.piezo_with_rf_thread: QThread = None
-        self.selap_thread: QThread = None
+        self.start_selap_thread: QThread = None
+        self.stepper_thread: QThread = None
+        self.end_selap_thread: QThread = None
 
         self.setup_combo_boxes()
 
@@ -67,21 +76,36 @@ class GuidedCommissioningScreens(Display):
         self.time_plot_updater = TimePlotUpdater({})
         self.ui.tuning_button.clicked.connect(self.setup_tuner_window)
 
-        self.update_cavity()
-        self.update_decarad()
+        self.progressbars = [self.ui.pre_rf_progressbar,
+                             self.ui.ssa_char_progressbar,
+                             self.ui.tune_progressbar,
+                             self.ui.large_rack_progressbar,
+                             self.ui.cav_cal_progressbar,
+                             self.ui.piezo_with_rf_progressbar,
+                             self.ui.selap_progressbar]
 
         self.connect_buttons()
 
-        self.non_zero_rad_signal.connect(self.handle_non_zero_rad, Qt.QueuedConnection)
-        self.rad_exceeded_signal.connect(self.handle_rad_exceeded, Qt.QueuedConnection)
-        self.change_max_ades_signal.connect(self.current_cavity.ades_max_srf_PV.put)
+        self.rad_error.connect(self.handle_radiation, Qt.QueuedConnection)
 
         self.success_signal.connect(self.handle_success)
 
         self.selap_timer = QTimer()
-        self.selap_timer.timeout.connect(self.end_selap)
+        self.selap_timer.setSingleShot(True)
+        self.selap_timer.timeout.connect(self.launch_end_selap_thread)
 
         self.success_popup: Optional[QMessageBox] = None
+        self.rad_popup: Display = None
+
+        self.decarads = {"1": Decarad(1), "2": Decarad(2)}
+
+    @slot(float)
+    def update_amax(self, value):
+        self.current_cavity.ades_max_srf_PV.put(value)
+
+    def reset_progressbars(self):
+        for progressbar in self.progressbars:
+            progressbar.setValue(0)
 
     def connect_buttons(self):
         self.ui.button_piezo_prerf.clicked.connect(self.launch_piezo_pre_rf_thread)
@@ -99,59 +123,78 @@ class GuidedCommissioningScreens(Display):
         self.ui.button_selap_rampup.clicked.connect(self.launch_selap_thread)
         self.ui.button_selap_rampup.clicked.connect(self.setup_rf_window)
 
-    def setup_thread(self, thread: QThread, worker: Worker,
+        self.ui.rf_button.clicked.connect(self.setup_rf_window)
+
+    def setup_thread(self, worker: Worker,
                      progressBar: QProgressBar,
                      error_handler: Callable, abortButton: QPushButton,
+                     startButton: QPushButton,
                      action_desc: Optional[str] = None):
-        worker.moveToThread(thread)
-        thread.started.connect(partial(worker.run, self.current_cavity))
+        terminateFunc = partial(enable_after_deletion, startButton, worker)
+        worker.started.connect(partial(startButton.setEnabled, False))
 
-        worker.finished.connect(thread.quit)
-        worker.finished.connect(worker.deleteLater)
+        worker.finished.connect(terminateFunc)
         worker.finished.connect(self.handle_success)
+        worker.finished.connect(print)
 
-        thread.finished.connect(thread.deleteLater)
-
-        worker.progress.connect(progressBar.setValue)
+        if progressBar:
+            worker.progress.connect(progressBar.setValue)
         worker.status.connect(self.ui.status_label.setText)
+        worker.status.connect(print)
 
         worker.error.connect(error_handler)
         worker.error.connect(self.ui.status_label.setText)
+        worker.error.connect(print)
 
-        abortButton.clicked.connect(thread.terminate)
+        abortButton.clicked.connect(terminateFunc)
         abortButton.clicked.connect(partial(self.ui.status_label.setText,
                                             "termination command sent to {action} thread".format(action=action_desc)))
-        thread.start()
+        worker.start()
 
     @slot(str)
     def handle_selap_error(self, e):
+        def abort(qmessagebox: QMessageBox):
+            clickedbutton = qmessagebox.clickedButton()
+            if qmessagebox.buttonRole(clickedbutton) == QMessageBox.RejectRole:
+                enable_after_deletion(self.ui.button_selap_rampup, self.start_selap_thread)
+                enable_after_deletion(self.ui.button_selap_rampup, self.end_selap_thread)
+
         showDisplay(self.rf_controls_window)
         popup = QMessageBox()
         popup.setIcon(QMessageBox.Critical)
         popup.setWindowTitle("SELAP Error")
         popup.setText(str(e))
+        popup.addButton('Abort automatic setup and set up manually',
+                        QMessageBox.RejectRole)
+        popup.buttonClicked.connect(partial(abort, popup))
         popup.exec()
 
     def launch_selap_thread(self):
-        self.selap_thread = QThread()
-        worker = SELAPWorker()
-        self.setup_thread(self.selap_thread, worker,
-                          self.ui.selap_progressbar, self.handle_selap_error,
-                          self.ui.selap_abort, "SELAP setup")
+        self.start_selap_thread = StartSELAPWorker(self.current_cavity)
+        self.setup_thread(worker=self.start_selap_thread,
+                          progressBar=self.ui.selap_progressbar,
+                          error_handler=self.handle_selap_error,
+                          abortButton=self.ui.selap_abort,
+                          action_desc="SELAP setup",
+                          startButton=self.ui.button_selap_rampup)
 
     def launch_piezo_with_rf_thread(self):
-        self.piezo_with_rf_thread = QThread()
-        worker = PiezoWithRFWorker()
-        self.setup_thread(self.piezo_with_rf_thread, worker,
-                          self.ui.piezo_with_rf_progressbar, self.handle_peizo_with_rf_error,
-                          self.ui.piezo_with_rf_abort, "Piezo with RF")
+        self.piezo_with_rf_thread = PiezoWithRFWorker(self.current_cavity)
+        self.setup_thread(worker=self.piezo_with_rf_thread,
+                          progressBar=self.ui.piezo_with_rf_progressbar,
+                          error_handler=self.handle_peizo_with_rf_error,
+                          abortButton=self.ui.piezo_with_rf_abort,
+                          action_desc="Piezo with RF",
+                          startButton=self.ui.button_piezo_withrf)
 
     def launch_cav_cal_thread(self):
-        self.cav_cal_thread = QThread()
-        worker = CavCalWorker()
-        self.setup_thread(self.cav_cal_thread, worker,
-                          self.ui.cav_cal_progressbar, self.handle_cav_cal_error,
-                          self.ui.cavity_cal_abort, "Cavity calibration")
+        self.cav_cal_thread = CavCalWorker(self.current_cavity)
+        self.setup_thread(worker=self.cav_cal_thread,
+                          progressBar=self.ui.cav_cal_progressbar,
+                          error_handler=self.handle_cav_cal_error,
+                          abortButton=self.ui.cavity_cal_abort,
+                          action_desc="Cavity calibration",
+                          startButton=self.ui.button_cavity_calibration)
 
     def handle_cav_cal_error(self, e):
         cavity_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_char_embed_ramp.edl')
@@ -159,38 +202,55 @@ class GuidedCommissioningScreens(Display):
                          self.cavity_actionbutton_clicked)
 
     def launch_tune_thread(self):
-        self.tune_thread = QThread()
-        worker = TuneWorker()
-        self.setup_thread(self.tune_thread, worker, self.ui.tune_progressbar,
-                          self.handle_tune_error, self.ui.tune_abort, "Tune cavity")
+        self.tune_thread = TuneWorker(self.current_cavity)
+        self.setup_thread(worker=self.tune_thread,
+                          progressBar=self.ui.tune_progressbar,
+                          error_handler=self.handle_tune_error,
+                          abortButton=self.ui.tune_abort,
+                          action_desc="Tune cavity",
+                          startButton=self.ui.button_tune_cavity)
 
     @slot(str)
     def handle_tune_error(self, message):
         tuner_expert_button = self.make_edmbutton('$TOOLS/edm/display/llrf/rf_srf_tuner_embed.edl')
-        make_error_popup('Detune PV invalid', tuner_expert_button, message, None)
+        make_error_popup('Detune PV invalid', tuner_expert_button, message,
+                         self.tune_actionbutton_clicked)
+
+    def tune_actionbutton_clicked(self, qmessagebox: QMessageBox):
+        clickedbutton = qmessagebox.clickedButton()
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.AcceptRole:
+            self.current_cavity.results.is_tuned = True
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.RejectRole:
+            enable_after_deletion(button=self.ui.button_tune_cavity,
+                                  thread=self.tune_thread)
+        self.populate_status_labels()
+        self.current_cavity.save_results()
 
     def launch_large_rack_thread(self):
-        self.large_rack_thread = QThread()
-        worker = LargeRackWorker()
-        self.setup_thread(self.large_rack_thread, worker,
-                          self.ui.large_rack_progressbar, self.handle_large_rack_error,
-                          self.ui.large_rack_abort, "8pi/9")
+        self.large_rack_thread = LargeRackWorker(self.current_cavity)
+        self.setup_thread(worker=self.large_rack_thread,
+                          progressBar=self.ui.large_rack_progressbar,
+                          error_handler=self.handle_large_rack_error,
+                          abortButton=self.ui.large_rack_abort, action_desc="8pi/9",
+                          startButton=self.ui.button_measure_8pi9)
 
     def launch_ssa_char_thread(self):
-        self.ssa_char_thread = QThread()
-        worker = SSACharWorker()
-        self.setup_thread(self.ssa_char_thread, worker,
-                          self.ui.ssa_char_progressbar,
-                          self.handle_ssa_char_error, self.ui.ssa_char_abort,
-                          "ssa characterization")
+        self.ssa_char_thread = SSACharWorker(self.current_cavity)
+        self.setup_thread(worker=self.ssa_char_thread,
+                          progressBar=self.ui.ssa_char_progressbar,
+                          error_handler=self.handle_ssa_char_error,
+                          abortButton=self.ui.ssa_char_abort,
+                          action_desc="ssa characterization",
+                          startButton=self.ui.button_ssa_char)
 
     def launch_piezo_pre_rf_thread(self):
-        self.piezo_pre_rf_thread = QThread()
-        worker = PiezoPreRFWorker()
-        self.setup_thread(self.piezo_pre_rf_thread, worker,
-                          self.ui.pre_rf_progressbar,
-                          self.handle_piezo_pre_rf_error,
-                          self.ui.piezo_pre_rf_abort, "piezo pre rf")
+        self.piezo_pre_rf_thread = PiezoPreRFWorker(self.current_cavity)
+        self.setup_thread(worker=self.piezo_pre_rf_thread,
+                          progressBar=self.ui.pre_rf_progressbar,
+                          error_handler=self.handle_piezo_pre_rf_error,
+                          abortButton=self.ui.piezo_pre_rf_abort,
+                          action_desc="piezo pre rf",
+                          startButton=self.ui.button_piezo_prerf)
 
     @slot(str)
     def handle_piezo_pre_rf_error(self, message):
@@ -200,17 +260,25 @@ class GuidedCommissioningScreens(Display):
                          exception=message,
                          action_func=self.piezo_prerf_actionbutton_clicked)
 
-    @slot(str)
-    def handle_non_zero_rad(self, message):
-        if not self.current_cavity.non_zero_rad_flagged:
-            make_info_popup(message)
-            self.current_cavity.non_zero_rad_flagged = True
+    @slot(utils.RadHandler)
+    def handle_radiation(self, radHandler: utils.RadHandler):
+        if not self.rad_popup:
+            self.rad_popup = Display(ui_filename=self.getPath("gui/rad_monitor.ui"))
 
-    @slot(str)
-    def handle_rad_exceeded(self, message):
-        if not self.current_cavity.rad_exceeded_flagged:
-            make_info_popup(message)
-            self.current_cavity.rad_exceeded_flagged = True
+        self.rad_popup.ui.yes_checkBox.stateChanged.connect(partial(self.handle_check, radHandler.action_func))
+        self.rad_popup.ui.no_checkBox.stateChanged.connect(self.reset_rad_popup)
+
+        self.rad_popup.ui.status_label.setText(radHandler.message)
+        showDisplay(self.rad_popup)
+
+    def reset_rad_popup(self):
+        self.rad_popup.hide()
+        self.rad_popup = None
+
+    def handle_check(self, action_func: Callable):
+        if self.rad_popup.ui.yes_checkBox.isChecked():
+            action_func()
+        self.reset_rad_popup()
 
     @slot(str)
     def handle_success(self, message):
@@ -222,53 +290,51 @@ class GuidedCommissioningScreens(Display):
             self.success_popup.setText(message)
             self.success_popup.exec()
 
-    def check_nonzero_rad(self, severity):
+    def check_radiation(self, severity, **kwargs):
         max_avg_dose = self.current_cm.decarad.max_avg_dose
-        if (severity == pyepicsUtils.EPICS_INVALID_VAL or max_avg_dose == 0
-                or self.current_cavity.non_zero_rad_flagged):
+
+        if severity == pyepicsUtils.EPICS_INVALID_VAL or max_avg_dose == 0:
             return
 
         if utils.RADIATION_LIMIT > max_avg_dose > 0:
+            if self.current_cavity.fe_onset_recorded:
+                return
 
-            threshold = (utils.GRADIENT_THRESHOLD_RADLIMIT
-                         * self.current_cavity.length)
-            new_max = min(threshold, self.current_cavity.ades_max_srf_PV.value)
-            self.change_max_ades_signal.emit(new_max)
-
-            if self.current_cavity.selAmplitudeActPV.value <= threshold:
-                self.current_cavity.results.commissioned_amplitude = threshold
-                self.non_zero_rad_signal.emit('Field emission detected. Proceed with'
-                                              ' caution without exceeding {thresh} MV.'
-                                              .format(thresh=threshold))
+            if self.current_cavity.selAmplitudeActPV.value <= self.current_cavity.rad_threshold:
+                message = ('Field emission detected. Proceed with caution'
+                           ' without exceeding {thresh} MV.'
+                           .format(thresh=self.current_cavity.rad_threshold))
+                radHandler = utils.RadHandler(message=message,
+                                              action_func=self.current_cavity.handle_rad_under50_underThresh)
 
             else:
-                self.current_cavity.results.commissioned_amplitude = self.current_cavity.selAmplitudeDesPV.value
-                self.non_zero_rad_signal.emit('Field emission detected above {thresh} MV.'
-                                              ' Please stop.'.format(thresh=threshold))
-            self.current_cavity.non_zero_rad_flagged = True
+                message = ('Field emission detected above {thresh} MV. Please'
+                           ' stop.'.format(thresh=self.current_cavity.rad_threshold))
+                radHandler = utils.RadHandler(message=message,
+                                              action_func=self.current_cavity.handle_rad_over50_overThresh)
+            self.rad_error.emit(radHandler)
 
-    def check_rad_exceeded(self, severity):
-        max_avg_dose = self.current_cm.decarad.max_avg_dose
-        if (severity == pyepicsUtils.EPICS_INVALID_VAL or max_avg_dose == 0
-                or self.current_cavity.rad_exceeded_flagged):
-            return
-        if max_avg_dose >= utils.RADIATION_LIMIT:
-            self.change_max_ades_signal.emit(self.current_cavity.selAmplitudeDesPV.value)
-            self.rad_exceeded_signal.emit('Radiation exceeds {limit}mR/hr. Please stop.'
-                                          .format(limit=utils.RADIATION_LIMIT))
+        elif max_avg_dose >= utils.RADIATION_LIMIT:
 
-            self.current_cavity.rad_exceeded_flagged = True
+            message = ('Radiation exceeds {limit}mR/hr. Please stop.'
+                       .format(limit=utils.RADIATION_LIMIT))
 
-    def check_radiation(self, severity, **kwargs):
-        self.check_nonzero_rad(severity)
-        self.check_rad_exceeded(severity)
+            if self.current_cavity.selAmplitudeActPV.value <= self.current_cavity.rad_threshold:
+
+                radHandler = utils.RadHandler(message=message,
+                                              action_func=self.current_cavity.handle_rad_over50_underThresh)
+
+            else:
+                radHandler = utils.RadHandler(message=message,
+                                              action_func=self.current_cavity.handle_rad_under50_overThresh)
+            self.rad_error.emit(radHandler)
 
     def connect_tuner_window(self):
         self.tuner_window.ui.button_save_cold_freq.clicked.connect(self.cold_freq_button_pressed)
-        self.tuner_window.ui.step_des_line_edit.returnPressed.connect(self.des_step_changed)
         self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
         self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
         self.tuner_window.ui.button_mark_tuned.clicked.connect(self.mark_tuned_button_clicked)
+        self.tuner_window.ui.step_des_spinBox.editingFinished.connect(self.launch_stepper_worker)
 
     def update_plot_timespan(self):
         self.time_plot_updater.updateTimespans(self.live_signals_window.ui.timespan_spinbox.value())
@@ -306,7 +372,9 @@ class GuidedCommissioningScreens(Display):
             utils.SINGLE_CAVITY_PLOT_KEY: TimePlotParams(plot=ui.plot_single_cavity_overview,
                                                          formLayout=ui.single_cav_form),
             utils.DECARAD_PLOT_KEY      : TimePlotParams(plot=ui.plot_decarad,
-                                                         formLayout=ui.decarad_form)
+                                                         formLayout=ui.decarad_form),
+            utils.AMP_PLOT_KEY          : TimePlotParams(plot=ui.plot_amps,
+                                                         formLayout=ui.amp_form)
         }
         self.time_plot_updater = TimePlotUpdater(time_plot_updater)
 
@@ -366,31 +434,38 @@ class GuidedCommissioningScreens(Display):
             label.setStyleSheet(status_map[status].stylesheet)
 
     def update_cavity(self):
+        self.ui.workflow_groupbox.setEnabled(True)
         if self.current_cavity:
             self.current_cavity.save_results()
+        try:
+            self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
+                self.ui.pick_cm.currentText()]
+            if self.current_cavity:
+                self.current_cavity.steppertuner.step_tot_pv.clear_callbacks()
+            self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
 
-        self.current_cm: CommissioningCryomodule = COMMISSIONING_CRYOMODULE_OBJECTS[
-            self.ui.pick_cm.currentText()]
-        if self.current_cavity:
-            self.current_cavity.steppertuner.step_tot_pv.clear_callbacks()
-        self.current_cavity: CommissioningCavity = self.current_cm.cavities[int(self.ui.pick_cavity.currentText())]
+            self.current_cavity.load_results()
 
-        self.current_cavity.load_results()
+            self.populate_status_labels()
 
-        self.populate_status_labels()
+            self.update_rf_controls()
 
-        self.update_rf_controls()
+            self.update_cavity_plots()
+            self.update_rf_plots()
+            self.update_tuner_plot()
 
-        self.update_cavity_plots()
-        self.update_rf_plots()
-        self.update_tuner_plot()
+            self.update_tuner_window()
 
-        self.update_tuner_window()
-
-        self.update_interlock()
+            self.update_interlock()
+            self.reset_progressbars()
+            self.update_decarad()
+        except ValueError:
+            self.ui.workflow_groupbox.setEnabled(False)
 
     def update_decarad(self):
-        self.current_cavity.cryomodule.decarad = Decarad(int(self.ui.pick_decarad.currentText()))
+        decarad = self.decarads[self.ui.pick_decarad.currentText()]
+        self.current_cavity.cryomodule.decarad = decarad
+        self.current_cm.decarad = decarad
         self.ui.indicator_decarad.channel = self.current_cm.decarad.powerStatusPVName
         self.ui.label_decarad_onoff.channel = self.current_cm.decarad.powerStatusPVName
         self.ui.label_decarad_voltage.channel = self.current_cm.decarad.voltageReadbackPVName
@@ -435,6 +510,7 @@ class GuidedCommissioningScreens(Display):
                                    utils.CPLRBOT_PLOT_KEY      : self.current_cm.coupler_bot_PVs,
                                    utils.CMVACUUM_PLOT_KEY     : self.current_cm.vacuumPlotPairs,
                                    utils.CRYOSIGNALS_PLOT_KEY  : self.current_cm.cryo_signal_PVs,
+                                   utils.AMP_PLOT_KEY          : self.current_cm.amp_pvs,
                                    utils.SINGLE_CAVITY_PLOT_KEY: self.current_cavity.plot_pvs}
 
             self.time_plot_updater.updatePlots(timeplot_update_map)
@@ -482,15 +558,25 @@ class GuidedCommissioningScreens(Display):
         ui.estimated_steps_label.setText(str(int(est_steps)))
         ui.label_current_freq.setText(str(value + self.current_cavity.frequency))
 
-    def des_step_changed(self):
-        des_steps = int(self.tuner_window.ui.step_des_line_edit.text())
-        self.ui.status_label.setText("Issuing stepper move command")
-        self.current_cavity.steppertuner.move(des_steps,
-                                              maxSteps=utils.STEPPER_MAX_STEPS,
-                                              speed=scLinacUtils.MAX_STEPPER_SPEED)
-        self.ui.status_label.setText("stepper done moving")
-        self.current_cavity.current_steps += des_steps
-        self.tuner_window.ui.label_session_steps.setText(str(self.current_cavity.current_steps))
+    def launch_stepper_worker(self):
+        if (not self.tuner_window.ui.step_des_spinBox.value()
+                or (self.stepper_thread and not self.stepper_thread.isFinished())):
+            return
+        self.stepper_thread = StepperWorker(cavity=self.current_cavity,
+                                            des_steps=self.tuner_window.ui.step_des_spinBox.value())
+        self.setup_thread(worker=self.stepper_thread,
+                          progressBar=None, error_handler=self.handle_stepper_err,
+                          abortButton=self.tuner_window.ui.step_abort_button,
+                          action_desc="Stepper move",
+                          startButton=self.tuner_window.ui.step_des_spinBox)
+
+    @slot(str)
+    def handle_stepper_err(self, exception):
+        popup = QMessageBox()
+        popup.setIcon(QMessageBox.Critical)
+        popup.setWindowTitle("Stepper Error")
+        popup.setText(exception)
+        popup.exec()
 
     def update_rf_controls(self):
         # TODO implement microphonics measurement (or connect button to microphonics GUI)
@@ -511,8 +597,8 @@ class GuidedCommissioningScreens(Display):
         ui.spinbox_ades.channel = self.current_cavity.selAmplitudeDesPV.pvname
         ui.label_ades_rdbk.channel = self.current_cavity.selAmplitudeDesPV.pvname
 
-        ui.lineedit_srfmax.channel = self.current_cavity.ades_max_srf_PV
-        ui.label_srfmax_rdbk.channel = self.current_cavity.ades_max_srf_PV
+        ui.lineedit_srfmax.channel = self.current_cavity.ades_max_srf_PV.pvname
+        ui.label_srfmax_rdbk.channel = self.current_cavity.ades_max_srf_PV.pvname
         ui.label_amax_rdbk.channel = self.current_cavity.ades_max_PV.pvname
 
         ui.spinbox_selphaseoffset.channel = self.current_cavity.sel_phaseoffset_PVName
@@ -530,6 +616,7 @@ class GuidedCommissioningScreens(Display):
         ui.label_amp_low.channel = self.current_cavity.feedback_amplitude_low_PVName
 
         ui.spinbox_reactive_power.channel = self.current_cavity.ssa_reactive_power_fraction_PV.pvname
+        ui.spinbox_reactive_power.editingFinished.connect(partial(self.current_cavity.ades_proc_pv.put, 1))
         ui.label_reactive_power_rdbk.channel = self.current_cavity.ssa_reactive_power_fraction_PV.pvname
 
         ui.label_max_amplitude.channel = self.current_cavity.acceptancetest_max_amplitude_PVName
@@ -538,13 +625,18 @@ class GuidedCommissioningScreens(Display):
         ui.label_cavity_limitation.channel = self.current_cavity.acceptancetest_cavity_limitation_PVName
 
         ui.button_onehour_done.clicked.connect(self.onehour_done_button_pressed)
-        ui.button_open_edm_rfcontrols.macros = [self.macro_string]
+        ui.button_edm_rfcontroller.macros = [self.macro_string]
+        ui.button_edm_waveforms.macros = [self.macro_string]
 
     def onehour_done_button_pressed(self):
+        self.selap_timer.stop()
         self.current_cavity.results.onehourrun_complete = True
-        self.current_cavity.results.commissioned_amplitude = self.current_cavity.ades_max_srf_PV.value
-        self.current_cavity.save_results()
+        curr_amp = self.current_cavity.selAmplitudeDesPV.value
+        self.current_cavity.ades_max_srf_PV.put(curr_amp)
+        # TODO figure out if we need to save commissioned amp
+        self.current_cavity.results.onehour_amp = curr_amp
         self.current_cavity.turnOff()
+        self.current_cavity.save_results()
         self.success_signal.emit("One hour run complete")
 
     def update_stepsize(self):
@@ -581,13 +673,21 @@ class GuidedCommissioningScreens(Display):
         if qmessagebox.buttonRole(clickedbutton) == QMessageBox.AcceptRole:
             self.current_cavity.results.ssa_characterized = True
             self.current_cavity.results.ssa_maxdrive = self.current_cavity.ssa_maxdrive_PV.value
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.RejectRole:
+            enable_after_deletion(button=self.ui.button_ssa_char,
+                                  thread=self.ssa_char_thread)
         self.populate_status_labels()
+        self.current_cavity.save_results()
 
     def freq_actionbutton_clicked(self, qmessagebox: QMessageBox):
         clickedbutton = qmessagebox.clickedButton()
         if qmessagebox.buttonRole(clickedbutton) == QMessageBox.AcceptRole:
             self.current_cavity.results.eight_pi_nine_freq_measured = True
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.RejectRole:
+            enable_after_deletion(button=self.ui.button_measure_8pi9,
+                                  thread=self.large_rack_thread)
         self.populate_status_labels()
+        self.current_cavity.save_results()
 
     def piezo_prerf_actionbutton_clicked(self, qmessagebox: QMessageBox):
         clickedbutton = qmessagebox.clickedButton()
@@ -595,7 +695,11 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.results.piezo_capacitance_a = self.current_cavity.piezo.capacitance_a_PV.value
             self.current_cavity.results.piezo_capacitance_b = self.current_cavity.piezo.capacitance_b_PV.value
             self.current_cavity.results.piezo_prerf_checked = True
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.RejectRole:
+            enable_after_deletion(button=self.ui.button_piezo_prerf,
+                                  thread=self.piezo_pre_rf_thread)
         self.populate_status_labels()
+        self.current_cavity.save_results()
 
     def piezo_withrf_actionbutton_clicked(self, qmessagebox: QMessageBox):
         clickedbutton = qmessagebox.clickedButton()
@@ -606,7 +710,11 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.piezo.withrf_save_dfgain_PV.put(1)
             self.current_cavity.results.piezo_detune_gain = self.current_cavity.piezo.detunegain_new_PV.value
             self.current_cavity.results.piezo_withrf_checked = True
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.RejectRole:
+            enable_after_deletion(button=self.ui.button_piezo_withrf,
+                                  thread=self.piezo_with_rf_thread)
         self.populate_status_labels()
+        self.current_cavity.save_results()
 
     def make_edmbutton(self, filepath: str):
         edmbutton = PyDMEDMDisplayButton()
@@ -622,7 +730,11 @@ class GuidedCommissioningScreens(Display):
             self.current_cavity.results.cavity_calibration_run = True
             self.current_cavity.results.fpc_qext_cold = self.current_cavity.measuredQLoadedPV.value
             self.current_cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
+        if qmessagebox.buttonRole(clickedbutton) == QMessageBox.RejectRole:
+            enable_after_deletion(button=self.ui.button_cavity_calibration,
+                                  thread=self.cav_cal_thread)
         self.populate_status_labels()
+        self.current_cavity.save_results()
 
     def testlead_selected(self):
         self.current_cavity.results.test_lead = self.ui.testlead.currentText()
@@ -649,19 +761,14 @@ class GuidedCommissioningScreens(Display):
         self.populate_status_labels()
         self.current_cavity.save_results()
 
-    def end_selap(self):
-        try:
-            self.current_cavity.selAmplitudeDesPV.put(5)
-            self.current_cavity.turnOff()
-            self.current_cavity.runCalibration(loadedQLowerlimit=scLinacUtils.LOADED_Q_LOWER_LIMIT,
-                                               loadedQUpperlimit=scLinacUtils.LOADED_Q_UPPER_LIMIT)
-            self.current_cavity.turnOff()
-            self.current_cavity.ssa.turnOff()
-            self.current_cavity.save_results()
-            self.populate_status_labels()
-            self.success_signal.emit('1h run complete')
-        except scLinacUtils.CavityQLoadedCalibrationError as e:
-            self.handle_cav_cal_error(e)
+    def launch_end_selap_thread(self):
+        self.end_selap_thread = EndSELAPWorker(self.current_cavity)
+        self.setup_thread(worker=self.end_selap_thread,
+                          progressBar=self.ui.selap_progressbar,
+                          error_handler=self.handle_selap_error,
+                          abortButton=self.ui.selap_abort,
+                          action_desc="SELAP rampdown",
+                          startButton=self.ui.button_selap_rampup)
 
     def setup_rf_window(self):
         if not self.rf_controls_window:
@@ -675,9 +782,13 @@ class GuidedCommissioningScreens(Display):
             self.rf_controls_window.ui.button_start_timer.clicked.connect(self.start_timer)
             self.rf_controls_window.ui.button_reset_timer.clicked.connect(self.restart_timer)
             self.rf_controls_window.ui.button_stop_timer.clicked.connect(self.stop_timer)
+            self.rf_controls_window.ui.sela_button.clicked.connect(self.save_sela_amp)
         self.update_rf_controls()
         self.update_rf_plots()
         showDisplay(self.rf_controls_window)
+
+    def save_sela_amp(self):
+        self.current_cavity.results.sela_amp = self.current_cavity.selAmplitudeDesPV.value
 
     def start_timer(self):
         self.selap_timer.start(3600000)
