@@ -21,7 +21,13 @@ class formSubmission(Display):
         self.ui.cm_dropdown.currentIndexChanged.connect(self.cm_selection)
         self.ui.cav_dropdown.currentIndexChanged.connect(self.cav_selection)
 
-        self.ui.smartsheet_client = smartsheet.Smartsheet("Bearer FcMv1IwineP5T56sZvXwF0M5fx9XFOkUbhKec")
+        authFile = open("/u/md/gonnella/smartsheetPython/gonnella_smartsheet_auth.txt")
+        auth = authFile.read()
+        auth = auth[0:-1]
+        prefix = "Bearer "
+        auth = prefix+auth
+
+        self.ui.smartsheet_client = smartsheet.Smartsheet(auth)
 
         self.ui.initialize_cm_dropdown()
         self.ui.initialize_cav_dropdown()
@@ -51,7 +57,7 @@ class formSubmission(Display):
         
 
         data = []
-        #data.append(self.ui.operator_edit.text())
+        
         data.append(self.ui.date_edit.text())
         data.append(self.ui.myfloat(self.ui.piezo_cap_a_edit.text()))
         data.append(self.ui.myfloat(self.ui.piezo_cap_b_edit.text()))
@@ -84,9 +90,10 @@ class formSubmission(Display):
         # build the new cells
         new_cell = []
         for i in range(len(cIndex)):
-            new_cell.append(smartsheet.models.Cell())
-            new_cell[-1].column_id = column_ids[cIndex[i]]
-            new_cell[-1].value = data[i]
+            cell = smartsheet.models.Cell()
+            cell.column_id = column_ids[cIndex[i]]
+            cell.value = data[i]
+            new_cell.append(cell)
             
             
         # build the operator field
@@ -124,8 +131,8 @@ class formSubmission(Display):
 
     def initialize_cav_dropdown(self):
         self.ui.cav_dropdown.addItem("Cavity")
-        for i in range(8):
-            self.ui.cav_dropdown.addItem("Cavity "+str(i+1))
+        for i in range(1,9):
+            self.ui.cav_dropdown.addItem("Cavity "+str(i))
 
         
     def cm_selection(self):
@@ -205,76 +212,76 @@ class formSubmission(Display):
         data = CavityResults()
         r = sheet.rows[index[0]]
         c = r.cells
-        for x in c:
-            id = x.column_id
+        for cell in r.cells:
+            id = cell.column_id
             jindex = column_ids.index(id)
             name = column_names[jindex]
             if name=="Operator":
-                data.test_lead = x.value
+                data.test_lead = cell.value
 
             elif name=="Date":
-                data.date = x.value
+                data.date = cell.value
 
             elif name=="Piezo Capacitance A":
-                data.piezo_capacitance_a = x.value
+                data.piezo_capacitance_a = cell.value
 
             elif name=="Piezo Capacitance B":
-                data.piezo_capacitance_b = x.value
+                data.piezo_capacitance_b = cell.value
 
             elif name=="SSA max drive":
-                data.ssa_maxdrive = x.value
+                data.ssa_maxdrive = cell.value
 
             elif name=="Cold Landing Frequency":
-                data.cold_land_freq_2K = x.value
+                data.cold_land_freq_2K = cell.value
 
             elif name=="Final Frequency":
-                data.final_frequency = x.value
+                data.final_frequency = cell.value
 
             elif name=="Steps to Reach Final Frequency":
-                data.steps_to_tuned_2K = x.value
+                data.steps_to_tuned_2K = cell.value
 
             elif name=="Qext FPC (cold)":
-                data.fpc_qext_cold = x.value
+                data.fpc_qext_cold = cell.value
 
             elif name=="Qext FPC (warm)":
-                data.fpc_qext_warm = x.value
+                data.fpc_qext_warm = cell.value
 
             elif name=="Qext Probe":
-                data.probe_qext_value = x.value
+                data.probe_qext_value = cell.value
 
             elif name=="Piezo amplifier gain A":
-                data.piezo_amplifiergain_a = x.value
+                data.piezo_amplifiergain_a = cell.value
 
             elif name=="Piezo amplifier gain B":
-                data.piezo_amplifiergain_b = x.value
+                data.piezo_amplifiergain_b = cell.value
 
             elif name=="Piezo detune gain":
-                data.piezo_detune_gain = x.value
+                data.piezo_detune_gain = cell.value
 
             elif name=="Radiation Onset":
-                temp = x.value
+                temp = cell.value
                 if isinstance(temp,float):
                     data.radiation_onset = str(temp)
                 else:
                     data.radiation_onset = temp
 
             elif name=="Final Phase Offset":
-                data.final_phase_offset = x.value
+                data.final_phase_offset = cell.value
 
             elif name=="Commissioned Amplitude":
-                data.commissioned_amplitude = x.value
+                data.commissioned_amplitude = cell.value
 
             elif name=="1 hour run Amplitude":
-                data.onehourrun_amplitude = x.value
+                data.onehourrun_amplitude = cell.value
 
             elif name=="1 hour run":
-                data.onehourrun_complete = x.value
+                data.onehourrun_complete = cell.value
 
             elif name=="Item Comp":
-                data.item_comp = x.value
+                data.item_comp = cell.value
 
             elif name=="Additonal Details":
-                data.add_details = x.value
+                data.add_details = cell.value
             
         return data
         
@@ -431,18 +438,15 @@ class formSubmission(Display):
 
         
     def read_contact_list(self):
-       
-        f = open('contact_list.csv')
-        csvreader = csv.reader(f)
-        rows = []
-        self.ui.contacts = []
-        for row in csvreader:
-            self.ui.contacts.append(smartsheet.models.ContactObjectValue({
-                "name": row[0],
-                "email": row[1]
-                }))
-
-        f.close
+        with open('contact_list.csv') as csvfile:
+            reader = csv.DictReader(csvfile)
+            self.ui.contacts = []
+            for row in reader:
+                print(row['Name'],row['email'])
+                self.ui.contacts.append(smartsheet.models.ContactObjectValue({
+                    "name": row['Name'],
+                    "email": row['email']
+                    }))
         
 
 
