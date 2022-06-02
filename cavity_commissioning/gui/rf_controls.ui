@@ -6,15 +6,125 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>658</width>
-    <height>854</height>
+    <width>663</width>
+    <height>831</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="7" column="0" colspan="3">
+   <item row="4" column="1">
+    <widget class="PyDMWaveformPlot" name="waveform_rfsignals">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string/>
+     </property>
+     <property name="yAxes">
+      <stringlist/>
+     </property>
+     <property name="title" stdset="0">
+      <string>RF waveforms</string>
+     </property>
+     <property name="showLegend">
+      <bool>true</bool>
+     </property>
+     <property name="curves">
+      <stringlist/>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="3">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Workflow</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_6">
+      <item row="5" column="2">
+       <widget class="QLabel" name="label_19">
+        <property name="text">
+         <string>6) Start one hour run</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
+       <widget class="QLabel" name="label_15">
+        <property name="text">
+         <string>2) After completion of ramp up, if ADES&gt;16.6MV, lower to 16.6MV</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label_20">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>5) </string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="PyDMRelatedDisplayButton" name="button_open_microphonics_gui">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="text">
+           <string>Measure microphonics</string>
+          </property>
+          <property name="filenames" stdset="0">
+           <stringlist>
+            <string>/home/physics/srf/gitRepos/microphonics/CommMicro.py</string>
+           </stringlist>
+          </property>
+          <property name="openInNewWindow" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>1) Ramp up to AMAX in SELA, while minimizing forward power adjusting SEL phase offset</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_16">
+        <property name="text">
+         <string>3) Switch to SELAP and straighten cheeto</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLabel" name="label_18">
+        <property name="text">
+         <string>4) Adjust reactive power fraction if necessary</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="5" column="1">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string>Phase controls</string>
@@ -34,6 +144,9 @@
         </property>
         <property name="showStepExponent" stdset="0">
          <bool>false</bool>
+        </property>
+        <property name="writeOnPress" stdset="0">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -67,206 +180,66 @@
      </layout>
     </widget>
    </item>
-   <item row="0" column="0" colspan="3">
-    <widget class="QGroupBox" name="groupBox">
+   <item row="6" column="2">
+    <widget class="QGroupBox" name="groupBox_8">
      <property name="title">
-      <string>Workflow</string>
+      <string>Related Displays</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_6">
-      <item row="4" column="1">
-       <widget class="QLabel" name="label_16">
-        <property name="text">
-         <string>3) Switch to SELAP and straighten cheeto</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLabel" name="label_15">
-        <property name="text">
-         <string>2) If ADES&gt;16.6MV, lower to 16.6MV</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="PyDMRelatedDisplayButton" name="button_open_microphonics_gui">
+     <layout class="QGridLayout" name="gridLayout_9">
+      <item row="0" column="0">
+       <widget class="PyDMEDMDisplayButton" name="button_edm_waveforms">
         <property name="toolTip">
          <string/>
         </property>
         <property name="text">
-         <string>5) Measure microphonics</string>
+         <string>EDM waveform screen</string>
         </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLabel" name="label_18">
-        <property name="text">
-         <string>4) Adjust reactive power fraction if necessary</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>1) Ramp up to AMAX in SELA, while minimizing forward power adjusting SEL phase offset</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLabel" name="label_19">
-        <property name="text">
-         <string>6) Start one hour run</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="3" column="0" colspan="2">
-    <widget class="QGroupBox" name="groupBox_4">
-     <property name="title">
-      <string>RF controls</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="2" column="3">
-       <widget class="PyDMLabel" name="label_rfstatus_rdbk">
-        <property name="toolTip">
-         <string/>
+        <property name="filenames" stdset="0">
+         <stringlist>
+          <string>$TOOLS/edm/display/llrf/rf_srf_wf_cavity_overview.edl</string>
+         </stringlist>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label_13">
-        <property name="text">
-         <string>RF Mode:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>SSA Power:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="PyDMLabel" name="label_rfmode_rdbk">
-        <property name="toolTip">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_14">
-        <property name="text">
-         <string>RF Power:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="PyDMPushButton" name="button_ssa_on">
+       <widget class="PyDMEDMDisplayButton" name="button_edm_rfcontroller">
         <property name="toolTip">
          <string/>
         </property>
         <property name="text">
-         <string>On</string>
+         <string>EDM RF controller screen</string>
         </property>
-        <property name="pressValue" stdset="0">
-         <string>1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="PyDMLabel" name="label_ssa_status_rdbk">
-        <property name="toolTip">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="PyDMPushButton" name="button_ssa_off">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="text">
-         <string>Off</string>
-        </property>
-        <property name="pressValue" stdset="0">
-         <string>1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1" colspan="2">
-       <widget class="PyDMEnumComboBox" name="combobox_rfmode">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <item>
-         <property name="text">
-          <string>Chirp</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Pulsed</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>SEL</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>SELA</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>SELAP</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="PyDMPushButton" name="button_rf_on">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="text">
-         <string>On</string>
-        </property>
-        <property name="pressValue" stdset="0">
-         <string>1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="PyDMPushButton" name="button_rf_off">
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="text">
-         <string>Off</string>
-        </property>
-        <property name="pressValue" stdset="0">
-         <string>0</string>
+        <property name="filenames" stdset="0">
+         <stringlist>
+          <string>$TOOLS/edm/display/llrf/rf_srf_controller_embed.edl</string>
+         </stringlist>
         </property>
        </widget>
       </item>
      </layout>
     </widget>
    </item>
-   <item row="8" column="2" rowspan="5">
-    <widget class="QGroupBox" name="groupBox_5">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+   <item row="4" column="2">
+    <widget class="PyDMWaveformPlot" name="waveform_cheeto">
+     <property name="toolTip">
+      <string/>
      </property>
+     <property name="yAxes">
+      <stringlist/>
+     </property>
+     <property name="title" stdset="0">
+      <string>Cheeto</string>
+     </property>
+     <property name="showLegend">
+      <bool>true</bool>
+     </property>
+     <property name="curves">
+      <stringlist/>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="2">
+    <widget class="QGroupBox" name="groupBox_5">
      <property name="title">
       <string>CM acceptance test data</string>
      </property>
@@ -307,7 +280,7 @@
            <string/>
           </property>
           <property name="text">
-           <string>el</string>
+           <string/>
           </property>
          </widget>
         </item>
@@ -358,26 +331,254 @@
      </layout>
     </widget>
    </item>
-   <item row="4" column="2">
-    <widget class="PyDMWaveformPlot" name="waveform_cheeto">
-     <property name="toolTip">
-      <string/>
+   <item row="3" column="0" colspan="2">
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>RF controls</string>
      </property>
-     <property name="yAxes">
-      <stringlist/>
-     </property>
-     <property name="title" stdset="0">
-      <string>Cheeto</string>
-     </property>
-     <property name="showLegend">
-      <bool>true</bool>
-     </property>
-     <property name="curves">
-      <stringlist/>
-     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="2">
+       <widget class="PyDMPushButton" name="button_ssa_off">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>Off</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="PyDMLabel" name="label_rfstatus_rdbk">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>SSA Power:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="PyDMLabel" name="label_ssa_status_rdbk">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="PyDMEnumComboBox" name="combobox_rfmode">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <item>
+         <property name="text">
+          <string>Chirp</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Pulsed</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>SEL</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>SELA</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>SELAP</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="PyDMPushButton" name="button_rf_off">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>Off</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="PyDMLabel" name="label_rfmode_rdbk">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>RF Power:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="PyDMPushButton" name="button_rf_on">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>On</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="PyDMPushButton" name="button_ssa_on">
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>On</string>
+        </property>
+        <property name="pressValue" stdset="0">
+         <string>1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>RF Mode:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
-   <item row="8" column="0" rowspan="4" colspan="2">
+   <item row="3" column="2">
+    <widget class="QGroupBox" name="groupBox_6">
+     <property name="title">
+      <string>Amplitude controls</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_8">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Stepsize:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="PyDMLineEdit" name="lineedit_srfmax">
+          <property name="toolTip">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="PyDMLabel" name="label_srfmax_rdbk">
+          <property name="toolTip">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="1">
+       <widget class="PyDMLabel" name="label_amax_rdbk">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineedit_ades_stepsize">
+        <property name="text">
+         <string>0.5</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="QPushButton" name="sela_button">
+        <property name="text">
+         <string>Save ADES as SELA Max</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_10">
+        <item>
+         <widget class="PyDMSpinbox" name="spinbox_ades">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="maximum">
+           <double>18.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.500000000000000</double>
+          </property>
+          <property name="showUnits" stdset="0">
+           <bool>true</bool>
+          </property>
+          <property name="showStepExponent" stdset="0">
+           <bool>false</bool>
+          </property>
+          <property name="writeOnPress" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="PyDMLabel" name="label_ades_rdbk">
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="text">
+           <string>s</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>AMAX:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>SRF MAX:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>ADES:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="6" column="1">
     <widget class="QGroupBox" name="groupBox_3">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -607,175 +808,16 @@
      </layout>
     </widget>
    </item>
-   <item row="13" column="1" colspan="2">
-    <widget class="PyDMEDMDisplayButton" name="button_open_edm_rfcontrols">
-     <property name="toolTip">
-      <string/>
-     </property>
-     <property name="text">
-      <string>Open EDM screens</string>
-     </property>
-     <property name="filenames" stdset="0">
-      <stringlist>
-       <string>$TOOLS/edm/display/llrf/rf_srf_wf_cavity_overview.edl</string>
-       <string>$TOOLS/edm/display/llrf/rf_srf_controller_embed.edl</string>
-      </stringlist>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1">
-    <widget class="PyDMWaveformPlot" name="waveform_rfsignals">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string/>
-     </property>
-     <property name="yAxes">
-      <stringlist/>
-     </property>
-     <property name="title" stdset="0">
-      <string>RF waveforms</string>
-     </property>
-     <property name="showLegend">
-      <bool>true</bool>
-     </property>
-     <property name="curves">
-      <stringlist/>
-     </property>
-    </widget>
-   </item>
-   <item row="14" column="1" colspan="2">
-    <widget class="QPushButton" name="button_onehour_done">
-     <property name="text">
-      <string>Save current ADES as AMAX, turn cavity off and mark complete</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="2">
-    <widget class="QGroupBox" name="groupBox_6">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="title">
-      <string>Amplitude controls</string>
-     </property>
-     <layout class="QFormLayout" name="formLayout_7">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>Stepsize:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="lineedit_ades_stepsize">
-        <property name="text">
-         <string>0.5</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>ADES:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <layout class="QHBoxLayout" name="horizontalLayout_10">
-        <item>
-         <widget class="PyDMSpinbox" name="spinbox_ades">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="maximum">
-           <double>18.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.500000000000000</double>
-          </property>
-          <property name="showUnits" stdset="0">
-           <bool>true</bool>
-          </property>
-          <property name="showStepExponent" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="PyDMLabel" name="label_ades_rdbk">
-          <property name="toolTip">
-           <string/>
-          </property>
-          <property name="text">
-           <string>s</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>AMAX:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="PyDMLabel" name="label_amax_rdbk">
-        <property name="toolTip">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>SRF MAX:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
-         <widget class="PyDMLineEdit" name="lineedit_srfmax">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="PyDMLabel" name="label_srfmax_rdbk">
-          <property name="toolTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
    <item row="1" column="0" colspan="3">
     <widget class="QGroupBox" name="groupBox_7">
      <property name="title">
       <string>One hour run</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_7">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_timer">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="button_start_timer">
         <property name="text">
-         <string>Timer not running</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
+         <string>Start timer</string>
         </property>
        </widget>
       </item>
@@ -786,6 +828,16 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_timer">
+        <property name="text">
+         <string>Timer not running</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="2">
        <widget class="QPushButton" name="button_reset_timer">
         <property name="text">
@@ -793,10 +845,13 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QPushButton" name="button_start_timer">
+      <item row="1" column="0" colspan="4">
+       <widget class="QPushButton" name="button_onehour_done">
+        <property name="toolTip">
+         <string>For manual completion not using the timer</string>
+        </property>
         <property name="text">
-         <string>Start timer</string>
+         <string>Save current ADES as AMAX, turn cavity off and mark complete</string>
         </property>
        </widget>
       </item>
