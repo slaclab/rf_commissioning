@@ -60,9 +60,12 @@ STEPPER_MAX_STEPS = 5000000
 
 MICROSTEPS_PER_STEP = 256
 
+HZ_PER_STEP = 1.4
+HL_HZ_PER_STEP = 18.3
+
 # These are very rough values obtained empirically
-ESTIMATED_STEPS_PER_HZ = MICROSTEPS_PER_STEP / 1.4
-ESTIMATED_STEPS_PER_HZ_HL = MICROSTEPS_PER_STEP / 18.3
+ESTIMATED_MICROSTEPS_PER_HZ = MICROSTEPS_PER_STEP / HZ_PER_STEP
+ESTIMATED_MICROSTEPS_PER_HZ_HL = MICROSTEPS_PER_STEP / HL_HZ_PER_STEP
 
 
 @dataclasses.dataclass
@@ -75,7 +78,7 @@ class ProbeQError(Exception):
     """
     Exception thrown during cavity probe Q calculation
     """
-
+    
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
@@ -85,7 +88,7 @@ class DetuneError(Exception):
     """
     Exception thrown during cavity tuning
     """
-
+    
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
@@ -95,7 +98,7 @@ class FreqSearchError(Exception):
     """
     Exception thrown during 8pi/9 frequency search
     """
-
+    
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
@@ -105,7 +108,7 @@ class RadOnsetError(Exception):
     """
     Exception thrown when radiation above background is detected
     """
-
+    
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
@@ -115,7 +118,7 @@ class RadLimitError(Exception):
     """
     Exception thrown when radiation exceeds limit
     """
-
+    
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
@@ -125,7 +128,7 @@ class PiezoError(Exception):
     """
     Exception thrown piezo checks
     """
-
+    
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
