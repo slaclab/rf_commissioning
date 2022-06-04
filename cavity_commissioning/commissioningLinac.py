@@ -18,38 +18,38 @@ ALL_CRYOMODULES = [""] + L0B + L1B + L1BHL + L2B + L3B
 class DecaradHead:
     def __init__(self, number, decarad):
         # type (int, Decarad) -> None
-
+        
         if number not in range(1, 11):
             raise AttributeError("Decarad Head number need to be between 1 and 10")
-
+        
         self.decarad = decarad
         self.number = number
-
+        
         # Adds leading 0 to numbers with less than 2 digits
         self.pvPrefix = self.decarad.pvPrefix + "{:02d}:".format(self.number)
-
+        
         self.doseRatePV: PV = PV(self.pvPrefix + "GAMMA_DOSE_RATE")
-
+        
         self.buffer = empty(10)
         self.buffer[:] = nan
         self.counter = 0
-
+        
         self.doseRatePV.add_callback(self.fill_buffer, index=0)
-
+    
     def fill_buffer(self, value, **kwargs):
         self.buffer[self.counter] = value
         self.counter = (self.counter + 1) % 10
-
+    
     @property
     def avgDose(self) -> float:
         # try to do averaging of the last 60 points to account for signal noise
         try:
             return max(nanmean(self.buffer) - utils.DECARAD_BACKGROUND_READING, 0)
-
+        
         # return the most recent value if we can't average for whatever reason
         except (AttributeError, requests.exceptions.ConnectionError):
             return self.normalized_dose
-
+    
     @property
     def normalized_dose(self) -> float:
         return max(self.doseRatePV.value - utils.DECARAD_BACKGROUND_READING, 0)
@@ -65,14 +65,14 @@ class Decarad:
         self.powerControlPVName = self.pvPrefix + "HVCTRL"
         self.powerStatusPVName = self.pvPrefix + "HVSTATUS"
         self.voltageReadbackPVName = self.pvPrefix + "HVMON"
-
+        
         self.heads = {head: DecaradHead(number=head, decarad=self)
                       for head in range(1, 11)}
-
+    
     @property
     def max_avg_dose(self):
         return max([head.avgDose for head in self.heads.values()])
-
+    
     @property
     def max_dose(self):
         return max([head.doseRatePV.value for head in self.heads.values()])
@@ -83,7 +83,7 @@ class Piezo:
         # type (CommissioningCavity) -> None
         self.cavity: CommissioningCavity = cavity
         self.pvPrefix: str = self.cavity.pvPrefix + "PZT:"
-
+        
         self.enable_PV: PV = PV(self.pvPrefix + "ENABLE")
         self.feedback_mode_PV: PV = PV(self.pvPrefix + "MODECTRL")
         self.dc_setpoint_PV: PV = PV(self.pvPrefix + "DAC_SP")
@@ -96,7 +96,7 @@ class Piezo:
         self.capacitance_a_PV: PV = PV(self.pvPrefix + "CHA_C")
         self.capacitance_b_PV: PV = PV(self.pvPrefix + "CHB_C")
         self.prerf_test_status_pv: PV = PV(self.pvPrefix + "TESTSTS")
-
+        
         self.withrf_run_check_PV: PV = PV(self.pvPrefix + "RFTESTSTRT")
         self.withrf_check_status_PV: PV = PV(self.pvPrefix + "RFTESTSTS")
         self.withrf_status_PV: PV = PV(self.pvPrefix + "RFSTESTSTAT")
@@ -105,7 +105,7 @@ class Piezo:
         self.withrf_push_dfgain_PV: PV = PV(self.pvPrefix + "PUSH_DFGAIN.PROC")
         self.withrf_save_dfgain_PV: PV = PV(self.pvPrefix + "SAVE_DFGAIN.PROC")
         self.detunegain_new_PV: PV = PV(self.pvPrefix + "DFGAIN_NEW")
-
+    
     def enable_feedback(self):
         self.enable_PV.put(utils.PIEZO_DISABLE_VALUE)
         self.dc_setpoint_PV.put(25)
@@ -114,14 +114,14 @@ class Piezo:
 
 
 class CommissioningCavity(Cavity):
-
+    
     def __init__(self, cavityNum, rackObject, ssaClass=SSA, stepperClass=StepperTuner):
         super().__init__(cavityNum, rackObject, stepperClass=CommissioningStepper)
-
+        
         self.results = utils.CommissioningCavityResults()
-
+        
         self.piezo = Piezo(self)
-
+        
         self.interlock_PV: PV = PV(self.pvPrefix + "RFPERMIT")
         self.coupler_top_PVName = self.pvPrefix + "CPLRTEMP1"
         self.coupler_bot_PVName = self.pvPrefix + "CPLRTEMP2"
@@ -133,46 +133,46 @@ class CommissioningCavity(Cavity):
         self.detune_rfs_PV: PV = PV(self.pvPrefix + "DF")
         self.forward_pwr_PVName = self.pvPrefix + "FWD:PWRMEAN"
         self.ades_proc_pv = PV(self.pvPrefix + "ADES.PROC")
-
+        
         self.ssa_maxdrive_PV: PV = PV(self.pvPrefix + "SSA:DRV_MAX_REQ")
         self.ssa_reactive_power_fraction_PV: PV = PV(self.pvPrefix + "SSA:REACTIVE")
-
+        
         self.measured_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE_CALC2")
         self.inuse_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE")
         self.calculate_probe_qext_PV: PV = PV(self.pvPrefix + "QPROBE_CALC1.PROC")
         self.push_probe_qext_PV: PV = PV(self.pvPrefix + "PUSH_QPROBECALC.PROC")
-
+        
         self.waveformplot_channelpairs: List[Tuple[Optional[str], str]] = [(None, self.revWaveformPV.pvname),
                                                                            (None, self.fwdWaveformPV.pvname),
                                                                            (None, self.cavWaveformPV.pvname)]
-
+        
         self.iwaveform_PVName = self.pvPrefix + "CTRL:IWF"
         self.qwaveform_PVName = self.pvPrefix + "CTRL:QWF"
         self.controller_limit_a_PVName = self.pvPrefix + "CTRL:LIMS.VALA"
         self.controller_limit_b_PVName = self.pvPrefix + "CTRL:LIMS.VALB"
-
+        
         self.cheetoplot_channelpairs: List[Tuple[Optional[str], str]] = [(self.iwaveform_PVName,
                                                                           self.qwaveform_PVName),
                                                                          (self.controller_limit_b_PVName,
                                                                           self.controller_limit_a_PVName)]
-
+        
         self.acceptancetest_max_amplitude_PVName = self.pvPrefix + "AT:AMAX"
         self.acceptancetest_useable_amplitude_PVName = self.pvPrefix + "AT:AUSE"
         self.acceptancetest_fe_onset_PVName = self.pvPrefix + "AT:FEON_AACT"
         self.acceptancetest_cavity_limitation_PVName = self.pvPrefix + "AT:LIMIT"
-
+        
         self.sel_phaseoffset_PVName = self.pvPrefix + "SEL_POFF"
         self.sel_phaseoffset_rdbk_PVName = self.pvPrefix + "SEL_POFF_RBV"
-
+        
         self.feedback_phase_high_PVName = self.pvPrefix + "PHAFB_HSUM"
         self.feedback_phase_low_PVName = self.pvPrefix + "PHAFB_LSUM"
         self.feedback_amplitude_high_PVName = self.pvPrefix + "AMPFB_HSUM"
         self.feedback_amplitude_low_PVName = self.pvPrefix + "AMPFB_LSUM"
-
+        
         self.freq_search_select_PV: PV = PV(self.pvPrefix + "FSCAN:SEL")
         self.freq_search_8pi9_PV: PV = PV(self.pvPrefix + "FSCAN:8PI9MODE")
         self.freq_search_push_PV: PV = PV(self.pvPrefix + "FSCAN:PUSH_8PI9.PROC")
-
+        
         self.ades_max_srf_PV: PV = PV(self.pvPrefix + "ADES_MAX_SRF")
         self.ades_max_PV: PV = PV(self.pvPrefix + "ADES_MAX")
         self.tuning_plot_pairs: List[Tuple[str]] = [(self.detune_best_PV.pvname,
@@ -181,7 +181,7 @@ class CommissioningCavity(Cavity):
                                                      "steptemp"),
                                                     (self.steppertuner.step_signed_pv.pvname,
                                                      "signedsteps")]
-
+        
         self.current_steps = 0
         self.plot_pvs: List[str] = [(self.stepper_temp_PV.pvname, None),
                                     (self.coupler_top_PVName, None),
@@ -191,36 +191,38 @@ class CommissioningCavity(Cavity):
                                     (self.vessel_top_PVName, None),
                                     (self.vessel_bot_PVName, None),
                                     (self.selAmplitudeActPV.pvname, None)]
-
+        
         self.fe_onset_recorded = False
         self.rad_threshold = (utils.GRADIENT_THRESHOLD_RADLIMIT * self.length)
-
+        
+        self.freq_search_stat_PV: PV = PV(self.pvPrefix + "FSCAN:SEARCHSTAT")
+    
     def record_fe_onset(self):
         if not self.fe_onset_recorded:
             self.results.fe_onset_amp = self.selAmplitudeDesPV.value
             self.fe_onset_recorded = True
-
+    
     def handle_rad_under50_underThresh(self):
         self.record_fe_onset()
         self.ades_max_srf_PV.put(min(self.rad_threshold, self.ades_max_srf_PV.value))
-
+    
     def handle_rad_under50_overThresh(self):
         self.record_fe_onset()
         self.results.sela_amp = self.selAmplitudeDesPV.value
         self.ades_max_srf_PV.put(self.rad_threshold)
-
+    
     def handle_rad_over50_underThresh(self):
         self.record_fe_onset()
         self.results.sela_amp = self.selAmplitudeDesPV.value
         self.ades_max_srf_PV.put(self.selAmplitudeDesPV.value)
         self.turnOff()
-
+    
     def handle_rad_over50_overThresh(self):
         self.record_fe_onset()
         self.results.sela_amp = self.selAmplitudeDesPV.value
         self.ades_max_srf_PV.put(self.rad_threshold)
         self.turnOff()
-
+    
     def load_results(self):
         with open('results/cryomodule_results.json', 'r+') as f:
             data = json.load(f)
@@ -233,13 +235,13 @@ class CommissioningCavity(Cavity):
                 # required precondition: keys in cav_data are ints 1 through 8
                 if str(self.number) in cav_data:
                     self.results.__dict__.update(cav_data[str(self.number)])
-
+    
     def save_results(self):
         fd = utils.acquireLock()
-
+        
         with open('results/cryomodule_results.json', 'r+') as f:
             data = json.load(f)
-
+            
             data[self.cryomodule.name] = self.cryomodule.results.__dict__
             f.seek(0)
             json.dump(data, f)
@@ -253,48 +255,48 @@ class CommissioningCavity(Cavity):
             json.dump(data, f)
             f.truncate()
         utils.releaseLock(fd)
-
+    
     # TODO set the chirp parameters to default before starting
     def setup_tuning(self):
         # self.turnOff()
         print("enabling piezo")
         self.piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
-
+        
         print("setting piezo to manual")
         self.piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
-
+        
         print("setting piezo DC voltage offset to 0V")
         self.piezo.dc_setpoint_PV.put(0)
-
+        
         print("setting piezo bias voltage to 25V")
         self.piezo.bias_voltage_PV.put(25)
-
+        
         print("setting drive level to {lev}".format(lev=scLinacUtils.SAFE_PULSED_DRIVE_LEVEL))
         self.drivelevelPV.put(scLinacUtils.SAFE_PULSED_DRIVE_LEVEL)
-
+        
         print("setting RF to chirp")
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_CHIRP)
-
+        
         print("turning RF on and waiting 5s for detune to catch up")
         self.turnOn()
         sleep(5)
-
+        
         if self.detune_best_PV.severity == pyepicsUtils.EPICS_INVALID_VAL:
             raise utils.DetuneError("Detune PV invalid. Either expand the chirp"
                                     " range or use the rack large frequency scan"
                                     " to find the detune.")
-
+    
     # TODO add callback to decarad on status to remove/add dose rate callbacks and (dis)able buttons
     def connect_to_decarad(self, callbackfunc: Callable):
         for decaradhead in self.cryomodule.decarad.heads.values():
             if decaradhead.doseRatePV.severity != pyepicsUtils.EPICS_INVALID_VAL:
                 decaradhead.doseRatePV.remove_callback(1)
                 decaradhead.doseRatePV.add_callback(callbackfunc, index=1)
-
+    
     @property
     def interlocks_cleared(self) -> bool:
         return self.interlock_PV.value == 1
-
+    
     def calculate_probe_q(self):
         self.calculate_probe_qext_PV.put(1, waitForPut=False)
         print("waiting 5s for probe q process to run")
@@ -305,34 +307,34 @@ class CommissioningCavity(Cavity):
             self.results.probe_qext_measured = True
         else:
             raise utils.ProbeQError('Measured probe Q value out of tolerance')
-
+    
     def selap_setup(self):
-
+        
         self.turnOff()
-
+        
         self.ssa.turnOn()
-
+        
         self.selAmplitudeDesPV.put(5)
-
+        
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SEL)
-
+        
         self.turnOn()
-
+        
         print("waiting 5s for detune to catch up")
         sleep(5)
-
+        
         print("checking detune")
         if (self.detune_best_PV.severity == 3
                 or abs(self.detune_best_PV.value) > 100):
             raise utils.DetuneError('Detune is invalid or larger than 100Hz')
-
+        
         print("checking piezo with rf calibration")
         if not self.results.piezo_withrf_checked:
             raise utils.PiezoError('Piezo checks have not been completed')
-
+        
         print("setting piezo to feedback")
         self.piezo.feedback_mode_PV.put(utils.PIEZO_FEEDBACK_VALUE)
-
+        
         self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_SELA)
 
 
@@ -340,14 +342,13 @@ class CommissioningRack(Rack):
     def __init__(self, rackName, cryoObject, cavityClass, ssaClass=SSA, stepperClass=StepperTuner):
         super().__init__(rackName=rackName, cryoObject=cryoObject, cavityClass=CommissioningCavity,
                          stepperClass=CommissioningStepper)
-
+        
         self.freq_search_low_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_START")
         self.freq_search_high_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_STOP")
         self.freq_search_rms_thresh_PV: PV = PV(self.pvPrefix + "FSCAN:RMS_THRESH")
         self.freq_search_modeoverlap_PV: PV = PV(self.pvPrefix + "FSCAN:MODE_OVERLAP")
         self.freq_search_start_PV: PV = PV(self.pvPrefix + "FSCAN:START")
         self.freq_scan_status_PV: PV = PV(self.pvPrefix + "FSCAN:STAT")
-        self.freq_search_stat_PV: PV = PV(self.pvPrefix + "FSCAN:SEARCHSTAT")
 
 
 class CommissioningCryomodule(Cryomodule):
@@ -356,10 +357,10 @@ class CommissioningCryomodule(Cryomodule):
         super().__init__(cryoName=cryoName, linacObject=linacObject, cavityClass=CommissioningCavity,
                          rackClass=CommissioningRack,
                          isHarmonicLinearizer=isHarmonicLinearizer, stepperClass=CommissioningStepper)
-
+        
         self.results = utils.CommissioningCryomoduleResults()
         self.cavity_results = {cavity.number: cavity.results for cavity in self.cavities.values()}
-
+        
         self.stepper_temp_PVs = []
         self.coupler_top_PVs = []
         self.coupler_bot_PVs = []
@@ -367,7 +368,7 @@ class CommissioningCryomodule(Cryomodule):
         self.hom_ds_PVs = []
         self.detune_PVs = []
         self.amp_pvs = []
-
+        
         for cavity in self.cavities.values():
             self.stepper_temp_PVs.append((cavity.stepper_temp_PV.pvname, None))
             self.coupler_top_PVs.append((cavity.coupler_top_PVName, None))
@@ -376,20 +377,20 @@ class CommissioningCryomodule(Cryomodule):
             self.hom_ds_PVs.append((cavity.hom_ds_PVName, None))
             self.detune_PVs.append((cavity.detune_best_PV.pvname, None))
             self.amp_pvs.append((cavity.selAmplitudeActPV.pvname, None))
-
+        
         self.cryo_signal_PVs = [(self.dsLevelPV.pvname, None),
                                 (self.usLevelPV.pvname, None),
                                 (self.dsPressurePV.pvname, None),
                                 (self.jtValveRdbkPV.pvname, None)]
-
+        
         # To be populated from the GUI
         self.decarad: Optional[Decarad] = None
-
+        
         self.vacuumPlotPairs = [(pv.pvname, "x96")
                                 for pv in self.linac.insulatingVacuumPVs]
         self.vacuumPlotPairs += [(pv.pvname, "!96") for pv in self.linac.beamlineVacuumPVs]
         self.vacuumPlotPairs += [(pv.pvname, "!96") for pv in self.couplerVacuumPVs]
-
+    
     @property
     def decarad_PVs(self):
         decarad_PVs = []
@@ -401,11 +402,11 @@ class CommissioningCryomodule(Cryomodule):
 class CommissioningStepper(StepperTuner):
     def __init__(self, cavity):
         super().__init__(cavity)
-
+    
     def checkTemp(self, **kwargs):
         if self.cavity.stepper_temp_PV.value >= scLinacUtils.STEPPER_TEMP_LIMIT:
             self.abort_pv.put(1, waitForPut=False)
-
+    
     def connect_callback(self):
         self.step_tot_pv.add_callback(self.checkTemp)
 
