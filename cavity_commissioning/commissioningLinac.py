@@ -102,6 +102,7 @@ class Piezo:
         self.withrf_status_PV: PV = PV(self.pvPrefix + "RFSTESTSTAT")
         self.amplifiergain_a_PV: PV = PV(self.pvPrefix + "CHA_AMPGAIN")
         self.amplifiergain_b_PV: PV = PV(self.pvPrefix + "CHB_AMPGAIN")
+        # TODO make sure these PVs are right
         self.withrf_push_dfgain_PV: PV = PV(self.pvPrefix + "PUSH_DFGAIN.PROC")
         self.withrf_save_dfgain_PV: PV = PV(self.pvPrefix + "SAVE_DFGAIN.PROC")
         self.detunegain_new_PV: PV = PV(self.pvPrefix + "DFGAIN_NEW")
