@@ -432,6 +432,9 @@ class GuidedCommissioningScreens(Display):
         for label, status in label_status_pairs:
             label.setText(status_map[status].message)
             label.setStyleSheet(status_map[status].stylesheet)
+        
+        if self.tuner_window:
+            self.tuner_window.ui.label_session_steps.setText(f"{self.current_cavity.current_steps}")
     
     def update_cavity(self):
         self.ui.workflow_groupbox.setEnabled(True)

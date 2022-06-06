@@ -160,9 +160,10 @@ class PiezoWithRFWorker(Worker):
             self.progress.emit(70)
             
             self.status.emit("verifying that RFS detune is <100Hz")
+            # TODO check if we should be using DFBEST
             if (self.cavity.detune_rfs_PV.severity == 3
                     or abs(self.cavity.detune_rfs_PV.value) > 100):
-                self.error.emit('Detuning is invalid or larger than 100Hz')
+                self.error.emit('Detune is invalid or larger than 100Hz')
                 return
             
             self.status.emit("running piezo test script")
@@ -177,6 +178,7 @@ class PiezoWithRFWorker(Worker):
             
             self.progress.emit(80)
             
+            # TODO check if there's another fault condition
             if piezo.withrf_check_status_PV.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE:
                 self.error.emit('Piezo with-rf test script has exited with status \'crash\'')
                 return
@@ -185,8 +187,8 @@ class PiezoWithRFWorker(Worker):
             self.cavity.results.piezo_amplifiergain_b = piezo.amplifiergain_b_PV.value
             
             self.status.emit("pushing and saving gain")
-            piezo.withrf_push_dfgain_PV.put(1)
-            piezo.withrf_save_dfgain_PV.put(1)
+            piezo.withrf_push_dfgain_PV.put(1, waitForPut=False)
+            piezo.withrf_save_dfgain_PV.put(1, waitForPut=False)
             self.progress.emit(90)
             
             self.cavity.results.piezo_detune_gain = piezo.detunegain_new_PV.value
@@ -317,6 +319,6 @@ class StepperWorker(Worker):
                                           speed=scLinacUtils.MAX_STEPPER_SPEED)
             self.status.emit("stepper done moving")
             self.cavity.current_steps += self.des_steps
-            self.finished.emit(str(self.cavity.current_steps))
+            self.finished.emit(f"Moved {self.cavity.current_steps} steps")
         except (scLinacUtils.StepperError, PVInvalidError) as e:
             self.error.emit(str(e))
