@@ -246,7 +246,7 @@ class LargeRackWorker(Worker):
                     or self.cavity.freq_search_8pi9_PV.value < -850000):
                 self.error.emit('8pi/9 frequency outside tolerance')
                 return
-            self.cavity.freq_search_push_PV.put(1)
+            self.cavity.freq_search_push_PV.put(1, waitForPut=False)
             self.cavity.results.eight_pi_nine_freq_measured = True
             
             self.finished.emit("8pi/9 scan successful")
@@ -261,8 +261,8 @@ class CavCalWorker(Worker):
             self.status.emit("running cavity calibration")
             self.cavity.runCalibration(3e7, 5e7)
             self.progress.emit(100)
-            self.cavity.results.fpc_qext_cold = self.current_cavity.measuredQLoadedPV.value
-            self.cavity.results.probe_qext_value = self.current_cavity.measured_probe_qext_PV.value
+            self.cavity.results.fpc_qext_cold = self.cavity.measuredQLoadedPV.value
+            self.cavity.results.probe_qext_value = self.cavity.measured_probe_qext_PV.value
             self.cavity.results.cavity_calibration_run = True
             self.finished.emit("cavity calibration done")
         except (scLinacUtils.CavityQLoadedCalibrationError,
