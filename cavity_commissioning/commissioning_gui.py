@@ -334,7 +334,8 @@ class GuidedCommissioningScreens(Display):
         self.tuner_window.ui.button_replace.clicked.connect(self.replace_button_clicked)
         self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
         self.tuner_window.ui.button_mark_tuned.clicked.connect(self.mark_tuned_button_clicked)
-        self.tuner_window.ui.step_des_spinBox.editingFinished.connect(self.launch_stepper_worker)
+        self.tuner_window.ui.step_des_spinBox.setKeyboardTracking(False)
+        self.tuner_window.ui.step_des_spinBox.valueChanged.connect(self.launch_stepper_worker)
     
     def update_plot_timespan(self):
         self.time_plot_updater.updateTimespans(self.live_signals_window.ui.timespan_spinbox.value())
