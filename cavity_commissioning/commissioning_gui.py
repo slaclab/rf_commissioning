@@ -274,6 +274,8 @@ class GuidedCommissioningScreens(Display):
     def reset_rad_popup(self):
         self.rad_popup.hide()
         self.rad_popup = None
+        self.current_cavity.cryomodule.decarad.clear_buffers()
+        self.current_cm.decarad.clear_buffers()
     
     def handle_check(self, action_func: Callable):
         if self.rad_popup.ui.yes_checkBox.isChecked():

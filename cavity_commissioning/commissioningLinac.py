@@ -28,7 +28,7 @@ class DecaradHead:
         # Adds leading 0 to numbers with less than 2 digits
         self.pvPrefix = self.decarad.pvPrefix + "{:02d}:".format(self.number)
         
-        self.doseRatePV: PV = PV(self.pvPrefix + "GAMMA_DOSE_RATE")
+        self.doseRatePV: PV = PV(self.pvPrefix + "GAMMAAVE")
         
         self.buffer = empty(10)
         self.buffer[:] = nan
@@ -66,8 +66,9 @@ class Decarad:
         self.powerStatusPVName = self.pvPrefix + "HVSTATUS"
         self.voltageReadbackPVName = self.pvPrefix + "HVMON"
         
-        self.heads = {head: DecaradHead(number=head, decarad=self)
-                      for head in range(1, 11)}
+        self.heads: Dict[int, DecaradHead] = {head: DecaradHead(number=head,
+                                                                decarad=self)
+                                              for head in range(1, 11)}
     
     @property
     def max_avg_dose(self):
@@ -76,6 +77,10 @@ class Decarad:
     @property
     def max_dose(self):
         return max([head.doseRatePV.value for head in self.heads.values()])
+    
+    def clear_buffers(self):
+        for head in self.heads.values():
+            head.buffer[:] = nan
 
 
 class Piezo:
@@ -154,8 +159,8 @@ class CommissioningCavity(Cavity):
         
         self.cheetoplot_channelpairs: List[Tuple[Optional[str], str]] = [(self.iwaveform_PVName,
                                                                           self.qwaveform_PVName),
-                                                                         (self.controller_limit_b_PVName,
-                                                                          self.controller_limit_a_PVName)]
+                                                                         (self.controller_limit_a_PVName,
+                                                                          self.controller_limit_b_PVName)]
         
         self.acceptancetest_max_amplitude_PVName = self.pvPrefix + "AT:AMAX"
         self.acceptancetest_useable_amplitude_PVName = self.pvPrefix + "AT:AUSE"
