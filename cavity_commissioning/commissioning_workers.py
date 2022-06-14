@@ -287,23 +287,33 @@ class StartSELAPWorker(Worker):
 class EndSELAPWorker(Worker):
     def run(self):
         try:
+            curr_amp = self.cavity.selAmplitudeDesPV.value
+            self.cavity.ades_max_srf_PV.put(curr_amp)
+            self.status.emit("pushed current amplitude to SRF max")
+            self.cavity.results.onehour_amp = curr_amp
             self.cavity.selAmplitudeDesPV.put(5)
+            self.status.emit("Set amplitude to 5MV")
             self.progress.emit(28.6)
             self.cavity.turnOff()
+            self.status.emit("Turned cavity off")
             self.progress.emit(42.9)
             self.cavity.runCalibration(loadedQLowerlimit=scLinacUtils.LOADED_Q_LOWER_LIMIT,
                                        loadedQUpperlimit=scLinacUtils.LOADED_Q_UPPER_LIMIT)
             self.progress.emit(57.2)
             self.cavity.turnOff()
+            self.status.emit("Ran cavity calibration")
             self.progress.emit(71.5)
             self.cavity.ssa.turnOff()
+            self.status.emit("turned off SSA")
             self.progress.emit(85.8)
             self.cavity.save_results()
+            self.status.emit("Saved results")
             self.progress.emit(100)
             self.finished.emit('1h run complete')
-        except (scLinacUtils.CavityQLoadedCalibrationError,
-                pyepicsUtils.PVInvalidError) as e:
+        except pyepicsUtils.PVInvalidError as e:
             self.error.emit(str(e))
+        except scLinacUtils.CavityQLoadedCalibrationError as e:
+            self.status.emit(str(e))
 
 
 class StepperWorker(Worker):
