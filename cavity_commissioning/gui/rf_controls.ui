@@ -25,6 +25,12 @@
      <property name="toolTip">
       <string/>
      </property>
+     <property name="showXGrid">
+      <bool>true</bool>
+     </property>
+     <property name="showYGrid">
+      <bool>true</bool>
+     </property>
      <property name="yAxes">
       <stringlist/>
      </property>
@@ -223,6 +229,9 @@
     <widget class="PyDMWaveformPlot" name="waveform_cheeto">
      <property name="toolTip">
       <string/>
+     </property>
+     <property name="showXGrid">
+      <bool>true</bool>
      </property>
      <property name="yAxes">
       <stringlist/>
