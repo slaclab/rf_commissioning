@@ -503,9 +503,6 @@
          <property name="showLegend">
           <bool>true</bool>
          </property>
-         <property name="maxRedrawRate" stdset="0">
-          <number>1</number>
-         </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
