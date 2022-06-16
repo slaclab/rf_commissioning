@@ -78,9 +78,12 @@ class PiezoPreRFWorker(Worker):
 
 
 class SSACharWorker(Worker):
-    def __init__(self, cavity: CommissioningCavity, drivemax=0.8, attemptnumber=1):
+    def __init__(self, cavity: CommissioningCavity, attemptnumber=1):
         super().__init__(cavity)
-        self.drivemax = drivemax
+        if cavity.cryomodule.isHarmonicLinearizer:
+            self.drivemax = 1
+        else:
+            self.drivemax = 0.8
         self.attemptnumber = attemptnumber
     
     def run(self):
@@ -135,7 +138,7 @@ class PiezoWithRFWorker(Worker):
             self.progress.emit(20)
             
             self.status.emit("setting ADES to 5MV")
-            self.cavity.selAmplitudeDesPV.put(5)
+            self.cavity.selAmplitudeDesPV.put(7)
             self.progress.emit(30)
             
             self.status.emit("setting cavity to SEL")
@@ -179,8 +182,9 @@ class PiezoWithRFWorker(Worker):
             self.progress.emit(80)
             
             # TODO check if there's another fault condition
-            if piezo.withrf_check_status_PV.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE:
-                self.error.emit('Piezo with-rf test script has exited with status \'crash\'')
+            if (piezo.withrf_check_status_PV.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE or
+                    piezo.withrf_status_PV.value != 0):
+                self.error.emit('Piezo with-rf test script was unsuccessful')
                 return
             
             self.cavity.results.piezo_amplifiergain_a = piezo.amplifiergain_a_PV.value

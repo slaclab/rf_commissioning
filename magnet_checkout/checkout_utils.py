@@ -1,11 +1,9 @@
+from time import sleep
 from typing import Dict, List, Tuple
 
 from epics import PV
 
-from lcls_tools.superconducting.scLinac import Cryomodule, Magnet, make_lcls_cryomodules
-
-# TODO convert to IDES of 20A
-NOMINAL_BDES = 8.5
+from lcls_tools.superconducting.scLinac import CryoDict, Cryomodule, Magnet
 
 CONTROL_PLOT_KEY = 'controlplot'
 LIVE_PLOT_KEY = 'liveplot'
@@ -14,12 +12,25 @@ LIVE_PLOT_KEY = 'liveplot'
 class CheckoutMagnet(Magnet):
     def __init__(self, magnettype, cryomodule):
         super().__init__(magnettype, cryomodule)
+        if magnettype == "QUAD":
+            self.nominal_bdes = 8.5
+        else:
+            self.nominal_bdes = 0.02
+    
+    def waitForReady(self):
+        while self.controlPV.value != 0:
+            print("waiting for the magnet to be ready")
+            sleep(1)
     
     def start_checkout(self):
         self.reset()
+        self.waitForReady()
         self.turnOn()
+        self.waitForReady()
         self.degauss()
-        self.bdes = NOMINAL_BDES
+        self.waitForReady()
+        self.bdes = self.nominal_bdes
+        self.waitForReady()
     
     def end_checkout(self):
         self.bdes = 0
@@ -56,5 +67,5 @@ class CheckoutCryomodule(Cryomodule):
                                                        (self.magnet_voltage_34_sq_PV.pvname, None)]
 
 
-CHECKOUT_CRYOMODULE_OBJECTS: Dict[str, Cryomodule] = make_lcls_cryomodules(magnetClass=CheckoutMagnet,
-                                                                           cryomoduleClass=CheckoutCryomodule)
+CHECKOUT_CRYOMODULE_OBJECTS: Dict[str, Cryomodule] = CryoDict(magnetClass=CheckoutMagnet,
+                                                              cryomoduleClass=CheckoutCryomodule)
