@@ -267,6 +267,8 @@ class GuidedCommissioningScreens(Display):
         
         self.rad_popup.ui.yes_checkBox.stateChanged.connect(partial(self.handle_check, radHandler.action_func))
         self.rad_popup.ui.no_checkBox.stateChanged.connect(self.reset_rad_popup)
+        self.rad_popup.ui.cavLabel.setText("CM{cm} Cavity {cav}".format(cm=self.current_cm.name,
+                                                                        cav=self.current_cavity.number))
         
         self.rad_popup.ui.status_label.setText(radHandler.message)
         showDisplay(self.rad_popup)
@@ -337,7 +339,7 @@ class GuidedCommissioningScreens(Display):
         self.tuner_window.ui.button_add.clicked.connect(self.add_button_clicked)
         self.tuner_window.ui.button_mark_tuned.clicked.connect(self.mark_tuned_button_clicked)
         self.tuner_window.ui.step_des_spinBox.setKeyboardTracking(False)
-        self.tuner_window.ui.step_des_spinBox.editingFinished.connect(self.launch_stepper_worker)
+        self.tuner_window.ui.step_go_button.clicked.connect(self.launch_stepper_worker)
     
     def update_plot_timespan(self):
         self.time_plot_updater.updateTimespans(self.live_signals_window.ui.timespan_spinbox.value())
@@ -576,7 +578,7 @@ class GuidedCommissioningScreens(Display):
                           progressBar=None, error_handler=self.handle_stepper_err,
                           abortButton=self.tuner_window.ui.step_abort_button,
                           action_desc="Stepper move",
-                          startButton=self.tuner_window.ui.step_des_spinBox)
+                          startButton=self.tuner_window.ui.step_go_button)
     
     @slot(str)
     def handle_stepper_err(self, exception):
@@ -639,7 +641,6 @@ class GuidedCommissioningScreens(Display):
     def onehour_done_button_pressed(self):
         self.selap_timer.stop()
         self.current_cavity.results.onehourrun_complete = True
-        self.current_cavity.turnOff()
         self.current_cavity.save_results()
         self.success_signal.emit("One hour run complete")
     

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Live Signals</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="3">
@@ -451,9 +451,6 @@
          </property>
          <property name="timeSpan">
           <double>600.000000000000000</double>
-         </property>
-         <property name="autoRangeY">
-          <bool>true</bool>
          </property>
         </widget>
        </item>
