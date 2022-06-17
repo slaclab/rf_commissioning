@@ -137,7 +137,7 @@ class PiezoWithRFWorker(Worker):
             self.cavity.ssa.turnOn()
             self.progress.emit(20)
             
-            self.status.emit("setting ADES to 5MV")
+            self.status.emit("setting ADES to 7MV")
             self.cavity.selAmplitudeDesPV.put(7)
             self.progress.emit(30)
             
