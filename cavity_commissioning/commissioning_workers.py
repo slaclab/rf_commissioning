@@ -264,9 +264,17 @@ class CavCalWorker(Worker):
         try:
             self.status.emit("running cavity calibration")
             self.cavity.runCalibration(3e7, 5e7)
-            self.progress.emit(100)
+            self.progress.emit(33)
             self.cavity.results.fpc_qext_cold = self.cavity.measuredQLoadedPV.value
+            self.status.emit("Running Probe Q Calculator")
+            self.cavity.calculate_probe_qext_PV.put(1, waitForPut=False)
+            sleep(1)
+            self.progress.emit(66)
+            self.status.emit("Pushing Probe Q")
+            self.cavity.push_probe_qext_PV.put(1, waitForPut=False)
+            self.status.emit("Saving Probe Q")
             self.cavity.results.probe_qext_value = self.cavity.measured_probe_qext_PV.value
+            self.progress.emit(100)
             self.cavity.results.cavity_calibration_run = True
             self.finished.emit("cavity calibration done")
         except (scLinacUtils.CavityQLoadedCalibrationError,
@@ -332,7 +340,7 @@ class StepperWorker(Worker):
                                           maxSteps=utils.STEPPER_MAX_STEPS,
                                           speed=scLinacUtils.MAX_STEPPER_SPEED)
             self.status.emit("stepper done moving")
-            self.cavity.current_steps += self.des_steps
-            self.finished.emit(f"Moved {self.cavity.current_steps} steps")
+            # self.cavity.results.steps_to_tuned_2K += self.des_steps
+            self.finished.emit(f"Cavity steps to cold 2K: {self.cavity.results.steps_to_tuned_2K}")
         except (scLinacUtils.StepperError, PVInvalidError) as e:
             self.error.emit(str(e))
