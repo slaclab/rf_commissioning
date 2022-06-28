@@ -6,6 +6,7 @@ import commissioningUtilities as utils
 from commissioningLinac import ALL_CRYOMODULES, COMMISSIONING_CRYOMODULE_OBJECTS, Piezo
 from lcls_tools.common.pyepics_tools import pyepicsUtils
 
+# The first element in this list is just an empty string
 ALL_CRYOMODULES.pop(0)
 results: Dict[str, Dict[int, Optional[str]]] = {cm: {cav: None for cav in range(1, 9)}
                                                 for cm in ALL_CRYOMODULES}
