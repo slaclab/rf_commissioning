@@ -439,7 +439,10 @@ class GuidedCommissioningScreens(Display):
             label.setStyleSheet(status_map[status].stylesheet)
         
         if self.tuner_window:
-            self.tuner_window.ui.label_session_steps.setText(f"{self.current_cavity.current_steps}")
+            try:
+                self.tuner_window.ui.spinbox_session_steps.setValue(self.current_cavity.results.steps_to_tuned_2K)
+            except TypeError:
+                self.tuner_window.ui.spinbox_session_steps.setValue(0)
     
     def update_cavity(self):
         self.ui.workflow_groupbox.setEnabled(True)
@@ -532,14 +535,20 @@ class GuidedCommissioningScreens(Display):
         ui.detune_label.channel = self.current_cavity.detune_best_PV.pvname
         ui.label_cold_steps.channel = self.current_cavity.steppertuner.steps_cold_landing_pv.pvname
         ui.label_cold_landing_freq.setText(str(self.current_cavity.results.cold_land_freq_2K))
-        ui.label_session_steps.setText(str(self.current_cavity.current_steps))
+        
+        try:
+            ui.spinbox_session_steps.setValue(self.current_cavity.results.steps_to_tuned_2K)
+        except TypeError:
+            ui.spinbox_session_steps.setValue(0)
+        
+        self.tuner_window.ui.spinbox_session_steps.valueChanged.connect(self.current_cavity.save_steps)
         self.update_tuner_plot()
     
     def replace_button_clicked(self):
-        self.current_cavity.steppertuner.steps_cold_landing_pv.put(self.current_cavity.current_steps)
+        self.current_cavity.steppertuner.steps_cold_landing_pv.put(self.current_cavity.results.steps_to_tuned_2K)
     
     def add_button_clicked(self):
-        self.current_cavity.steppertuner.steps_cold_landing_pv.put(self.current_cavity.current_steps
+        self.current_cavity.steppertuner.steps_cold_landing_pv.put(self.current_cavity.results.steps_to_tuned_2K
                                                                    +
                                                                    self.current_cavity.steppertuner.steps_cold_landing_pv.value)
     
@@ -572,8 +581,13 @@ class GuidedCommissioningScreens(Display):
         if (not self.tuner_window.ui.step_des_spinBox.value()
                 or (self.stepper_thread and not self.stepper_thread.isFinished())):
             return
+        
+        def update_steps():
+            self.tuner_window.ui.spinbox_session_steps.setValue(self.current_cavity.results.steps_to_tuned_2K)
+        
         self.stepper_thread = StepperWorker(cavity=self.current_cavity,
                                             des_steps=self.tuner_window.ui.step_des_spinBox.value())
+        self.stepper_thread.finished.connect(update_steps)
         self.setup_thread(worker=self.stepper_thread,
                           progressBar=None, error_handler=self.handle_stepper_err,
                           abortButton=self.tuner_window.ui.step_abort_button,

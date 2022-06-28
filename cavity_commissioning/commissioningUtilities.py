@@ -12,12 +12,13 @@ TESTLEAD_LIST = [
     'Nelson, Janice',
     'Porter, Ryan',
     'Zacarias, Lisa',
+    'Partner Lab Affiliate'
 ]
 
 RADIATION_LIMIT = 50
 GRADIENT_THRESHOLD_RADLIMIT = 16
 # this value is based on historical data, when the decarads were on, but not seeing any FE from a cavity
-DECARAD_BACKGROUND_READING = 4
+DECARAD_BACKGROUND_READING = 0.4
 
 PROBE_QEXT_UPPER_LIMIT = 3e12
 PROBE_QEXT_LOWER_LIMIT = 1e11
@@ -144,7 +145,7 @@ class CommissioningCavityResults:
     ssa_characterized: bool = False
     is_tuned: bool = False
     cold_land_freq_2K: Optional[float] = None
-    steps_to_tuned_2K: Optional[int] = None
+    steps_to_tuned_2K: Optional[int] = 0
     steps_to_tuned_4K: Optional[int] = None
     final_frequency: Optional[float] = None
     eight_pi_nine_freq_measured: bool = False

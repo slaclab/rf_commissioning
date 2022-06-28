@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>631</width>
-    <height>674</height>
+    <height>668</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -149,7 +149,10 @@
       <item>
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>Select Decarad in use:</string>
+         <string>Select Decarad in use (leave blank if experiencing radiation from another cavity):</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

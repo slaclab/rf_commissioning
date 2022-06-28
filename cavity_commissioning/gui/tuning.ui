@@ -205,14 +205,7 @@
         <item row="0" column="0">
          <widget class="QLabel" name="label_6">
           <property name="text">
-           <string>Steps this session:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="label_session_steps">
-          <property name="text">
-           <string>None</string>
+           <string>Cavity Steps to Cold (2K)</string>
           </property>
          </widget>
         </item>
@@ -227,6 +220,19 @@
          <widget class="PyDMLabel" name="label_cold_steps">
           <property name="toolTip">
            <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QSpinBox" name="spinbox_session_steps">
+          <property name="minimum">
+           <number>-1000000000</number>
+          </property>
+          <property name="maximum">
+           <number>1000000000</number>
+          </property>
+          <property name="singleStep">
+           <number>10000</number>
           </property>
          </widget>
         </item>

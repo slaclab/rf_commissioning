@@ -125,6 +125,7 @@ class CommissioningCavity(Cavity):
         super().__init__(cavityNum, rackObject, stepperClass=CommissioningStepper)
         
         self.results = utils.CommissioningCavityResults()
+        self.steppertuner.saved_steps = self.results.steps_to_tuned_2K
         
         self.piezo = Piezo(self)
         
@@ -188,7 +189,6 @@ class CommissioningCavity(Cavity):
                                                     (self.steppertuner.step_signed_pv.pvname,
                                                      "signedsteps")]
         
-        self.current_steps = 0
         self.plot_pvs: List[str] = [(self.stepper_temp_PV.pvname, None),
                                     (self.coupler_top_PVName, None),
                                     (self.coupler_bot_PVName, None),
@@ -202,6 +202,11 @@ class CommissioningCavity(Cavity):
         self.rad_threshold = (utils.GRADIENT_THRESHOLD_RADLIMIT * self.length)
         
         self.freq_search_stat_PV: PV = PV(self.pvPrefix + "FSCAN:SEARCHSTAT")
+    
+    def save_steps(self, steps):
+        print(f"setting cavity steps to {steps}")
+        self.results.steps_to_tuned_2K = steps
+        self.save_results()
     
     def record_fe_onset(self):
         if not self.fe_onset_recorded:
@@ -406,15 +411,24 @@ class CommissioningCryomodule(Cryomodule):
 
 
 class CommissioningStepper(StepperTuner):
-    def __init__(self, cavity):
+    def __init__(self, cavity: CommissioningCavity):
         super().__init__(cavity)
+        # self.cavity: CommissioningCavity = cavity
+        init = self.step_signed_pv.value
+        self.initial_steps = init if init else 0
+        self.saved_steps = None
     
     def checkTemp(self, **kwargs):
         if self.cavity.stepper_temp_PV.value >= scLinacUtils.STEPPER_TEMP_LIMIT:
             self.abort_pv.put(1, waitForPut=False)
     
+    def count_steps(self, value, **kwargs):
+        self.cavity.results.steps_to_tuned_2K = (value - self.initial_steps) + self.saved_steps
+        self.cavity.save_results()
+    
     def connect_callback(self):
         self.step_tot_pv.add_callback(self.checkTemp)
+        self.step_signed_pv.add_callback(self.count_steps)
 
 
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = CryoDict(cryomoduleClass=CommissioningCryomodule,
