@@ -180,6 +180,7 @@ class PiezoWithRFWorker(Worker):
                 sleep(1)
             
             self.progress.emit(80)
+            sleep(2)
             
             # TODO check if there's another fault condition
             if (piezo.withrf_check_status_PV.value != utils.PIEZO_SCRIPT_COMPLETE_VALUE or

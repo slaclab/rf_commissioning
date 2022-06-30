@@ -3,14 +3,13 @@ from time import sleep
 from typing import Callable, Dict, List, Optional, Tuple
 
 import requests
-from numpy import empty, nan, nanmean
 
 import commissioningUtilities as utils
 from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.common.pyepics_tools.pyepicsUtils import PV
 from lcls_tools.superconducting import scLinacUtils
 from lcls_tools.superconducting.scLinac import (Cavity, CryoDict, Cryomodule,
-                                                L0B, L1B, L1BHL, L2B, L3B, Rack, SSA, StepperTuner)
+                                                L0B, L1B, L1BHL, L2B, L3B, Piezo, Rack, SSA, StepperTuner)
 
 ALL_CRYOMODULES = [""] + L0B + L1B + L1BHL + L2B + L3B
 
@@ -30,21 +29,13 @@ class DecaradHead:
         
         self.doseRatePV: PV = PV(self.pvPrefix + "GAMMAAVE")
         
-        self.buffer = empty(10)
-        self.buffer[:] = nan
         self.counter = 0
-        
-        self.doseRatePV.add_callback(self.fill_buffer, index=0)
-    
-    def fill_buffer(self, value, **kwargs):
-        self.buffer[self.counter] = value
-        self.counter = (self.counter + 1) % 10
     
     @property
     def avgDose(self) -> float:
         # try to do averaging of the last 60 points to account for signal noise
         try:
-            return max(nanmean(self.buffer) - utils.DECARAD_BACKGROUND_READING, 0)
+            return max(self.doseRatePV.value - utils.DECARAD_BACKGROUND_READING, 0)
         
         # return the most recent value if we can't average for whatever reason
         except (AttributeError, requests.exceptions.ConnectionError):
@@ -77,22 +68,13 @@ class Decarad:
     @property
     def max_dose(self):
         return max([head.doseRatePV.value for head in self.heads.values()])
-    
-    def clear_buffers(self):
-        for head in self.heads.values():
-            head.buffer[:] = nan
 
 
-class Piezo:
+class CommissioningPiezo(Piezo):
     def __init__(self, cavity):
         # type (CommissioningCavity) -> None
-        self.cavity: CommissioningCavity = cavity
-        self.pvPrefix: str = self.cavity.pvPrefix + "PZT:"
+        super().__init__(cavity)
         
-        self.enable_PV: PV = PV(self.pvPrefix + "ENABLE")
-        self.feedback_mode_PV: PV = PV(self.pvPrefix + "MODECTRL")
-        self.dc_setpoint_PV: PV = PV(self.pvPrefix + "DAC_SP")
-        self.bias_voltage_PV: PV = PV(self.pvPrefix + "BIAS")
         self.prerf_test_start_pv: PV = PV(self.pvPrefix + "TESTSTRT")
         self.prerf_cha_status_PV: PV = PV(self.pvPrefix + "CHA_TESTSTAT")
         self.prerf_chb_status_PV: PV = PV(self.pvPrefix + "CHB_TESTSTAT")
@@ -111,23 +93,19 @@ class Piezo:
         self.withrf_push_dfgain_PV: PV = PV(self.pvPrefix + "PUSH_DFGAIN.PROC")
         self.withrf_save_dfgain_PV: PV = PV(self.pvPrefix + "SAVE_DFGAIN.PROC")
         self.detunegain_new_PV: PV = PV(self.pvPrefix + "DFGAIN_NEW")
-    
-    def enable_feedback(self):
-        self.enable_PV.put(utils.PIEZO_DISABLE_VALUE)
-        self.dc_setpoint_PV.put(25)
-        self.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
-        self.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
 
 
 class CommissioningCavity(Cavity):
     
-    def __init__(self, cavityNum, rackObject, ssaClass=SSA, stepperClass=StepperTuner):
-        super().__init__(cavityNum, rackObject, stepperClass=CommissioningStepper)
+    def __init__(self, cavityNum, rackObject, ssaClass=SSA,
+                 stepperClass=StepperTuner, piezoClass=CommissioningPiezo):
+        super().__init__(cavityNum, rackObject, stepperClass=CommissioningStepper,
+                         piezoClass=CommissioningPiezo)
         
         self.results = utils.CommissioningCavityResults()
         self.steppertuner.saved_steps = self.results.steps_to_tuned_2K
         
-        self.piezo = Piezo(self)
+        self.piezo = CommissioningPiezo(self)
         
         self.interlock_PV: PV = PV(self.pvPrefix + "RFPERMIT")
         self.coupler_top_PVName = self.pvPrefix + "CPLRTEMP1"
@@ -255,7 +233,7 @@ class CommissioningCavity(Cavity):
             
             data[self.cryomodule.name] = self.cryomodule.results.__dict__
             f.seek(0)
-            json.dump(data, f)
+            json.dump(data, f, indent=4)
             f.truncate()
         with open('results/cavity_results.json', 'r+') as f:
             data = json.load(f)
@@ -263,7 +241,7 @@ class CommissioningCavity(Cavity):
                 data[self.cryomodule.name] = {cav_number: {} for cav_number in self.cryomodule.cavities.keys()}
             data[self.cryomodule.name][self.number] = self.results.__dict__
             f.seek(0)
-            json.dump(data, f)
+            json.dump(data, f, indent=4)
             f.truncate()
         utils.releaseLock(fd)
     
@@ -350,9 +328,12 @@ class CommissioningCavity(Cavity):
 
 
 class CommissioningRack(Rack):
-    def __init__(self, rackName, cryoObject, cavityClass, ssaClass=SSA, stepperClass=StepperTuner):
-        super().__init__(rackName=rackName, cryoObject=cryoObject, cavityClass=CommissioningCavity,
-                         stepperClass=CommissioningStepper)
+    def __init__(self, rackName, cryoObject, cavityClass, ssaClass=SSA,
+                 stepperClass=StepperTuner, piezoClass=CommissioningPiezo):
+        super().__init__(rackName=rackName, cryoObject=cryoObject,
+                         cavityClass=CommissioningCavity,
+                         stepperClass=CommissioningStepper,
+                         piezoClass=CommissioningPiezo)
         
         self.freq_search_low_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_START")
         self.freq_search_high_PV: PV = PV(self.pvPrefix + "FSCAN:FREQ_STOP")
@@ -364,10 +345,13 @@ class CommissioningRack(Rack):
 
 class CommissioningCryomodule(Cryomodule):
     def __init__(self, cryoName, linacObject, cavityClass, magnetClass, rackClass, isHarmonicLinearizer, ssaClass=SSA,
-                 stepperClass=StepperTuner):
-        super().__init__(cryoName=cryoName, linacObject=linacObject, cavityClass=CommissioningCavity,
+                 stepperClass=StepperTuner, piezoClass=CommissioningPiezo):
+        super().__init__(cryoName=cryoName, linacObject=linacObject,
+                         cavityClass=CommissioningCavity,
                          rackClass=CommissioningRack,
-                         isHarmonicLinearizer=isHarmonicLinearizer, stepperClass=CommissioningStepper)
+                         isHarmonicLinearizer=isHarmonicLinearizer,
+                         stepperClass=CommissioningStepper,
+                         piezoClass=CommissioningPiezo)
         
         self.results = utils.CommissioningCryomoduleResults()
         self.cavity_results = {cavity.number: cavity.results for cavity in self.cavities.values()}
@@ -434,4 +418,5 @@ class CommissioningStepper(StepperTuner):
 COMMISSIONING_CRYOMODULE_OBJECTS: Dict[str, CommissioningCryomodule] = CryoDict(cryomoduleClass=CommissioningCryomodule,
                                                                                 cavityClass=CommissioningCavity,
                                                                                 rackClass=CommissioningRack,
-                                                                                stepperClass=CommissioningStepper)
+                                                                                stepperClass=CommissioningStepper,
+                                                                                piezoClass=CommissioningPiezo)
