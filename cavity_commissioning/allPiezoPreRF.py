@@ -3,7 +3,7 @@ from time import sleep
 from typing import Dict, Optional
 
 import commissioningUtilities as utils
-from commissioningLinac import ALL_CRYOMODULES, COMMISSIONING_CRYOMODULE_OBJECTS, Piezo
+from commissioningLinac import ALL_CRYOMODULES, COMMISSIONING_CRYOMODULE_OBJECTS, CommissioningPiezo
 from lcls_tools.common.pyepics_tools import pyepicsUtils
 
 # The first element in this list is just an empty string
@@ -15,7 +15,7 @@ for cm in ALL_CRYOMODULES:
     cmObj = COMMISSIONING_CRYOMODULE_OBJECTS[cm]
     for cavity in cmObj.cavities.values():
         try:
-            piezo: Piezo = cavity.piezo
+            piezo: CommissioningPiezo = cavity.piezo
             piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
             piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
             piezo.dc_setpoint_PV.put(0)
