@@ -18,7 +18,7 @@ TESTLEAD_LIST = [
 RADIATION_LIMIT = 50
 GRADIENT_THRESHOLD_RADLIMIT = 16
 # this value is based on historical data, when the decarads were on, but not seeing any FE from a cavity
-DECARAD_BACKGROUND_READING = 0.4
+DECARAD_BACKGROUND_READING = 0.8
 
 PROBE_QEXT_UPPER_LIMIT = 3e12
 PROBE_QEXT_LOWER_LIMIT = 1e11
@@ -67,6 +67,8 @@ HL_HZ_PER_STEP = 18.3
 # These are very rough values obtained empirically
 ESTIMATED_MICROSTEPS_PER_HZ = MICROSTEPS_PER_STEP / HZ_PER_STEP
 ESTIMATED_MICROSTEPS_PER_HZ_HL = MICROSTEPS_PER_STEP / HL_HZ_PER_STEP
+
+PIEZO_WITH_RF_GRAD = 6.5
 
 
 @dataclasses.dataclass
