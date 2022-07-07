@@ -20,7 +20,7 @@ class Worker(QThread):
     
     def __init__(self, cavity: CommissioningCavity):
         super().__init__()
-        self.cavity = cavity
+        self.cavity: CommissioningCavity = cavity
     
     @abstractmethod
     def run(self):
@@ -136,9 +136,11 @@ class PiezoWithRFWorker(Worker):
             self.status.emit("turning SSA on")
             self.cavity.ssa.turnOn()
             self.progress.emit(20)
-            
-            self.status.emit("setting ADES to 7MV")
-            self.cavity.selAmplitudeDesPV.put(7)
+
+            amp = utils.PIEZO_WITH_RF_GRAD * self.cavity.length
+            self.status.emit(f"setting ADES to {amp}MV")
+            self.cavity.selAmplitudeDesPV.put(min(self.cavity.ades_max_PV.value,
+                                                  amp))
             self.progress.emit(30)
             
             self.status.emit("setting cavity to SEL")
