@@ -8,8 +8,7 @@ from qtpy.QtCore import Signal as signal
 import commissioningUtilities as utils
 from commissioningLinac import CommissioningCavity
 from lcls_tools.common.pyepics_tools import pyepicsUtils
-from lcls_tools.common.pyepics_tools.pyepicsUtils import PVInvalidError
-from lcls_tools.superconducting import scLinacUtils as scLinacUtils
+from lcls_tools.superconducting import scLinacUtils
 
 
 class Worker(QThread):
@@ -80,10 +79,7 @@ class PiezoPreRFWorker(Worker):
 class SSACharWorker(Worker):
     def __init__(self, cavity: CommissioningCavity, attemptnumber=1):
         super().__init__(cavity)
-        if cavity.cryomodule.isHarmonicLinearizer:
-            self.drivemax = 1
-        else:
-            self.drivemax = 0.8
+        self.drivemax = cavity.ssa.drivemax
         self.attemptnumber = attemptnumber
     
     def run(self):
@@ -109,7 +105,7 @@ class SSACharWorker(Worker):
                     self.run()
                 else:
                     self.error.emit(str(e))
-        except (PVInvalidError, scLinacUtils.SSAPowerError) as e:
+        except (pyepicsUtils.PVInvalidError, scLinacUtils.SSAPowerError) as e:
             self.error.emit(str(e))
 
 
@@ -137,7 +133,7 @@ class PiezoWithRFWorker(Worker):
             self.cavity.ssa.turnOn()
             self.progress.emit(20)
 
-            amp = utils.PIEZO_WITH_RF_GRAD * self.cavity.length
+            amp = scLinacUtils.PIEZO_WITH_RF_GRAD * self.cavity.length
             self.status.emit(f"setting ADES to {amp}MV")
             self.cavity.selAmplitudeDesPV.put(min(self.cavity.ades_max_PV.value,
                                                   amp))
@@ -258,7 +254,7 @@ class LargeRackWorker(Worker):
             
             self.finished.emit("8pi/9 scan successful")
             self.progress.emit(100)
-        except PVInvalidError as e:
+        except pyepicsUtils.PVInvalidError as e:
             self.error.emit(str(e))
 
 
@@ -306,6 +302,7 @@ class EndSELAPWorker(Worker):
             self.cavity.ades_max_srf_PV.put(curr_amp)
             self.status.emit("pushed current amplitude to SRF max")
             self.cavity.results.onehour_amp = curr_amp
+            self.cavity.results.onehourrun_complete = True
             self.cavity.selAmplitudeDesPV.put(5)
             self.status.emit("Set amplitude to 5MV")
             self.progress.emit(28.6)
@@ -344,5 +341,5 @@ class StepperWorker(Worker):
             self.status.emit("stepper done moving")
             # self.cavity.results.steps_to_tuned_2K += self.des_steps
             self.finished.emit(f"Cavity steps to cold 2K: {self.cavity.results.steps_to_tuned_2K}")
-        except (scLinacUtils.StepperError, PVInvalidError) as e:
+        except (scLinacUtils.StepperError, pyepicsUtils.PVInvalidError) as e:
             self.error.emit(str(e))

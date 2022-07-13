@@ -245,36 +245,6 @@ class CommissioningCavity(Cavity):
             f.truncate()
         utils.releaseLock(fd)
     
-    # TODO set the chirp parameters to default before starting
-    def setup_tuning(self):
-        # self.turnOff()
-        print("enabling piezo")
-        self.piezo.enable_PV.put(utils.PIEZO_ENABLE_VALUE)
-        
-        print("setting piezo to manual")
-        self.piezo.feedback_mode_PV.put(utils.PIEZO_MANUAL_VALUE)
-        
-        print("setting piezo DC voltage offset to 0V")
-        self.piezo.dc_setpoint_PV.put(0)
-        
-        print("setting piezo bias voltage to 25V")
-        self.piezo.bias_voltage_PV.put(25)
-        
-        print("setting drive level to {lev}".format(lev=scLinacUtils.SAFE_PULSED_DRIVE_LEVEL))
-        self.drivelevelPV.put(scLinacUtils.SAFE_PULSED_DRIVE_LEVEL)
-        
-        print("setting RF to chirp")
-        self.rfModeCtrlPV.put(scLinacUtils.RF_MODE_CHIRP)
-        
-        print("turning RF on and waiting 5s for detune to catch up")
-        self.turnOn()
-        sleep(5)
-        
-        if self.detune_best_PV.severity == pyepicsUtils.EPICS_INVALID_VAL:
-            raise utils.DetuneError("Detune PV invalid. Either expand the chirp"
-                                    " range or use the rack large frequency scan"
-                                    " to find the detune.")
-    
     # TODO add callback to decarad on status to remove/add dose rate callbacks and (dis)able buttons
     def connect_to_decarad(self, callbackfunc: Callable):
         for decaradhead in self.cryomodule.decarad.heads.values():
