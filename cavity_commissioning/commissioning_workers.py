@@ -266,7 +266,7 @@ class CavCalWorker(Worker):
     def run(self):
         try:
             self.status.emit("running cavity calibration")
-            self.cavity.runCalibration(3e7, 5e7)
+            self.cavity.runCalibration()
             self.progress.emit(33)
             self.cavity.results.fpc_qext_cold = self.cavity.measuredQLoadedPV.value
             self.status.emit("Running Probe Q Calculator")
@@ -312,8 +312,7 @@ class EndSELAPWorker(Worker):
             self.cavity.turnOff()
             self.status.emit("Turned cavity off")
             self.progress.emit(42.9)
-            self.cavity.runCalibration(loadedQLowerlimit=scLinacUtils.LOADED_Q_LOWER_LIMIT,
-                                       loadedQUpperlimit=scLinacUtils.LOADED_Q_UPPER_LIMIT)
+            self.cavity.runCalibration()
             self.progress.emit(57.2)
             self.cavity.turnOff()
             self.status.emit("Ran cavity calibration")
