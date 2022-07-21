@@ -347,7 +347,8 @@ class CommissioningCryomodule(Cryomodule):
         self.cryo_signal_PVs = [(self.dsLevelPV, None),
                                 (self.usLevelPV, None),
                                 (self.dsPressurePV, None),
-                                (self.jtValveReadbackPV, None)]
+                                (self.jtValveReadbackPV, None),
+                                (self.heater_readback_pv, None)]
         
         # To be populated from the GUI
         self.decarad: Optional[Decarad] = None
