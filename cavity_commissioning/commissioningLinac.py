@@ -3,13 +3,14 @@ from time import sleep
 from typing import Callable, Dict, List, Optional, Tuple
 
 import requests
-
-import commissioningUtilities as utils
+from epics import caget
 from lcls_tools.common.pyepics_tools import pyepicsUtils
 from lcls_tools.common.pyepics_tools.pyepicsUtils import PV
 from lcls_tools.superconducting import scLinacUtils
 from lcls_tools.superconducting.scLinac import (Cavity, CryoDict, Cryomodule,
                                                 L0B, L1B, L1BHL, L2B, L3B, Piezo, Rack, SSA, StepperTuner)
+
+import commissioningUtilities as utils
 
 ALL_CRYOMODULES = [""] + L0B + L1B + L1BHL + L2B + L3B
 
@@ -162,12 +163,12 @@ class CommissioningCavity(Cavity):
         self.ades_max_PV: PV = PV(self.pvPrefix + "ADES_MAX")
         self.tuning_plot_pairs: List[Tuple[str]] = [(self.detune_best_PV.pvname,
                                                      "dfbest"),
-                                                    (self.stepper_temp_PV.pvname,
+                                                    (self.stepper_temp_pv,
                                                      "steptemp"),
                                                     (self.steppertuner.step_signed_pv.pvname,
                                                      "signedsteps")]
         
-        self.plot_pvs: List[str] = [(self.stepper_temp_PV.pvname, None),
+        self.plot_pvs: List[str] = [(self.stepper_temp_pv, None),
                                     (self.coupler_top_PVName, None),
                                     (self.coupler_bot_PVName, None),
                                     (self.hom_ds_PVName, None),
@@ -335,7 +336,7 @@ class CommissioningCryomodule(Cryomodule):
         self.amp_pvs = []
         
         for cavity in self.cavities.values():
-            self.stepper_temp_PVs.append((cavity.stepper_temp_PV.pvname, None))
+            self.stepper_temp_PVs.append((cavity.stepper_temp_pv, None))
             self.coupler_top_PVs.append((cavity.coupler_top_PVName, None))
             self.coupler_bot_PVs.append((cavity.coupler_bot_PVName, None))
             self.hom_us_PVs.append((cavity.hom_us_PVName, None))
@@ -343,10 +344,10 @@ class CommissioningCryomodule(Cryomodule):
             self.detune_PVs.append((cavity.detune_best_PV.pvname, None))
             self.amp_pvs.append((cavity.selAmplitudeActPV.pvname, None))
         
-        self.cryo_signal_PVs = [(self.dsLevelPV.pvname, None),
-                                (self.usLevelPV.pvname, None),
-                                (self.dsPressurePV.pvname, None),
-                                (self.jtValveRdbkPV.pvname, None)]
+        self.cryo_signal_PVs = [(self.dsLevelPV, None),
+                                (self.usLevelPV, None),
+                                (self.dsPressurePV, None),
+                                (self.jtValveReadbackPV, None)]
         
         # To be populated from the GUI
         self.decarad: Optional[Decarad] = None
@@ -373,7 +374,7 @@ class CommissioningStepper(StepperTuner):
         self.saved_steps = None
     
     def checkTemp(self, **kwargs):
-        if self.cavity.stepper_temp_PV.value >= scLinacUtils.STEPPER_TEMP_LIMIT:
+        if caget(self.cavity.stepper_temp_pv) >= scLinacUtils.STEPPER_TEMP_LIMIT:
             self.abort_pv.put(1, waitForPut=False)
     
     def count_steps(self, value, **kwargs):
