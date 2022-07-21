@@ -99,9 +99,6 @@
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
-         <property name="updateMode" stdset="0">
-          <enum>PyDMTimePlot::AtFixedRate</enum>
-         </property>
          <property name="timeSpan">
           <double>600.000000000000000</double>
          </property>
@@ -126,9 +123,6 @@
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
-         </property>
-         <property name="updateMode" stdset="0">
-          <enum>PyDMTimePlot::AtFixedRate</enum>
          </property>
          <property name="timeSpan">
           <double>600.000000000000000</double>
@@ -155,9 +149,6 @@
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
-         <property name="updateMode" stdset="0">
-          <enum>PyDMTimePlot::AtFixedRate</enum>
-         </property>
          <property name="timeSpan">
           <double>600.000000000000000</double>
          </property>
@@ -182,9 +173,6 @@
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
-         </property>
-         <property name="updateMode" stdset="0">
-          <enum>PyDMTimePlot::AtFixedRate</enum>
          </property>
          <property name="timeSpan">
           <double>600.000000000000000</double>
@@ -331,8 +319,8 @@
          </property>
          <property name="yAxes">
           <stringlist>
-           <string>{&quot;name&quot;: &quot;!96&quot;, &quot;orientation&quot;: &quot;left&quot;, &quot;label&quot;: null, &quot;minRange&quot;: -1.0, &quot;maxRange&quot;: 1.0, &quot;autoRange&quot;: true, &quot;logMode&quot;: null}</string>
-           <string>{&quot;name&quot;: &quot;x96&quot;, &quot;orientation&quot;: &quot;right&quot;, &quot;label&quot;: null, &quot;minRange&quot;: -1.0, &quot;maxRange&quot;: 1.0, &quot;autoRange&quot;: true, &quot;logMode&quot;: null}</string>
+           <string>{&quot;name&quot;: &quot;!96&quot;, &quot;orientation&quot;: &quot;left&quot;, &quot;minRange&quot;: -1.0, &quot;maxRange&quot;: 1.0, &quot;autoRange&quot;: true}</string>
+           <string>{&quot;name&quot;: &quot;x96&quot;, &quot;orientation&quot;: &quot;right&quot;, &quot;minRange&quot;: -1.0, &quot;maxRange&quot;: 1.0, &quot;autoRange&quot;: true}</string>
           </stringlist>
          </property>
          <property name="title" stdset="0">
@@ -346,9 +334,6 @@
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
-         </property>
-         <property name="updateMode" stdset="0">
-          <enum>PyDMTimePlot::AtFixedRate</enum>
          </property>
          <property name="timeSpan">
           <double>600.000000000000000</double>
@@ -381,9 +366,6 @@
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
-         <property name="updateMode" stdset="0">
-          <enum>PyDMTimePlot::AtFixedRate</enum>
-         </property>
          <property name="timeSpan">
           <double>600.000000000000000</double>
          </property>
@@ -408,9 +390,6 @@
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
-         </property>
-         <property name="updateMode" stdset="0">
-          <enum>PyDMTimePlot::AtFixedRate</enum>
          </property>
          <property name="timeSpan">
           <double>600.000000000000000</double>
@@ -446,9 +425,6 @@
          <property name="updatesAsynchronously">
           <bool>true</bool>
          </property>
-         <property name="updateMode" stdset="0">
-          <enum>PyDMTimePlot::AtFixedRate</enum>
-         </property>
          <property name="timeSpan">
           <double>600.000000000000000</double>
          </property>
@@ -459,6 +435,12 @@
          <property name="toolTip">
           <string/>
          </property>
+         <property name="showXGrid">
+          <bool>true</bool>
+         </property>
+         <property name="showYGrid">
+          <bool>true</bool>
+         </property>
          <property name="title" stdset="0">
           <string>Amplitudes</string>
          </property>
@@ -467,9 +449,6 @@
          </property>
          <property name="updatesAsynchronously">
           <bool>true</bool>
-         </property>
-         <property name="updateMode" stdset="0">
-          <enum>PyDMTimePlot::AtFixedRate</enum>
          </property>
          <property name="timeSpan">
           <double>600.000000000000000</double>
@@ -524,8 +503,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>298</width>
-            <height>688</height>
+            <width>98</width>
+            <height>28</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout">
